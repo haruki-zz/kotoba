@@ -9,8 +9,8 @@
 1) 新增单词（AI/手动）：用户输入单词，默认调用 AI 生成平假名读音、日文释义、例句；若 AI 不可用/超时，允许用户手动填写并保存。结果以 JSON 持久化。  
 2) 单词卡片：正面仅显示单词；背面含单词、平假名读音、日文释义、日文例句；点击翻面。  
 3) 复习单词：按 SM-2 抽取待复习词，队列呈现卡片，用户标记记忆程度。  
-4) 单词库：列表浏览全部单词，按 50 音顺排序；可选择单词，修改读音/释义/例句，或删除该单词。  
-5) 每日活跃度：GitHub 贡献度式方格，展示每日新增量与复习 session 次数（session 定义为一次复习流程的开始/结束，而非单词数）。
+4) 单词库：列表浏览全部单词，按 50 音顺排序；可选择单词，AI/手动修改读音/释义/例句，或删除该单词。  
+5) 每日活跃度：GitHub 贡献度式方格，展示每日新增量与复习 session 次数（session 定义为一次复习流程，而非单词数）。
 
 ## 用户流（简要）
 - 新增（AI/手动）：输入单词 -> 触发 AI，若失败/离线则提示手动填写 -> 展示生成/手填内容 -> 用户确认保存（允许编辑） -> 写入本地 JSON。
@@ -26,7 +26,7 @@
 
 ## 数据与存储
 - 存储位置：应用数据目录（Electron `app.getPath('userData')`），使用人类可读的 JSON 文件。
-- 词库文件 `words.jsonl`（一行一条 JSON，便于 append；编辑/删除时全量重写到临时文件再替换；删除会同步清理该 `word_id` 的复习记录）示例：
+- 词库文件 `words.jsonl`（一行一条 JSON，便于 append；编辑/删除时全量重写到临时文件再替换）示例：
   ```json
   {
     "id": "uuid",
@@ -35,7 +35,6 @@
     "definition_ja": "学ぶこと。ある分野について学習する行為。",
     "example_ja": "試験の前夜に友達と図書館で勉強した。",
     "created_at": "2024-05-01T12:00:00Z",
-    "source": "user-input+ai",
     "sm2": {
       "repetition": 0,
       "interval": 1,
@@ -45,27 +44,17 @@
     }
   }
   ```
-- 复习日志 `reviews.jsonl`（记录 session 与单词打分）示例：
-  ```json
-  {
-    "session_id": "uuid",
-    "word_id": "uuid",
-    "score": 4,
-    "reviewed_at": "2024-05-01T12:30:00Z"
-  }
-  ```
-- 复习 Session 记录 `sessions.jsonl`（记录 session 开始/结束与数量）示例：
+- 复习 Session 记录 `sessions.jsonl`（记录 session 开始时间与数量）示例：
   ```json
   {
     "session_id": "uuid",
     "started_at": "2024-05-01T12:00:00Z",
-    "ended_at": "2024-05-01T12:10:00Z",
     "review_count": 12
   }
   ```
 - 活跃度数据 `activity.json`：按日聚合 `{ "2024-05-01": { "added": 5, "sessions": 2 } }`。
-- 时间统一使用秒级 UTC ISO 字符串（`YYYY-MM-DDTHH:mm:ssZ`），字段含 `created_at/reviewed_at/next_review_at/started_at/ended_at` 等，活跃度展示按本地日归档（渲染时将 UTC 转为本地日）。
-- 导入/导出：支持 JSON（含 JSONL）导入，导出支持 JSON 与 CSV。导入时去重规则：`id` 冲突则跳过新记录；若 `word+hiragana` 已存在则提示冲突并默认跳过（用户可选择覆盖），新建记录缺失 `id` 时自动生成。
+- 时间统一使用秒级 UTC ISO 字符串（`YYYY-MM-DDTHH:mm:ssZ`），字段含 `created_at/next_review_at/started_at` 等，活跃度展示按本地日归档（渲染时将 UTC 转为本地日）。
+- 导入/导出：支持 JSON（含 JSONL）导入，导出支持 JSON 与 CSV。导入时按 `word` 去重：相同 `word` 的记录直接覆盖旧记录（保留新记录的数据），无论 `id` 是否相同；新建记录缺失 `id` 时自动生成。
 - 活跃度重算：导入或批量修改后，可依据 `words.jsonl` 与 `sessions.jsonl` 重新聚合生成 `activity.json` 以矫正计数。
 
 ## AI 生成流程
@@ -82,7 +71,7 @@
   - 间隔向上取整天数，`interval = max(1, ceil(interval))`。
   - 计算 `next_review_at = now + interval(days)`。
 - 队列生成：优先筛选 `next_review_at <= now` 的词按时间升序；若数量不足，按 `next_review_at` 距当前时间最近的顺序补足队列（使用秒级 UTC）。
-- Session 计数：每次进入复习流程即创建 session_id，结束（或退出）时记录一次；session 详情写入 `sessions.jsonl`，活跃度按 session 条目计数。
+- Session 计数：每次进入复习流程即创建 session_id，按开始时间计入活跃度；session 详情写入 `sessions.jsonl`，退出时补充 `review_count`。
 
 ## UI 与交互（简要）
 具体参见 UI 设计文档。(UI-design-document.md)
