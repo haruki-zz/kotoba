@@ -1,5 +1,7 @@
 # 实施计划（核心版）
 
+> 测试文件统一放置在 `src/__test__/`，命名 `*.test.ts(x)`。
+
 1. 准备与环境校验  
    - 操作：安装 Node 18+ 依赖，使用 electron-vite 初始化 Electron + Vite + React + TypeScript 脚手架（dev、lint、test、build），确认 ESLint/Prettier/Vitest 配置存在。  
    - 验证：运行 npm run lint 与 npm run test 均通过；执行 npm run dev 能启动空白 Electron 窗口且无控制台报错。
