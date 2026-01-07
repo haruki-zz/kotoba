@@ -53,14 +53,14 @@
   }
   ```
 - 活跃度数据 `activity.json`：按日聚合 `{ "2024-05-01": { "added": 5, "sessions": 2 } }`。
-- 时间统一使用秒级 UTC ISO 字符串（`YYYY-MM-DDTHH:mm:ssZ`），字段含 `created_at/next_review_at/started_at` 等，活跃度展示按本地日归档（渲染时将 UTC 转为本地日）。
-- 导入/导出：支持 JSON（含 JSONL）导入，导出支持 JSON 与 CSV。导入时按 `word` 去重：相同 `word` 的记录直接覆盖旧记录（保留新记录的数据），无论 `id` 是否相同；新建记录缺失 `id` 时自动生成。
+- 时间统一使用秒级 UTC ISO 字符串（`YYYY-MM-DDTHH:mm:ssZ`），字段含 `created_at/next_review_at/started_at` 等，活跃度展示按本地日归档（渲染时将 UTC 转为本地日）。热力图颜色按每日 `added + sessions` 的和映射，权重相同。
+- 导入/导出：支持 JSON（含 JSONL）导入，导出支持 JSON 与 CSV。导入时按正则化后的 `word` 去重（标准化假名/汉字空格）：相同 `word` 的记录覆盖旧记录，但保留旧记录的 `created_at` 与 `sm2` 字段，仅更新读音、释义、例句；无论 `id` 是否相同；新建记录缺失 `id` 时自动生成。
 - 活跃度重算：导入或批量修改后，可依据 `words.jsonl` 与 `sessions.jsonl` 重新聚合生成 `activity.json` 以矫正计数。
 
 ## AI 生成流程
 - 输入：用户提供原始单词（允许汉字/假名/外来语）。
 - 提示词要点：生成平假名、日文释义（含语境/用法说明）、一条自然的日文例句；保持简洁，避免罗马音。
-- API：首批支持 OpenAI 与 Google（实现时需按官方 API 文档规范调用），主进程封装，并保留可扩展的提供商列表接口以便后续接入更多模型。
+- API：首批支持 OpenAI 与 Google（按官方 SDK 调用），主进程封装 Provider Router：默认走 Google，超时 15–30 秒区间并 1 次重试，失败后自动切换 OpenAI，前提是用户已配置两个 provider 的 key；若无任何 key，阻断生成并直接切换到手动录入提示。
 - 质量控制：前端允许用户在保存前编辑生成内容；限制响应长度，超时/错误提供降级提示。AI 不可用时提供纯手动录入表单并提示用户。
 
 ## 复习与 SM-2 细节
@@ -83,7 +83,7 @@
 
 ## 安全与隐私
 - 数据默认仅存本地；不自动上传。
-- API Key 加密存储于系统安全存储（macOS Keychain / Windows Credential Vault），IPC 不回传完整 key。
+- API Key 加密存储于系统安全存储（macOS Keychain / Windows Credential Vault），IPC 不回传完整 key；本地开发与 CI 允许通过环境变量注入 key 以便测试。
 - 允许用户导出/删除全部数据。
 
 ## 非功能与性能
