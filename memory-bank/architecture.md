@@ -29,4 +29,5 @@
 - `prompts/system-prompt.md`：系统级工作方式约束。
 
 ## 当前状态
-脚手架运行通畅，lint/test/dev 命令可用，尚未接入业务功能与 UI 设计稿。下一步按实施计划进入目录与配置落地（Tailwind 主题、features 分组等）。 
+- 脚手架运行通畅，lint/test/dev 命令可用，尚未接入业务功能与 UI 设计稿。下一步按实施计划进入目录与配置落地（Tailwind 主题、features 分组等）。 
+- SM-2 记忆程度已确定为 easy/medium/hard 三档（质量分 5/3/1，hard 重置、medium/easy 按公式更新且 `ef` 下限 1.3），后续实现需遵循此规则。

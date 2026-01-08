@@ -11,7 +11,7 @@
    - 验证：运行 npm run build 或 npm run lint -- --max-warnings=0 完成；在开发模式下检查浏览器样式面板确认变量生效（颜色、字体可被解析）。
 
 3. 数据模型与时间规范  
-   - 操作：在共享类型模块定义 WordRecord、Sm2Fields、SessionRecord、ActivityEntry 等类型，统一字段的 UTC ISO 秒级时间格式；明确必填字段与可选字段。  
+   - 操作：在共享类型模块定义 WordRecord、Sm2Fields、SessionRecord、ActivityEntry 等类型，统一字段的 UTC ISO 秒级时间格式；明确必填字段与可选字段（SM-2 的 `last_rating` 为 `easy | medium | hard`）。  
    - 验证：添加 Vitest 类型单测或 schema 校验用例，使用设计文档示例数据构造对象，确保通过校验且缺失字段会被判定错误。
 
 4. 持久化与文件操作工具  
@@ -19,8 +19,8 @@
    - 验证：编写主进程单元测试，使用临时目录模拟读写，断言追加、覆盖、去重与时间格式保持正确；运行 npm run test -- path/to/fs-tests 确认通过。
 
 5. SM-2 调度与复习队列  
-   - 操作：实现 SM-2 评分更新函数与队列生成器，遵循 score 0–4、ef 下限 1.3、间隔向上取整、优先过期词的规则；生成 next_review_at 与排序队列。  
-   - 验证：添加算法单元测试覆盖 score <3 与 >=3 情况、ef 下限、间隔取整、队列补足顺序；运行 npm run test -- path/to/sm2-tests 全绿。
+   - 操作：实现 SM-2 评分更新函数与队列生成器，评分档位为 `easy/medium/hard`，映射质量分 5/3/1；`hard` 重置为 `repetition=0, interval=1`，`medium/easy` 按标准公式更新 `ef`（下限 1.3）、首次 1 天、第二次 6 天、其后 `ceil(interval * ef)`，并写入 `last_rating` 与 `next_review_at`。  
+   - 验证：添加算法单元测试覆盖 `hard` 重置、`medium/easy` 通过、`ef` 下限、间隔取整、队列补足顺序；运行 npm run test -- path/to/sm2-tests 全绿。
 
 6. 主进程 API 提供者与 AI 调用  
    - 操作：封装 OpenAI 与 Google 提供者与 Provider Router：默认走 Google，设置 15–30 秒超时与 1 次重试；当两家 key 均存在时，Google 失败自动切换 OpenAI；无任何 key 时阻断生成并返回手动录入提示；保留可扩展提供者注册接口。  
@@ -43,7 +43,7 @@
     - 验证：编写组件测试（输入→点击生成→mock AI 返回→可编辑→保存触发 IPC 写入）；手动验证：断开网络或 mock 失败时能走手动保存；运行 npm run test -- path/to/add-word-tests 通过。
 
 11. 复习流程  
-    - 操作：构建复习页面卡片翻转、评分按钮、进度条；进入页面请求队列，评分后更新 SM-2 字段、next_review_at 与 session 统计，支持键盘快捷键。  
+    - 操作：构建复习页面卡片翻转、评分按钮、进度条；进入页面请求队列，评分后更新 SM-2 字段、next_review_at 与 session 统计，支持键盘快捷键（1/2/3 对应 hard/medium/easy）。  
     - 验证：组件测试覆盖翻转交互、键盘评分、进度条更新；算法集成测试断言评分后队列与持久化数据更新正确；手动运行 npm run dev 检查动效与无障碍焦点可见。
 
 12. 单词库页面  

@@ -8,7 +8,7 @@
 ## 核心功能
 1) 新增单词（AI/手动）：用户输入单词，默认调用 AI 生成平假名读音、日文释义、例句；若 AI 不可用/超时，允许用户手动填写并保存。结果以 JSON 持久化。  
 2) 单词卡片：正面仅显示单词；背面含单词、平假名读音、日文释义、日文例句；点击翻面。  
-3) 复习单词：按 SM-2 抽取待复习词，队列呈现卡片，用户标记记忆程度。  
+3) 复习单词：按 SM-2 抽取待复习词，队列呈现卡片，用户标记记忆程度（easy/medium/hard）。  
 4) 单词库：列表浏览全部单词，按 50 音顺排序；可选择单词，AI/手动修改读音/释义/例句，或删除该单词。  
 5) 每日活跃度：GitHub 贡献度式方格，展示每日新增量与复习 session 次数（session 定义为一次复习流程，而非单词数）。
 
@@ -40,7 +40,7 @@
       "interval": 1,
       "ef": 2.5,
       "next_review_at": "2024-05-02T12:00:00Z",
-      "last_score": null
+      "last_rating": null
     }
   }
   ```
@@ -49,7 +49,8 @@
   {
     "session_id": "uuid",
     "started_at": "2024-05-01T12:00:00Z",
-    "review_count": 12
+    "review_count": 12,
+    "last_rating": "medium"
   }
   ```
 - 活跃度数据 `activity.json`：按日聚合 `{ "2024-05-01": { "added": 5, "sessions": 2 } }`。
@@ -64,14 +65,15 @@
 - 质量控制：前端允许用户在保存前编辑生成内容；限制响应长度，超时/错误提供降级提示。AI 不可用时提供纯手动录入表单并提示用户。
 
 ## 复习与 SM-2 细节
-- 评分区间 0-4（0 完全不会，4 完全熟练）。
+- 记忆程度分三级：`easy`（熟练掌握）、`medium`（较熟悉但需巩固）、`hard`（不熟悉急需复习）。
+- 质量分映射：`easy`=5、`medium`=3、`hard`=1，用于 SM-2 公式计算；`hard` 视为失败档。
 - 更新规则：
-  - 初始：`repetition=0, interval=1, ef=2.5`。
-  - 若 score < 3：`repetition=0, interval=1`；否则按 SM-2 公式更新 `ef` 与 `interval`，`ef` 下限 1.3。
-  - 间隔向上取整天数，`interval = max(1, ceil(interval))`。
-  - 计算 `next_review_at = now + interval(days)`。
+  - 初始：`repetition=0, interval=1, ef=2.5`，`last_rating=null`。
+  - `hard`：`repetition=0, interval=1`，使用质量分 1 更新 `ef` 并应用下限 1.3，`next_review_at = now + 1 day`。
+  - `medium`/`easy`：视为通过，按质量分 3 或 5 更新 `ef`（下限 1.3），`repetition += 1`；间隔规则为首次 1 天、第二次 6 天、之后 `ceil(interval * ef)`，并记录 `last_rating`。
+  - 所有间隔均向上取整且至少 1 天，`next_review_at = now + interval(days)`。
 - 队列生成：优先筛选 `next_review_at <= now` 的词按时间升序；若数量不足，按 `next_review_at` 距当前时间最近的顺序补足队列（使用秒级 UTC）。
-- Session 计数：每次进入复习流程即创建 session_id，按开始时间计入活跃度；session 详情写入 `sessions.jsonl`，退出时补充 `review_count`。
+- Session 计数：每次进入复习流程即创建 session_id，按开始时间计入活跃度；session 详情写入 `sessions.jsonl`，退出时补充 `review_count` 与本次 `last_rating`。
 
 ## UI 与交互（简要）
 具体参见 UI 设计文档。(UI-design-document.md)
