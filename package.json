@@ -9,7 +9,10 @@
     "dev": "vite dev",
     "build": "vite build && electron-builder --dir",
     "build:desktop": "vite build && electron-builder",
-    "lint": "echo \"Lint will be configured in later steps\"",
+    "lint": "npm run lint:eslint && npm run lint:prettier",
+    "lint:eslint": "eslint \"src/**/*.{ts,tsx}\" \"vite.config.ts\"",
+    "lint:prettier": "prettier --check \"src/**/*.{ts,tsx,jsx}\" \"package.json\" \"tsconfig.json\" \"vite.config.ts\" \"eslint.config.js\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx,jsx}\" \"package.json\" \"tsconfig.json\" \"vite.config.ts\" \"eslint.config.js\"",
     "test": "echo \"No tests defined yet\""
   },
   "repository": {
@@ -44,12 +47,20 @@
     "react-dom": "^19.2.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.0",
     "@types/node": "^25.0.5",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.2",
     "electron": "^39.2.7",
     "electron-builder": "^26.4.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^15.14.0",
+    "prettier": "^3.7.4",
+    "typescript-eslint": "^8.52.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vite-plugin-electron": "^0.29.0"

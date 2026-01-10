@@ -21,15 +21,15 @@ export default defineConfig(({ command }) => ({
             rollupOptions: {
               output: {
                 entryFileNames: "index.mjs",
-                format: "es"
-              }
-            }
-          }
-        }
+                format: "es",
+              },
+            },
+          },
+        },
       },
       preload: {
         input: {
-          preload: path.join(__dirname, "src/preload/index.ts")
+          preload: path.join(__dirname, "src/preload/index.ts"),
         },
         vite: {
           build: {
@@ -38,15 +38,15 @@ export default defineConfig(({ command }) => ({
             rollupOptions: {
               output: {
                 entryFileNames: "index.cjs",
-                format: "cjs"
-              }
-            }
-          }
-        }
-      }
-    })
+                format: "cjs",
+              },
+            },
+          },
+        },
+      },
+    }),
   ],
   build: {
-    outDir: "dist/renderer"
-  }
+    outDir: "dist/renderer",
+  },
 }));

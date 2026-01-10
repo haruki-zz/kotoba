@@ -13,8 +13,8 @@ const createMainWindow = async () => {
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.cjs"),
       contextIsolation: true,
-      nodeIntegration: false
-    }
+      nodeIntegration: false,
+    },
   });
 
   if (isDev && process.env.VITE_DEV_SERVER_URL) {
