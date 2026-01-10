@@ -1,0 +1,26 @@
+{
+  "name": "kotoba",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cross-platform desktop app for Japanese vocabulary practice.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "lint": "echo \"Lint will be configured in later steps\"",
+    "test": "echo \"No tests defined yet\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haruki-zz/kotoba.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "bugs": {
+    "url": "https://github.com/haruki-zz/kotoba/issues"
+  },
+  "homepage": "https://github.com/haruki-zz/kotoba#readme"
+}
