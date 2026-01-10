@@ -1,11 +1,11 @@
 # Repository Guidelines
 
 # IMPORTANT:
-# Always read prompts/@system-prompt.md before making any decision or writing any code.
-# Always read memory-bank/@architecture.md before writing any code.
-# Always read memory-bank/@design-document.md before writing any code.
+# Always read prompts/system-prompt.md before making any decision or writing any code.
+# Always read memory-bank/architecture.md before writing any code.
+# Always read memory-bank/design-document.md before writing any code.
 # Always emphasize modularity (multiple files) and discourage a monolith (one giant file). 
-# After adding a major feature or completing a milestone, update memory-bank/@architecture.md.
+# After adding a major feature or completing a milestone, update memory-bank/architecture.md.
 
 ## Project Structure & Module Organization
 - Root docs: `design-document.md`, `tech-stack.md`, `system-prompt.md`; keep new planning docs alongside them.
