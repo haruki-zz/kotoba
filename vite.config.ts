@@ -49,4 +49,8 @@ export default defineConfig(({ command }) => ({
   build: {
     outDir: "dist/renderer",
   },
+  test: {
+    environment: "node",
+    include: ["src/__test__/**/*.test.{ts,tsx}"],
+  },
 }));

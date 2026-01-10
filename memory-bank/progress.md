@@ -9,3 +9,7 @@
 ## 2026-01-12
 - 完成实施计划第 3 步：接入 ESLint flat 配置与 Prettier，新增 `eslint.config.js`、`.prettierrc`/`.prettierignore`，并在 `package.json` 增补 `lint`/`format` 脚本与所需依赖（eslint、typescript-eslint、react/react-hooks 插件、eslint-config-prettier、prettier 等）。
 - 运行 `npm run lint` 验证现有 `src` 与配置文件均通过格式与规则检查，未调整业务逻辑。
+
+## 2026-01-13
+- 完成实施计划第 4 步：在 `src/shared` 定义词条/活跃度类型、SM-2 默认状态与更新算法、数据校验与默认补全逻辑；新增 `src/__test__` 覆盖 SM-2 更新/队列排序与词条/活跃度校验的 Vitest 用例。
+- 将 `npm test` 切换为 Vitest，更新 `vite.config.ts` 支持测试配置，运行 `npm test` 全部通过。
