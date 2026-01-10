@@ -11,6 +11,12 @@
 - `vite.config.ts`: Vite 与 `vite-plugin-electron` 配置，分别构建 renderer（`dist/renderer`）与 Electron 主/预加载（`dist-electron`，主进程输出 ESM `index.mjs`，预加载输出 CJS），内置 Vitest 配置（Node 环境，匹配 `src/__test__`）。
 - `index.html`: 渲染进程入口，挂载 React 根节点并加载 `src/renderer/main.tsx`。
 - `src/main/index.ts`: Electron 主进程入口，创建窗口、加载 dev/prod 资源，预设安全选项（contextIsolation=true、nodeIntegration=false）。
+- `src/main/storage/index.ts`: 主进程数据入口，提供 `createDataStore` 以读写 `words.json`/`activity.json`，支持新增/更新/删除词条、按评分应用 SM-2 更新并累计活跃度，返回 streak 与今日统计。
+- `src/main/storage/json.ts`: 封装 JSON 读写与原子写入（临时文件 + rename），出现错误时清理临时文件避免污染。
+- `src/main/storage/paths.ts`: 解析默认数据目录 `data/`，提供 `getWordsPath`/`getActivityPath`。
+- `src/main/storage/words.ts`: 构建词条草稿为完整 `Word`，合并更新时补全 `updated_at` 与 SM-2 字段。
+- `src/main/storage/activity.ts`: 活跃度工具，递增每日新增/复习计数、计算连续活跃天数（按 UTC 日期），汇总今日统计。
+- `src/main/storage/types.ts`: 存储层专用类型（词条草稿/更新、活跃度汇总）。
 - `src/preload/index.ts`: 预加载脚本，占位暴露 `electronAPI`，后续可按需扩展受控桥接。
 - `src/renderer/main.tsx`: React 入口，挂载根组件并启用 StrictMode。
 - `src/renderer/App.tsx`: 渲染占位页面，后续 UI 将在此拓展。
@@ -20,6 +26,7 @@
 - `src/shared/validation.ts`: 词条/活跃度 JSON 校验与默认值补全（时间戳、SM-2 下限夹紧）。
 - `src/__test__/sm2.test.ts`: 覆盖 SM-2 算法与复习队列排序的 Vitest 用例。
 - `src/__test__/validation.test.ts`: 覆盖词条与活跃度补全校验的 Vitest 用例。
+- `src/__test__/storage.test.ts`: 基于临时目录的存储层单测，验证原子写入、防坏数据补全、SM-2 评分更新与活跃度累积。
 - `prompts/`: 约束开发流程的全局提示集合（coding-principles、system-prompt），变更行为需遵循此处规则。
 - `memory-bank/`: 项目设计与进度文档中心（设计文档、技术栈、实施计划、架构说明、UI 设计、进度记录）。
 - `AGENTS.md`: 代码助手的操作规范与技能列表。
@@ -32,3 +39,4 @@
 - 代码风格守护：已接入 ESLint flat 配置与 Prettier，`npm run lint` 作为统一入口保证 TypeScript/React 代码和配置文件风格一致。
 - 文档优先：prompts 与 memory-bank 构成规则与设计的单一可信来源，后续模块与代码需按其约束演进。
 - 共享逻辑与测试：`src/shared` 集中提供 SM-2 算法、类型与数据校验，`src/__test__` 通过 Vitest 覆盖核心公式与默认补全，确保主/渲染进程复用时行为一致。
+- 主进程存储层：`src/main/storage` 采用 JSON 原子写入与严格校验，封装词条与活跃度的读写更新，确保 SM-2 更新与活跃度累积一致且写入失败不破坏原文件。

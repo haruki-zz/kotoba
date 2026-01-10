@@ -13,3 +13,8 @@
 ## 2026-01-13
 - 完成实施计划第 4 步：在 `src/shared` 定义词条/活跃度类型、SM-2 默认状态与更新算法、数据校验与默认补全逻辑；新增 `src/__test__` 覆盖 SM-2 更新/队列排序与词条/活跃度校验的 Vitest 用例。
 - 将 `npm test` 切换为 Vitest，更新 `vite.config.ts` 支持测试配置，运行 `npm test` 全部通过。
+
+## 2026-01-14
+- 完成实施计划第 5 步：在主进程新增 `src/main/storage` 模块，统一数据目录解析、原子写入、词条增删改与 SM-2 评分更新，并对 `words.json`/`activity.json` 读写进行校验与默认补全。
+- 新增活跃度递增与 streak 计算逻辑（按 UTC 日期统计），确保新增/复习操作都会累积 `added_count`/`review_count`。
+- 添加基于临时目录的 `src/__test__/storage.test.ts`，覆盖原子写入防护、默认补全、SM-2 更新与活跃度聚合；（测试由用户执行并通过）。
