@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "description": "Cross-platform desktop app for Japanese vocabulary practice.",
-  "main": "index.js",
+  "main": "dist-electron/main/index.mjs",
   "type": "module",
   "scripts": {
+    "dev": "vite dev",
+    "build": "vite build && electron-builder --dir",
+    "build:desktop": "vite build && electron-builder",
     "lint": "echo \"Lint will be configured in later steps\"",
     "test": "echo \"No tests defined yet\""
   },
@@ -22,5 +25,33 @@
   "bugs": {
     "url": "https://github.com/haruki-zz/kotoba/issues"
   },
-  "homepage": "https://github.com/haruki-zz/kotoba#readme"
+  "homepage": "https://github.com/haruki-zz/kotoba#readme",
+  "build": {
+    "appId": "com.haruki.kotoba",
+    "productName": "Kotoba",
+    "files": [
+      "dist/**",
+      "dist-electron/**",
+      "node_modules/**",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    }
+  },
+  "dependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.5",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.4.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vite-plugin-electron": "^0.29.0"
+  }
 }

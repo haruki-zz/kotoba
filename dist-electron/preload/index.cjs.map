@@ -1,0 +1,1 @@
+{"version":3,"file":"index.cjs","sources":["../../src/preload/index.ts"],"sourcesContent":["import { contextBridge } from \"electron\";\n\ncontextBridge.exposeInMainWorld(\"electronAPI\", {});\n"],"names":["contextBridge"],"mappings":";;AAEAA,SAAAA,cAAc,kBAAkB,eAAe,EAAE;"}
