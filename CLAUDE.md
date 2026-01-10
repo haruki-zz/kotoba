@@ -12,6 +12,14 @@
 ├── vite.config.ts             # Vite + vite-plugin-electron 配置，构建 main(ESM)/preload(CJS) 与 renderer
 └── src
     ├── main
+    │   ├── ai                     # 主进程 AI 适配层，封装 OpenAI/Gemini/Mock 提供统一生成接口
+    │   │   ├── index.ts           # buildAiProvider 入口，根据配置选择具体 provider
+    │   │   ├── openai.ts          # OpenAI 提供商实现，使用 chat completions 输出 JSON 卡片
+    │   │   ├── gemini.ts          # Gemini 提供商实现，使用 Gemini Flash 2.5 Lite 生成 JSON 卡片
+    │   │   ├── mock.ts            # 本地 mock provider，开发/无密钥场景下返回固定内容
+    │   │   ├── prompt.ts          # 统一的生成提示文案
+    │   │   ├── types.ts           # provider 与生成结果类型定义
+    │   │   └── utils.ts           # term 校验、超时控制与返回字段解析
     │   ├── index.ts           # Electron 主进程入口，创建窗口并加载渲染器
     │   └── storage            # 主进程存储层，管理本地 JSON
     │       ├── index.ts       # DataStore 入口，词条增删改/SM-2 评分更新与活跃度累积
@@ -30,6 +38,7 @@
     ├── __test__
     │   ├── sm2.test.ts        # 覆盖 SM-2 计算与队列排序的 Vitest 用例
     │   ├── validation.test.ts # 覆盖词条/活跃度校验与默认补全的 Vitest 用例
+    │   ├── ai-providers.test.ts# 覆盖 OpenAI/Gemini/mock provider 的超时与解析逻辑
     │   └── storage.test.ts    # 基于临时目录的存储层单测，验证原子写入与活跃度累积
     └── renderer
         ├── App.tsx            # 渲染端占位界面
@@ -42,5 +51,6 @@
 - **预加载层**：`src/preload/index.ts` 保留空桥接点，采用 CJS 输出方便 contextBridge 注入，后续按需暴露受控 API。
 - **共享逻辑**：`src/shared` 提供词条/活跃度类型、SM-2 状态默认值与更新算法、JSON 校验与补全，供主/渲染进程复用。
 - **测试**：`src/__test__` 中的 Vitest 用例覆盖 SM-2 计算、复习队列排序与数据校验，确保算法与默认值稳定。
+- **AI 适配层**：`src/main/ai` 封装 OpenAI/Gemini/Mock 三种 provider，统一生成词卡字段，内置提示文案、字段解析与超时控制，便于后续通过 contextBridge 暴露。
 - **渲染层**：`src/renderer/main.tsx` + `App.tsx` 组成最小 UI 占位，确保 Vite/HMR 路径正常。
 - **构建工具链**：`vite.config.ts` 管理三端构建；`package.json` scripts 提供 `dev`、`build`、`build:desktop`，electron-builder 输出到 `release/`；`npm run lint`/`format` 依赖 ESLint + Prettier 统一风格。

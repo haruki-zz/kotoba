@@ -18,3 +18,8 @@
 - 完成实施计划第 5 步：在主进程新增 `src/main/storage` 模块，统一数据目录解析、原子写入、词条增删改与 SM-2 评分更新，并对 `words.json`/`activity.json` 读写进行校验与默认补全。
 - 新增活跃度递增与 streak 计算逻辑（按 UTC 日期统计），确保新增/复习操作都会累积 `added_count`/`review_count`。
 - 添加基于临时目录的 `src/__test__/storage.test.ts`，覆盖原子写入防护、默认补全、SM-2 更新与活跃度聚合；（测试由用户执行并通过）。
+
+## 2026-01-15
+- 完成实施计划第 6 步：在 `src/main/ai` 搭建 AI 提供商适配层，抽象统一接口封装 OpenAI/Gemini/Mock，集中提示文案、term 长度校验、JSON 字段解析与超时控制（默认 12s）。
+- OpenAI provider 采用 `gpt-4o-mini` 非流式 JSON 输出，Gemini provider 使用 Flash 2.5 Lite 预览模型并限制输出 tokens；无密钥默认使用 mock provider 便于开发。
+- 新增 `src/__test__/ai-providers.test.ts` 使用 mock fetch/model 覆盖解析错误、超时与默认 mock 分支；引入 `openai`、`@google/generative-ai` 依赖。测试由用户执行并通过。
