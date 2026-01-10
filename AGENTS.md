@@ -1,6 +1,7 @@
 # Repository Guidelines
 
 # IMPORTANT:
+# Always follow rules in prompts/coding-principles.md before writing any code.
 # Always read prompts/system-prompt.md before making any decision or writing any code.
 # Always read memory-bank/architecture.md before writing any code.
 # Always read memory-bank/design-document.md before writing any code.
