@@ -115,6 +115,36 @@ const requireWordUpdate = (update) => {
   }
   return update;
 };
+const requirePath = (value, field) => {
+  if (value === void 0) {
+    return void 0;
+  }
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`${field} 需为非空路径`);
+  }
+  return value.trim();
+};
+const requireExportRequest = (payload) => {
+  const request = {
+    wordsPath: requirePath(payload?.wordsPath, "wordsPath"),
+    activityPath: requirePath(payload?.activityPath, "activityPath"),
+    csvPath: requirePath(payload?.csvPath, "csvPath")
+  };
+  if (!request.wordsPath && !request.activityPath && !request.csvPath) {
+    throw new Error("需至少指定一个导出目标路径");
+  }
+  return request;
+};
+const requireImportRequest = (payload) => {
+  const request = {
+    wordsPath: requirePath(payload?.wordsPath, "wordsPath"),
+    activityPath: requirePath(payload?.activityPath, "activityPath")
+  };
+  if (!request.wordsPath && !request.activityPath) {
+    throw new Error("需至少提供导入文件路径");
+  }
+  return request;
+};
 const createIpcHandlers = ({ dataStore: dataStore2, providerManager: providerManager2, now }) => {
   const getNow = () => now ? now() : Date.now();
   return {
@@ -134,12 +164,8 @@ const createIpcHandlers = ({ dataStore: dataStore2, providerManager: providerMan
     },
     [IPC_CHANNELS.submitReview]: async (payload) => dataStore2.applyReview(requireId(payload?.id), requireGrade(payload?.grade), getNow()),
     [IPC_CHANNELS.loadActivitySummary]: async () => dataStore2.loadActivitySummary(getNow()),
-    [IPC_CHANNELS.exportData]: async () => {
-      throw new Error("导出功能尚未实现");
-    },
-    [IPC_CHANNELS.importData]: async () => {
-      throw new Error("导入功能尚未实现");
-    }
+    [IPC_CHANNELS.exportData]: async (payload) => dataStore2.exportData(requireExportRequest(payload), getNow()),
+    [IPC_CHANNELS.importData]: async (payload) => dataStore2.importData(requireImportRequest(payload), getNow())
   };
 };
 const registerIpcHandlers = (context, ipc = ipcMain) => {
@@ -7940,7 +7966,7 @@ const createProviderManager = (initialSettings = {}, providerFactory = buildAiPr
   };
   return { getProvider, getState, setConfig };
 };
-const isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+const isRecord$1 = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 const asString = (value, field) => {
   if (typeof value === "string" && value.trim().length > 0) {
     return value;
@@ -7962,7 +7988,7 @@ const asNonNegativeInteger = (value, fallback) => {
 };
 const normalizeSm2Shape = (value, now) => {
   const base = defaultSm2State(now);
-  if (!isRecord(value)) {
+  if (!isRecord$1(value)) {
     return base;
   }
   const easiness = typeof value.easiness === "number" && Number.isFinite(value.easiness) ? value.easiness : base.easiness;
@@ -7974,7 +8000,7 @@ const normalizeSm2Shape = (value, now) => {
   };
 };
 const normalizeWord = (value, now = Date.now()) => {
-  if (!isRecord(value)) {
+  if (!isRecord$1(value)) {
     throw new Error("word 条目必须是对象");
   }
   return {
@@ -7990,7 +8016,7 @@ const normalizeWord = (value, now = Date.now()) => {
   };
 };
 const normalizeWordsFile = (payload, now = Date.now()) => {
-  if (!isRecord(payload) || !Array.isArray(payload.words)) {
+  if (!isRecord$1(payload) || !Array.isArray(payload.words)) {
     throw new Error("words 数据格式非法，应为 { words: [] }");
   }
   return {
@@ -7998,7 +8024,7 @@ const normalizeWordsFile = (payload, now = Date.now()) => {
   };
 };
 const normalizeActivityDay = (value) => {
-  if (!isRecord(value)) {
+  if (!isRecord$1(value)) {
     throw new Error("activity 天级数据格式非法");
   }
   return {
@@ -8007,13 +8033,13 @@ const normalizeActivityDay = (value) => {
   };
 };
 const normalizeActivityData = (payload) => {
-  if (!isRecord(payload)) {
+  if (!isRecord$1(payload)) {
     throw new Error("activity 数据格式非法，应为 { days: {} }");
   }
   if (payload.days === void 0) {
     return { days: {} };
   }
-  if (!isRecord(payload.days)) {
+  if (!isRecord$1(payload.days)) {
     throw new Error("activity.days 需为对象映射");
   }
   const days = {};
@@ -8102,6 +8128,128 @@ const writeJsonAtomic = async (filePath, payload) => {
 const defaultDataDir = path$1.resolve(process.cwd(), "data");
 const getWordsPath = (baseDir = defaultDataDir) => path$1.join(baseDir, "words.json");
 const getActivityPath = (baseDir = defaultDataDir) => path$1.join(baseDir, "activity.json");
+const isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+const readJsonStrict = async (filePath) => {
+  const content = await fs.readFile(filePath, "utf-8");
+  return JSON.parse(content);
+};
+const extractWordsArray = (payload) => {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  if (isRecord(payload) && Array.isArray(payload.words)) {
+    return payload.words;
+  }
+  throw new Error("words 文件需为数组或 { words: [] }");
+};
+const loadWordsFromFile = async (filePath, now) => {
+  const payload = await readJsonStrict(filePath);
+  const entries = extractWordsArray(payload);
+  const words = [];
+  const errors = [];
+  entries.forEach((entry, index) => {
+    try {
+      words.push(normalizeWord(entry, now));
+    } catch (error) {
+      errors.push(`words[${index}]: ${error.message}`);
+    }
+  });
+  return { words, errors };
+};
+const normalizeActivityEntry = (date, value) => {
+  const normalized = normalizeActivityData({ days: { [date]: value } });
+  const day = normalized.days[date];
+  if (!day) {
+    throw new Error("activity 天级数据格式非法");
+  }
+  return day;
+};
+const loadActivityFromFile = async (filePath) => {
+  const payload = await readJsonStrict(filePath);
+  if (!isRecord(payload)) {
+    throw new Error("activity 数据格式非法，应为 { days: {} }");
+  }
+  const rawDays = payload.days ?? {};
+  if (!isRecord(rawDays)) {
+    throw new Error("activity.days 需为对象映射");
+  }
+  const days = {};
+  const errors = [];
+  for (const [date, value] of Object.entries(rawDays)) {
+    try {
+      days[date] = normalizeActivityEntry(date, value);
+    } catch (error) {
+      errors.push(`activity.${date}: ${error.message}`);
+    }
+  }
+  return { activity: { days }, errors };
+};
+const mergeWordsByTerm = (existing, incoming) => {
+  const map = /* @__PURE__ */ new Map();
+  let replaced = 0;
+  let added = 0;
+  existing.forEach((word) => {
+    map.set(word.term.trim(), word);
+  });
+  incoming.forEach((word) => {
+    const key = word.term.trim();
+    if (map.has(key)) {
+      replaced += 1;
+      map.delete(key);
+    } else {
+      added += 1;
+    }
+    map.set(key, word);
+  });
+  return { words: Array.from(map.values()), replaced, added };
+};
+const mergeActivity = (existing, incoming) => ({
+  days: { ...existing.days, ...incoming.days }
+});
+const escapeCsvField = (value) => {
+  const raw = typeof value === "number" ? String(value) : value;
+  const escaped = raw.replace(/"/g, '""');
+  return `"${escaped}"`;
+};
+const buildWordsCsv = (words) => {
+  const header = [
+    "id",
+    "term",
+    "kana",
+    "definition_ja",
+    "scene_ja",
+    "example_ja",
+    "created_at",
+    "updated_at",
+    "repetition",
+    "interval",
+    "easiness",
+    "next_review_at"
+  ];
+  const rows = words.map(
+    (word) => [
+      word.id,
+      word.term,
+      word.kana,
+      word.definition_ja,
+      word.scene_ja,
+      word.example_ja,
+      word.created_at,
+      word.updated_at,
+      word.sm2.repetition,
+      word.sm2.interval,
+      word.sm2.easiness,
+      word.sm2.next_review_at
+    ].map(escapeCsvField).join(",")
+  );
+  return [header.join(","), ...rows].join("\n") + "\n";
+};
+const writeWordsCsv = async (filePath, words) => {
+  const dir = path$1.dirname(filePath);
+  await ensureDir(dir);
+  const content = buildWordsCsv(words);
+  await fs.writeFile(filePath, content, "utf-8");
+};
 const buildWordFromDraft = (draft, now) => {
   const candidate = {
     ...draft,
@@ -8206,6 +8354,64 @@ class DataStore {
     const activity = await this.readActivityData();
     const updated = update(activity, formatDateKey(now));
     await this.writeActivityData(updated);
+  }
+  async exportData(request, now = Date.now()) {
+    const wordsFile = await this.readWordsFile(now);
+    const activity = await this.readActivityData();
+    const shouldExportWords = Boolean(request.wordsPath || request.csvPath);
+    const shouldExportActivity = Boolean(request.activityPath);
+    const result = {
+      wordsCount: shouldExportWords ? wordsFile.words.length : 0,
+      activityDaysCount: shouldExportActivity ? Object.keys(activity.days).length : 0
+    };
+    if (request.wordsPath) {
+      await writeJsonAtomic(request.wordsPath, wordsFile);
+    }
+    if (request.activityPath) {
+      await writeJsonAtomic(request.activityPath, activity);
+    }
+    if (request.csvPath) {
+      await writeWordsCsv(request.csvPath, wordsFile.words);
+      result.csvCount = wordsFile.words.length;
+    }
+    return result;
+  }
+  async importData(request, now = Date.now()) {
+    const errors = [];
+    let importedWords = 0;
+    let replacedWords = 0;
+    let skippedWords = 0;
+    let activityDaysImported = 0;
+    let wordsFile = await this.readWordsFile(now);
+    let activity = await this.readActivityData();
+    if (request.wordsPath) {
+      const { words, errors: wordErrors } = await loadWordsFromFile(request.wordsPath, now);
+      errors.push(...wordErrors);
+      skippedWords = wordErrors.length;
+      const merged = mergeWordsByTerm(wordsFile.words, words);
+      importedWords = merged.added + merged.replaced;
+      replacedWords = merged.replaced;
+      wordsFile = { words: merged.words };
+    }
+    if (request.activityPath) {
+      const { activity: incoming, errors: activityErrors } = await loadActivityFromFile(request.activityPath);
+      errors.push(...activityErrors);
+      activityDaysImported = Object.keys(incoming.days).length;
+      activity = mergeActivity(activity, incoming);
+    }
+    if (request.wordsPath) {
+      await this.writeWordsFile(wordsFile, now);
+    }
+    if (request.activityPath) {
+      await this.writeActivityData(activity);
+    }
+    return {
+      importedWords,
+      replacedWords,
+      skippedWords,
+      activityDaysImported,
+      errors
+    };
   }
 }
 const createDataStore = (baseDir = defaultDataDir) => new DataStore(baseDir);

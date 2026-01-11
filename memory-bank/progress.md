@@ -29,3 +29,8 @@
 - 主进程新增 IPC 层（`src/main/ipc`）与 provider 管理器，集中入参校验、AI provider 配置、SM-2 队列与 DataStore 调度，并在主入口注册/卸载 handlers。
 - 预加载层通过 contextBridge 仅暴露白名单 API（`src/preload/index.ts`），渲染端增加类型声明 `src/renderer/electron-api.d.ts`。
 - 添加 IPC 行为单测 `src/__test__/ipc.test.ts` 覆盖频道注册、入参校验、队列过滤与 provider 配置。测试由用户执行并通过。
+
+## 2026-01-17
+- 完成实施计划第 8 步：主进程存储层新增导入/导出能力，支持 words/activity JSON 与 CSV（`src/main/storage/index.ts`、`src/main/storage/transfer.ts`），导入时按 term 去重并保留传入的 SM-2/时间戳，非法记录会跳过并返回错误列表。
+- 共享层补充导入/导出契约类型（`src/shared/data-transfer.ts`），IPC/预加载接口支持携带目标路径（`src/shared/ipc.ts`、`src/main/ipc/handlers.ts`、`src/preload/index.ts`）。
+- 新增/扩展单测覆盖导出文件生成、导入去重与活动合并（`src/__test__/storage.test.ts`、`src/__test__/ipc.test.ts`）。测试由用户执行并通过。

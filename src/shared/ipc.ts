@@ -1,5 +1,6 @@
 import { ProviderSettings, ProviderState, WordCardContent } from "./ai";
 import { ActivitySummary, ReviewRating, Word, WordDraft, WordUpdate } from "./types";
+import { ExportRequest, ExportResult, ImportRequest, ImportResult } from "./data-transfer";
 
 export const IPC_CHANNELS = {
   generateWordCard: "ai:generate-word-card",
@@ -29,8 +30,8 @@ export interface IpcRequestMap {
   [IPC_CHANNELS.loadReviewQueue]: { payload: void; response: Word[] };
   [IPC_CHANNELS.submitReview]: { payload: { id: string; grade: ReviewRating }; response: Word };
   [IPC_CHANNELS.loadActivitySummary]: { payload: void; response: ActivitySummary };
-  [IPC_CHANNELS.exportData]: { payload: void; response: never };
-  [IPC_CHANNELS.importData]: { payload: unknown; response: never };
+  [IPC_CHANNELS.exportData]: { payload: ExportRequest; response: ExportResult };
+  [IPC_CHANNELS.importData]: { payload: ImportRequest; response: ImportResult };
 }
 
 type AsyncResult<K extends IpcChannel> = Promise<IpcRequestMap[K]["response"]>;

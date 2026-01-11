@@ -1,10 +1,12 @@
 import { applyReviewResult } from "../../shared/sm2";
 import { ActivityData, ReviewRating, Word, WordsFile } from "../../shared/types";
 import { normalizeActivityData, normalizeWordsFile } from "../../shared/validation";
+import { ExportRequest, ExportResult, ImportRequest, ImportResult } from "../../shared/data-transfer";
 import { summarizeActivity, recordAddedWord, recordReviewedWord, formatDateKey } from "./activity";
 import { writeJsonAtomic, readJsonFile } from "./json";
 import { getActivityPath, getWordsPath, defaultDataDir } from "./paths";
 import { ActivitySummary, WordDraft, WordUpdate } from "./types";
+import { loadActivityFromFile, loadWordsFromFile, mergeActivity, mergeWordsByTerm, writeWordsCsv } from "./transfer";
 import { buildWordFromDraft, mergeWordUpdate } from "./words";
 
 class DataStore {
@@ -108,6 +110,76 @@ class DataStore {
     const activity = await this.readActivityData();
     const updated = update(activity, formatDateKey(now));
     await this.writeActivityData(updated);
+  }
+
+  async exportData(request: ExportRequest, now = Date.now()): Promise<ExportResult> {
+    const wordsFile = await this.readWordsFile(now);
+    const activity = await this.readActivityData();
+    const shouldExportWords = Boolean(request.wordsPath || request.csvPath);
+    const shouldExportActivity = Boolean(request.activityPath);
+    const result: ExportResult = {
+      wordsCount: shouldExportWords ? wordsFile.words.length : 0,
+      activityDaysCount: shouldExportActivity ? Object.keys(activity.days).length : 0,
+    };
+
+    if (request.wordsPath) {
+      await writeJsonAtomic(request.wordsPath, wordsFile);
+    }
+
+    if (request.activityPath) {
+      await writeJsonAtomic(request.activityPath, activity);
+    }
+
+    if (request.csvPath) {
+      await writeWordsCsv(request.csvPath, wordsFile.words);
+      result.csvCount = wordsFile.words.length;
+    }
+
+    return result;
+  }
+
+  async importData(request: ImportRequest, now = Date.now()): Promise<ImportResult> {
+    const errors: string[] = [];
+    let importedWords = 0;
+    let replacedWords = 0;
+    let skippedWords = 0;
+    let activityDaysImported = 0;
+
+    let wordsFile = await this.readWordsFile(now);
+    let activity = await this.readActivityData();
+
+    if (request.wordsPath) {
+      const { words, errors: wordErrors } = await loadWordsFromFile(request.wordsPath, now);
+      errors.push(...wordErrors);
+      skippedWords = wordErrors.length;
+      const merged = mergeWordsByTerm(wordsFile.words, words);
+      importedWords = merged.added + merged.replaced;
+      replacedWords = merged.replaced;
+      wordsFile = { words: merged.words };
+    }
+
+    if (request.activityPath) {
+      const { activity: incoming, errors: activityErrors } = await loadActivityFromFile(request.activityPath);
+      errors.push(...activityErrors);
+      activityDaysImported = Object.keys(incoming.days).length;
+      activity = mergeActivity(activity, incoming);
+    }
+
+    if (request.wordsPath) {
+      await this.writeWordsFile(wordsFile, now);
+    }
+
+    if (request.activityPath) {
+      await this.writeActivityData(activity);
+    }
+
+    return {
+      importedWords,
+      replacedWords,
+      skippedWords,
+      activityDaysImported,
+      errors,
+    };
   }
 }
 

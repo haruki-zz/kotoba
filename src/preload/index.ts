@@ -17,7 +17,7 @@ const api: RendererApi = {
   loadReviewQueue: () => invoke(IPC_CHANNELS.loadReviewQueue, undefined),
   submitReview: (payload) => invoke(IPC_CHANNELS.submitReview, payload),
   loadActivitySummary: () => invoke(IPC_CHANNELS.loadActivitySummary, undefined),
-  exportData: () => invoke(IPC_CHANNELS.exportData, undefined),
+  exportData: (payload) => invoke(IPC_CHANNELS.exportData, payload),
   importData: (payload) => invoke(IPC_CHANNELS.importData, payload),
 };
 

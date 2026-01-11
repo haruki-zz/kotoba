@@ -26,7 +26,7 @@ const api = {
   loadReviewQueue: () => invoke(IPC_CHANNELS.loadReviewQueue, void 0),
   submitReview: (payload) => invoke(IPC_CHANNELS.submitReview, payload),
   loadActivitySummary: () => invoke(IPC_CHANNELS.loadActivitySummary, void 0),
-  exportData: () => invoke(IPC_CHANNELS.exportData, void 0),
+  exportData: (payload) => invoke(IPC_CHANNELS.exportData, payload),
   importData: (payload) => invoke(IPC_CHANNELS.importData, payload)
 };
 electron.contextBridge.exposeInMainWorld("electronAPI", api);

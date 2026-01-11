@@ -18,14 +18,15 @@
 - `src/main/ai/prompt.ts`: 统一的词卡生成提示文案，约束字段格式与语气。
 - `src/main/ai/types.ts`: provider、配置与生成字段类型定义。
 - `src/main/ai/utils.ts`: term 校验、字段解析、超时控制等通用工具。
-- `src/main/ipc/handlers.ts`: IPC 频道处理器，校验入参并调度 DataStore、SM-2 队列与 AI provider。
+- `src/main/ipc/handlers.ts`: IPC 频道处理器，校验入参并调度 DataStore、SM-2 队列与 AI provider；支持导入/导出路径校验。
 - `src/main/ipc/provider.ts`: 管理 AI provider 配置与实例的状态，合并超时/密钥来源，保证密钥仅在主进程使用。
 - `src/main/ipc/index.ts`: 注册/卸载 ipcMain handlers，便于测试注入与生命周期管理。
-- `src/main/storage/index.ts`: 主进程数据入口，提供 `createDataStore` 以读写 `words.json`/`activity.json`，支持新增/更新/删除词条、按评分应用 SM-2 更新并累计活跃度，返回 streak 与今日统计。
+- `src/main/storage/index.ts`: 主进程数据入口，提供 `createDataStore` 以读写 `words.json`/`activity.json`，支持新增/更新/删除词条、按评分应用 SM-2 更新并累计活跃度，返回 streak 与今日统计；新增导入/导出 JSON 与 CSV 的接口。
 - `src/main/storage/json.ts`: 封装 JSON 读写与原子写入（临时文件 + rename），出现错误时清理临时文件避免污染。
 - `src/main/storage/paths.ts`: 解析默认数据目录 `data/`，提供 `getWordsPath`/`getActivityPath`。
 - `src/main/storage/words.ts`: 构建词条草稿为完整 `Word`，合并更新时补全 `updated_at` 与 SM-2 字段。
 - `src/main/storage/activity.ts`: 活跃度工具，递增每日新增/复习计数、计算连续活跃天数（按 UTC 日期），汇总今日统计。
+- `src/main/storage/transfer.ts`: 导入/导出辅助，解析外部 words/activity 文件、按 term 去重合并并生成 CSV。
 - `src/main/storage/types.ts`: 存储层专用类型（词条草稿/更新、活跃度汇总）。
 - `src/preload/index.ts`: 预加载脚本，占位暴露 `electronAPI`，后续可按需扩展受控桥接。
 - `src/renderer/main.tsx`: React 入口，挂载根组件并启用 StrictMode。
@@ -35,11 +36,12 @@
 - `src/shared/types.ts`: 词条、SM-2 状态、复习日志与活跃度数据的共享类型。
 - `src/shared/ai.ts`: 跨端共享的 provider 名称、状态与词卡字段类型。
 - `src/shared/ipc.ts`: IPC 频道常量、请求/响应契约与 Renderer API 类型。
+- `src/shared/data-transfer.ts`: 导入/导出请求与结果类型定义，覆盖 JSON/CSV 路径与统计字段。
 - `src/shared/sm2.ts`: SM-2 默认状态、评分更新、到期判断与复习队列排序的纯函数。
 - `src/shared/validation.ts`: 词条/活跃度 JSON 校验与默认值补全（时间戳、SM-2 下限夹紧）。
 - `src/__test__/sm2.test.ts`: 覆盖 SM-2 算法与复习队列排序的 Vitest 用例。
 - `src/__test__/validation.test.ts`: 覆盖词条与活跃度补全校验的 Vitest 用例。
-- `src/__test__/storage.test.ts`: 基于临时目录的存储层单测，验证原子写入、防坏数据补全、SM-2 评分更新与活跃度累积。
+- `src/__test__/storage.test.ts`: 基于临时目录的存储层单测，验证原子写入、防坏数据补全、SM-2 评分更新、活跃度累积与导入/导出。
 - `src/__test__/ai-providers.test.ts`: 覆盖 OpenAI/Gemini/Mock provider 的字段解析、超时与默认分支。
 - `prompts/`: 约束开发流程的全局提示集合（coding-principles、system-prompt），变更行为需遵循此处规则。
 - `memory-bank/`: 项目设计与进度文档中心（设计文档、技术栈、实施计划、架构说明、UI 设计、进度记录）。

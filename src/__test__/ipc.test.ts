@@ -35,6 +35,8 @@ describe("IPC handlers", () => {
     updateWord: ReturnType<typeof vi.fn>;
     deleteWord: ReturnType<typeof vi.fn>;
     applyReview: ReturnType<typeof vi.fn>;
+    exportData: ReturnType<typeof vi.fn>;
+    importData: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
@@ -52,6 +54,8 @@ describe("IPC handlers", () => {
       updateWord: vi.fn(async (id: string) => buildWord(id, NOW)),
       deleteWord: vi.fn(async () => {}),
       applyReview: vi.fn(async (id: string) => buildWord(id, NOW + 1)),
+      exportData: vi.fn(async () => ({ wordsCount: 0, activityDaysCount: 0 })),
+      importData: vi.fn(async () => ({ importedWords: 0, replacedWords: 0, skippedWords: 0, activityDaysImported: 0, errors: [] })),
     };
   });
 
@@ -128,6 +132,8 @@ describe("IPC registration", () => {
         updateWord: vi.fn(async () => buildWord("x", NOW)),
         deleteWord: vi.fn(async () => {}),
         applyReview: vi.fn(async () => buildWord("x", NOW)),
+        exportData: vi.fn(async () => ({ wordsCount: 0, activityDaysCount: 0 })),
+        importData: vi.fn(async () => ({ importedWords: 0, replacedWords: 0, skippedWords: 0, activityDaysImported: 0, errors: [] })),
       },
       now: () => NOW,
     };

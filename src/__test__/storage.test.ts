@@ -90,4 +90,87 @@ describe("DataStore", () => {
     expect(after).toBe(before);
     renameSpy.mockRestore();
   });
+
+  it("导出 words 与 activity JSON 以及 CSV", async () => {
+    const now = Date.UTC(2024, 0, 6);
+    const { store } = await buildStore();
+    const exportDir = await fs.mkdtemp(path.join(os.tmpdir(), "kotoba-export-"));
+    const exportedWordsPath = path.join(exportDir, "words.json");
+    const exportedActivityPath = path.join(exportDir, "activity.json");
+    const exportedCsvPath = path.join(exportDir, "words.csv");
+
+    await store.addWord(createDraft(), now);
+    const summary = await store.exportData(
+      { wordsPath: exportedWordsPath, activityPath: exportedActivityPath, csvPath: exportedCsvPath },
+      now,
+    );
+
+    const exportedWords = JSON.parse(await fs.readFile(exportedWordsPath, "utf-8"));
+    const exportedActivity = JSON.parse(await fs.readFile(exportedActivityPath, "utf-8"));
+    const csv = await fs.readFile(exportedCsvPath, "utf-8");
+
+    expect(summary.wordsCount).toBe(1);
+    expect(summary.activityDaysCount).toBe(1);
+    expect(summary.csvCount).toBe(1);
+    expect(exportedWords.words).toHaveLength(1);
+    expect(Object.keys(exportedActivity.days)).toHaveLength(1);
+    expect(csv.split("\n")[0]).toContain("term,kana,definition_ja");
+  });
+
+  it("导入时按 term 去重并跳过非法记录", async () => {
+    const now = Date.UTC(2024, 0, 7);
+    const { store, wordsPath } = await buildStore();
+    const importedPath = path.join(path.dirname(wordsPath), "imported-words.json");
+    const original = await store.addWord(createDraft(), now);
+    const incoming = [
+      {
+        ...createDraft(),
+        id: "incoming-1",
+        term: original.term,
+        sm2: { repetition: 2, interval: 3, easiness: 2.7, next_review_at: now + DAY_IN_MS },
+      },
+      {
+        ...createDraft(),
+        id: "incoming-2",
+        term: "new-term",
+      },
+      { term: "", kana: "", definition_ja: "", scene_ja: "", example_ja: "" },
+    ];
+
+    await fs.writeFile(importedPath, JSON.stringify({ words: incoming }), "utf-8");
+    const result = await store.importData({ wordsPath: importedPath }, now + 1);
+    const merged = await store.loadWords(now + 1);
+
+    expect(result.importedWords).toBe(2);
+    expect(result.replacedWords).toBe(1);
+    expect(result.skippedWords).toBe(1);
+    expect(result.errors).toHaveLength(1);
+    expect(merged).toHaveLength(2);
+    expect(merged.find((word) => word.term === original.term)?.sm2.repetition).toBe(2);
+  });
+
+  it("导入 activity 时合并日期并跳过非法条目", async () => {
+    const base = Date.UTC(2024, 0, 8);
+    const { store, activityPath } = await buildStore();
+    const importPath = path.join(path.dirname(activityPath), "import-activity.json");
+    await store.addWord(createDraft(), base);
+
+    await fs.writeFile(
+      importPath,
+      JSON.stringify({
+        days: {
+          "2024-01-09": { added_count: 2, review_count: 1 },
+          invalid: "bad",
+        },
+      }),
+      "utf-8",
+    );
+
+    const result = await store.importData({ activityPath: importPath }, base + DAY_IN_MS);
+    const merged = JSON.parse(await fs.readFile(activityPath, "utf-8"));
+
+    expect(result.activityDaysImported).toBe(1);
+    expect(result.errors).toHaveLength(1);
+    expect(Object.keys(merged.days)).toContain("2024-01-09");
+  });
 });

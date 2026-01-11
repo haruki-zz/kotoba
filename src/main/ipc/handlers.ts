@@ -1,6 +1,7 @@
 import { IPC_CHANNELS, IpcChannel, IpcRequestMap } from "../../shared/ipc";
 import { buildReviewQueue } from "../../shared/sm2";
 import { ActivitySummary, ReviewRating, Word, WordDraft, WordUpdate } from "../../shared/types";
+import { ExportRequest, ExportResult, ImportRequest, ImportResult } from "../../shared/data-transfer";
 import { ProviderManager } from "./provider";
 
 type Handler<K extends IpcChannel> = (payload: IpcRequestMap[K]["payload"]) => Promise<IpcRequestMap[K]["response"]>;
@@ -14,6 +15,8 @@ export interface DataStoreApi {
   updateWord: (id: string, update: WordUpdate, now?: number) => Promise<Word>;
   deleteWord: (id: string, now?: number) => Promise<void>;
   applyReview: (id: string, grade: ReviewRating, now?: number) => Promise<Word>;
+  exportData: (request: ExportRequest, now?: number) => Promise<ExportResult>;
+  importData: (request: ImportRequest, now?: number) => Promise<ImportResult>;
 }
 
 export interface IpcContext {
@@ -66,6 +69,45 @@ const requireWordUpdate = (update: unknown): WordUpdate => {
   return update as WordUpdate;
 };
 
+const requirePath = (value: unknown, field: string) => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`${field} 需为非空路径`);
+  }
+
+  return value.trim();
+};
+
+const requireExportRequest = (payload: ExportRequest | undefined): ExportRequest => {
+  const request: ExportRequest = {
+    wordsPath: requirePath(payload?.wordsPath, "wordsPath"),
+    activityPath: requirePath(payload?.activityPath, "activityPath"),
+    csvPath: requirePath(payload?.csvPath, "csvPath"),
+  };
+
+  if (!request.wordsPath && !request.activityPath && !request.csvPath) {
+    throw new Error("需至少指定一个导出目标路径");
+  }
+
+  return request;
+};
+
+const requireImportRequest = (payload: ImportRequest | undefined): ImportRequest => {
+  const request: ImportRequest = {
+    wordsPath: requirePath(payload?.wordsPath, "wordsPath"),
+    activityPath: requirePath(payload?.activityPath, "activityPath"),
+  };
+
+  if (!request.wordsPath && !request.activityPath) {
+    throw new Error("需至少提供导入文件路径");
+  }
+
+  return request;
+};
+
 export const createIpcHandlers = ({ dataStore, providerManager, now }: IpcContext): IpcHandlers => {
   const getNow = () => (now ? now() : Date.now());
 
@@ -88,11 +130,7 @@ export const createIpcHandlers = ({ dataStore, providerManager, now }: IpcContex
     [IPC_CHANNELS.submitReview]: async (payload) =>
       dataStore.applyReview(requireId(payload?.id), requireGrade(payload?.grade), getNow()),
     [IPC_CHANNELS.loadActivitySummary]: async () => dataStore.loadActivitySummary(getNow()),
-    [IPC_CHANNELS.exportData]: async () => {
-      throw new Error("导出功能尚未实现");
-    },
-    [IPC_CHANNELS.importData]: async () => {
-      throw new Error("导入功能尚未实现");
-    },
+    [IPC_CHANNELS.exportData]: async (payload) => dataStore.exportData(requireExportRequest(payload), getNow()),
+    [IPC_CHANNELS.importData]: async (payload) => dataStore.importData(requireImportRequest(payload), getNow()),
   };
 };
