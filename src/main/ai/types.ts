@@ -1,12 +1,4 @@
-export type ProviderName = "openai" | "gemini" | "mock";
-
-export interface WordCardContent {
-  term: string;
-  kana: string;
-  definition_ja: string;
-  scene_ja: string;
-  example_ja: string;
-}
+import { ProviderName, WordCardContent } from "../../shared/ai";
 
 export interface WordCardFields extends Omit<WordCardContent, "term"> {}
 

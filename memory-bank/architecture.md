@@ -18,6 +18,9 @@
 - `src/main/ai/prompt.ts`: 统一的词卡生成提示文案，约束字段格式与语气。
 - `src/main/ai/types.ts`: provider、配置与生成字段类型定义。
 - `src/main/ai/utils.ts`: term 校验、字段解析、超时控制等通用工具。
+- `src/main/ipc/handlers.ts`: IPC 频道处理器，校验入参并调度 DataStore、SM-2 队列与 AI provider。
+- `src/main/ipc/provider.ts`: 管理 AI provider 配置与实例的状态，合并超时/密钥来源，保证密钥仅在主进程使用。
+- `src/main/ipc/index.ts`: 注册/卸载 ipcMain handlers，便于测试注入与生命周期管理。
 - `src/main/storage/index.ts`: 主进程数据入口，提供 `createDataStore` 以读写 `words.json`/`activity.json`，支持新增/更新/删除词条、按评分应用 SM-2 更新并累计活跃度，返回 streak 与今日统计。
 - `src/main/storage/json.ts`: 封装 JSON 读写与原子写入（临时文件 + rename），出现错误时清理临时文件避免污染。
 - `src/main/storage/paths.ts`: 解析默认数据目录 `data/`，提供 `getWordsPath`/`getActivityPath`。
@@ -27,8 +30,11 @@
 - `src/preload/index.ts`: 预加载脚本，占位暴露 `electronAPI`，后续可按需扩展受控桥接。
 - `src/renderer/main.tsx`: React 入口，挂载根组件并启用 StrictMode。
 - `src/renderer/App.tsx`: 渲染占位页面，后续 UI 将在此拓展。
+- `src/renderer/electron-api.d.ts`: 声明 window.electronAPI 类型，渲染端只能调用白名单 IPC API。
 - `src/shared/index.ts`: 汇总导出 shared 模块。
 - `src/shared/types.ts`: 词条、SM-2 状态、复习日志与活跃度数据的共享类型。
+- `src/shared/ai.ts`: 跨端共享的 provider 名称、状态与词卡字段类型。
+- `src/shared/ipc.ts`: IPC 频道常量、请求/响应契约与 Renderer API 类型。
 - `src/shared/sm2.ts`: SM-2 默认状态、评分更新、到期判断与复习队列排序的纯函数。
 - `src/shared/validation.ts`: 词条/活跃度 JSON 校验与默认值补全（时间戳、SM-2 下限夹紧）。
 - `src/__test__/sm2.test.ts`: 覆盖 SM-2 算法与复习队列排序的 Vitest 用例。
@@ -48,4 +54,5 @@
 - 文档优先：prompts 与 memory-bank 构成规则与设计的单一可信来源，后续模块与代码需按其约束演进。
 - 共享逻辑与测试：`src/shared` 集中提供 SM-2 算法、类型与数据校验，`src/__test__` 通过 Vitest 覆盖核心公式与默认补全，确保主/渲染进程复用时行为一致。
 - 主进程存储层：`src/main/storage` 采用 JSON 原子写入与严格校验，封装词条与活跃度的读写更新，确保 SM-2 更新与活跃度累积一致且写入失败不破坏原文件。
-- AI 提供商适配：`src/main/ai` 统一封装 OpenAI/Gemini/Mock，集中提示、字段解析与超时控制，默认走 mock 以便无密钥开发，后续可通过桥接安全暴露到渲染端。
+- AI 提供商适配：`src/main/ai` 统一封装 OpenAI/Gemini/Mock，集中提示、字段解析与超时控制，默认走 mock 以便无密钥开发，由 IPC 层安全暴露。
+- IPC 安全桥接：`src/shared/ipc.ts` 定义频道与契约，`src/main/ipc` 校验入参并调度 DataStore/AI，`src/preload` 只暴露白名单 API，减少渲染进程能力面。

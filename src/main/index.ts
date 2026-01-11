@@ -1,10 +1,16 @@
 import { app, BrowserWindow } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { registerIpcHandlers } from "./ipc";
+import { createProviderManager } from "./ipc/provider";
+import { createDataStore } from "./storage";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const isDev = !app.isPackaged;
+const dataStore = createDataStore();
+const providerManager = createProviderManager();
+let unregisterIpc: (() => void) | undefined;
 
 const createMainWindow = async () => {
   const mainWindow = new BrowserWindow({
@@ -26,6 +32,7 @@ const createMainWindow = async () => {
 };
 
 app.whenReady().then(() => {
+  unregisterIpc = registerIpcHandlers({ dataStore, providerManager });
   createMainWindow();
 
   app.on("activate", () => {
@@ -39,4 +46,8 @@ app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
   }
+});
+
+app.on("will-quit", () => {
+  unregisterIpc?.();
 });

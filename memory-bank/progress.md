@@ -23,3 +23,9 @@
 - 完成实施计划第 6 步：在 `src/main/ai` 搭建 AI 提供商适配层，抽象统一接口封装 OpenAI/Gemini/Mock，集中提示文案、term 长度校验、JSON 字段解析与超时控制（默认 12s）。
 - OpenAI provider 采用 `gpt-4o-mini` 非流式 JSON 输出，Gemini provider 使用 Flash 2.5 Lite 预览模型并限制输出 tokens；无密钥默认使用 mock provider 便于开发。
 - 新增 `src/__test__/ai-providers.test.ts` 使用 mock fetch/model 覆盖解析错误、超时与默认 mock 分支；引入 `openai`、`@google/generative-ai` 依赖。测试由用户执行并通过。
+
+## 2026-01-16
+- 完成实施计划第 7 步：定义共享 IPC 契约与 AI/词条草稿类型（`src/shared/ipc.ts`、`src/shared/ai.ts`、`src/shared/types.ts`），确保主渲染两端接口一致。
+- 主进程新增 IPC 层（`src/main/ipc`）与 provider 管理器，集中入参校验、AI provider 配置、SM-2 队列与 DataStore 调度，并在主入口注册/卸载 handlers。
+- 预加载层通过 contextBridge 仅暴露白名单 API（`src/preload/index.ts`），渲染端增加类型声明 `src/renderer/electron-api.d.ts`。
+- 添加 IPC 行为单测 `src/__test__/ipc.test.ts` 覆盖频道注册、入参校验、队列过滤与 provider 配置。测试由用户执行并通过。
