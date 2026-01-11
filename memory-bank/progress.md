@@ -34,3 +34,7 @@
 - 完成实施计划第 8 步：主进程存储层新增导入/导出能力，支持 words/activity JSON 与 CSV（`src/main/storage/index.ts`、`src/main/storage/transfer.ts`），导入时按 term 去重并保留传入的 SM-2/时间戳，非法记录会跳过并返回错误列表。
 - 共享层补充导入/导出契约类型（`src/shared/data-transfer.ts`），IPC/预加载接口支持携带目标路径（`src/shared/ipc.ts`、`src/main/ipc/handlers.ts`、`src/preload/index.ts`）。
 - 新增/扩展单测覆盖导出文件生成、导入去重与活动合并（`src/__test__/storage.test.ts`、`src/__test__/ipc.test.ts`）。测试由用户执行并通过。
+
+## 2026-01-18
+- 完成实施计划第 9 步：在渲染端建立全局 Zustand store（`src/renderer/store.ts`），集中管理词库、复习队列、活跃度、provider 及 session 状态，封装调用 IPC 的异步 action（加载、增改删词条、评分、provider 配置）。
+- 新增 store 单测（`src/__test__/store.test.ts`）mock electronAPI 覆盖成功与错误路径、增改删词条、评分后移除队列、provider/活跃度刷新。测试由用户执行并通过。

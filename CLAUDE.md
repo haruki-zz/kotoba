@@ -43,16 +43,18 @@
     │   ├── sm2.ts             # SM-2 默认状态、更新函数与复习队列排序
     │   ├── types.ts           # 词条、活跃度、复习日志等共享类型定义（含草稿/更新/汇总）
     │   └── validation.ts      # JSON 校验与默认补全（词条、SM-2、活跃度）
+    ├── renderer
+    │   ├── store.ts           # 渲染端全局 Zustand store，封装 IPC 异步 actions 与状态
+    │   ├── App.tsx            # 渲染端占位界面
+    │   ├── electron-api.d.ts  # 声明 window.electronAPI 类型，限制渲染层可用接口
+    │   └── main.tsx           # React 入口，挂载根组件
     ├── __test__
     │   ├── sm2.test.ts        # 覆盖 SM-2 计算与队列排序的 Vitest 用例
     │   ├── validation.test.ts # 覆盖词条/活跃度校验与默认补全的 Vitest 用例
     │   ├── ai-providers.test.ts# 覆盖 OpenAI/Gemini/mock provider 的超时与解析逻辑
     │   ├── storage.test.ts    # 基于临时目录的存储层单测，验证原子写入与活跃度累积
+    │   ├── store.test.ts      # 渲染端 store 行为单测，mock electronAPI 覆盖加载与错误路径
     │   └── ipc.test.ts        # IPC 处理与 provider 管理的入参校验、频道注册覆盖
-    └── renderer
-        ├── App.tsx            # 渲染端占位界面
-        ├── electron-api.d.ts  # 声明 window.electronAPI 类型，限制渲染层可用接口
-        └── main.tsx           # React 入口，挂载根组件
 ```
 
 ## 角色与依赖
@@ -62,5 +64,5 @@
 - **共享逻辑**：`src/shared` 提供词条/活跃度类型（含草稿、更新与汇总）、导入/导出契约、SM-2 状态默认值与更新算法、AI/IPC 契约、JSON 校验与补全，供主/渲染进程复用。
 - **测试**：`src/__test__` 中的 Vitest 用例覆盖 SM-2 计算、复习队列排序、数据校验、AI provider、存储层导入导出与 IPC 入口，确保算法与通道契约稳定。
 - **AI 适配层**：`src/main/ai` 封装 OpenAI/Gemini/Mock 三种 provider，统一生成词卡字段，内置提示文案、字段解析与超时控制，由 IPC/Preload 间接暴露。
-- **渲染层**：`src/renderer/main.tsx` + `App.tsx` 组成最小 UI 占位，并通过 `electron-api.d.ts` 绑定可用的 electronAPI 类型，确保 Vite/HMR 路径正常。
+- **渲染层**：`src/renderer/store.ts` 提供全局 Zustand store 封装 IPC 异步 actions；`src/renderer/main.tsx` + `App.tsx` 组成最小 UI 占位，并通过 `electron-api.d.ts` 绑定可用的 electronAPI 类型，确保 Vite/HMR 路径正常。
 - **构建工具链**：`vite.config.ts` 管理三端构建；`package.json` scripts 提供 `dev`、`build`、`build:desktop`，electron-builder 输出到 `release/`；`npm run lint`/`format` 依赖 ESLint + Prettier 统一风格。
