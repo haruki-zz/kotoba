@@ -43,3 +43,7 @@
 - 完成实施计划第 10 步：集成 Tailwind 主题配置与 PostCSS 管线（`tailwind.config.js`、`postcss.config.cjs`），引入颜色/字体/阴影 tokens。
 - 新增全局样式（`src/renderer/index.css`）使用 CSS 变量实现背景渐变、文字/按钮/面板基样式，并在 `src/renderer/main.tsx` 引入。
 - 调整 PostCSS 插件为 `@tailwindcss/postcss` 并去除未声明的 @apply 自定义类，解决 Tailwind v4 构建报错。测试由用户执行并通过。
+
+## 2026-01-20
+- 完成实施计划第 11 步：新增词条 UI 表单 `src/renderer/components/AddWordForm.tsx`，支持输入单词后调用生成接口自动填充读音/释义/情境/例句，可手动编辑并保存，保存后刷新词库与活跃度。
+- `src/renderer/App.tsx` 使用 AddWordForm 取代占位页面，表单交互包含回车触发生成、进度/错误提示与保存成功反馈。测试由用户执行并通过。
