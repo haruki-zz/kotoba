@@ -19,8 +19,9 @@ const buildWord = (id: string): Word => ({
 });
 
 const activity: ActivitySummary = {
-  today: { added_count: 0, review_count: 0, total: 0 },
+  today: { date: "2024-01-01", added_count: 0, review_count: 0, total: 0 },
   streak: 0,
+  history: [{ date: "2024-01-01", added_count: 0, review_count: 0, total: 0 }],
 };
 
 const createMockApi = (overrides?: Partial<RendererApi>): RendererApi => ({

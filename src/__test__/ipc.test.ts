@@ -24,7 +24,11 @@ const buildWord = (id: string, nextReviewAt: number): Word => ({
   },
 });
 
-const summary: ActivitySummary = { today: { added_count: 0, review_count: 0, total: 0 }, streak: 0 };
+const summary: ActivitySummary = {
+  today: { date: "2024-01-01", added_count: 0, review_count: 0, total: 0 },
+  streak: 0,
+  history: [{ date: "2024-01-01", added_count: 0, review_count: 0, total: 0 }],
+};
 
 describe("IPC handlers", () => {
   let providerManager: ProviderManager;

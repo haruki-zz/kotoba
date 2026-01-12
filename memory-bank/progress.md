@@ -51,3 +51,7 @@
 ## 2026-01-21
 - 完成实施计划第 12 步：新增复习队列与评分界面 `src/renderer/components/ReviewSession.tsx`，支持加载今日计划或自选全词库、卡片翻面、按「容易/一般/困难」评分后调用 IPC 更新 SM-2 与活跃度，并将复习模块串联进 `src/renderer/App.tsx`。
 - 组件测试覆盖空态自选复习、翻面与评分调用（`src/__test__/review-session.test.tsx`），Vitest 切换 jsdom 环境并引入 RTL/jest-dom（`vite.config.ts`、`src/__test__/setup.ts`）。测试由用户执行并通过。
+
+## 2026-01-22
+- 完成实施计划第 13 步：扩展活跃度汇总返回带日期与总计的 `history`，在渲染端新增活跃度视图 `src/renderer/components/ActivityOverview.tsx` 展示 streak、今日新增/复习计数与近 6 周热力格（悬停显示详情），并挂载到 `App.tsx`。
+- 新增 `src/__test__/activity-overview.test.tsx` 覆盖热力格色阶和文案，更新现有 IPC/Store/Storage/ReviewSession 测试以匹配新的活动结构。测试由用户执行并通过。

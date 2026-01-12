@@ -38,6 +38,11 @@ export interface ActivityData {
   days: Record<string, ActivityDay>;
 }
 
+export interface ActivitySummaryDay extends ActivityDay {
+  date: string;
+  total: number;
+}
+
 export interface WordDraft {
   id?: string;
   term: string;
@@ -61,6 +66,7 @@ export interface WordUpdate {
 }
 
 export interface ActivitySummary {
-  today: ActivityDay & { total: number };
+  today: ActivitySummaryDay;
   streak: number;
+  history: ActivitySummaryDay[];
 }

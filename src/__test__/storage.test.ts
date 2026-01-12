@@ -62,6 +62,9 @@ describe("DataStore", () => {
     expect(reviewed.sm2.repetition).toBe(1);
     expect(summary.today.review_count).toBe(1);
     expect(summary.today.added_count).toBe(0);
+    expect(summary.today.date).toBe("2024-01-04");
+    expect(summary.history).toHaveLength(2);
+    expect(summary.history.find((day) => day.date === "2024-01-04")?.review_count).toBe(1);
   });
 
   it("streak 以最近活跃日开始连续统计", async () => {
@@ -74,6 +77,7 @@ describe("DataStore", () => {
 
     const summary = await store.loadActivitySummary(base + 3 * DAY_IN_MS);
     expect(summary.streak).toBe(1);
+    expect(summary.history.map((day) => day.date)).toEqual(["2024-01-10", "2024-01-11", "2024-01-13"]);
   });
 
   it("原子写入失败时保持原文件不变", async () => {

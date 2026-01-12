@@ -25,7 +25,7 @@
 - `src/main/storage/json.ts`: 封装 JSON 读写与原子写入（临时文件 + rename），出现错误时清理临时文件避免污染。
 - `src/main/storage/paths.ts`: 解析默认数据目录 `data/`，提供 `getWordsPath`/`getActivityPath`。
 - `src/main/storage/words.ts`: 构建词条草稿为完整 `Word`，合并更新时补全 `updated_at` 与 SM-2 字段。
-- `src/main/storage/activity.ts`: 活跃度工具，递增每日新增/复习计数、计算连续活跃天数（按 UTC 日期），汇总今日统计。
+- `src/main/storage/activity.ts`: 活跃度工具，递增每日新增/复习计数、计算连续活跃天数（按 UTC 日期），汇总今日统计并输出按日期排序的 `history`。
 - `src/main/storage/transfer.ts`: 导入/导出辅助，解析外部 words/activity 文件、按 term 去重合并并生成 CSV。
 - `src/main/storage/types.ts`: 存储层专用类型（词条草稿/更新、活跃度汇总）。
 - `src/preload/index.ts`: 预加载脚本，占位暴露 `electronAPI`，后续可按需扩展受控桥接。
@@ -33,8 +33,9 @@
 - `src/renderer/store.ts`: 渲染端全局 Zustand store，集中管理词库、复习队列、活跃度、provider 与 session 状态，封装调用 IPC 的异步 actions；复习评分后同步移除队列并刷新活跃度。
 - `src/renderer/components/AddWordForm.tsx`: 新增词条表单，调用生成接口自动填充读音/释义/情境/例句，支持手动编辑并保存，保存后刷新词库与活跃度。
 - `src/renderer/components/ReviewSession.tsx`: 复习界面，加载今日队列或自选全词库，支持卡片翻转与「容易/一般/困难」评分，评分后调用 IPC 更新 SM-2 与活跃度。
+- `src/renderer/components/ActivityOverview.tsx`: 活跃度与 streak 视图，展示今日新增/复习计数、连续天数与近六周热力格（悬停显示每日详情）。
 - `src/renderer/index.css`: Tailwind 基线与全局主题样式，定义颜色/字体/阴影 CSS 变量、背景渐变以及通用容器/按钮类。
-- `src/renderer/App.tsx`: 渲染入口布局，当前串联复习与新增词条两大流程。
+- `src/renderer/App.tsx`: 渲染入口布局，当前串联活跃度概览、复习与新增词条三大流程。
 - `src/renderer/electron-api.d.ts`: 声明 window.electronAPI 类型，渲染端只能调用白名单 IPC API。
 - `src/shared/index.ts`: 汇总导出 shared 模块。
 - `src/shared/types.ts`: 词条、SM-2 状态、复习日志与活跃度数据的共享类型。
@@ -49,6 +50,7 @@
 - `src/__test__/ai-providers.test.ts`: 覆盖 OpenAI/Gemini/Mock provider 的字段解析、超时与默认分支。
 - `src/__test__/store.test.ts`: 渲染端 store 的 Vitest 用例，mock electronAPI 覆盖加载/错误、词条增改删、评分更新队列与 provider/活跃度刷新。
 - `src/__test__/review-session.test.tsx`: React 复习界面测试，覆盖空队列自选复习、卡片翻面与评分调用流程。
+- `src/__test__/activity-overview.test.tsx`: 活跃度视图测试，覆盖 streak/今日计数与热力格色阶、文案。
 - `src/__test__/setup.ts`: Vitest setup，注入 React Testing Library 的 jest-dom 匹配器供 jsdom 断言。
 - `prompts/`: 约束开发流程的全局提示集合（coding-principles、system-prompt），变更行为需遵循此处规则。
 - `memory-bank/`: 项目设计与进度文档中心（设计文档、技术栈、实施计划、架构说明、UI 设计、进度记录）。
@@ -62,6 +64,7 @@
 - 代码风格守护：已接入 ESLint flat 配置与 Prettier，`npm run lint` 作为统一入口保证 TypeScript/React 代码和配置文件风格一致。
 - 文档优先：prompts 与 memory-bank 构成规则与设计的单一可信来源，后续模块与代码需按其约束演进。
 - 共享逻辑与测试：`src/shared` 集中提供 SM-2 算法、类型与数据校验，`src/__test__` 通过 Vitest 覆盖核心公式与默认补全，并在 jsdom 环境下使用 React Testing Library 覆盖复习界面的翻转与评分交互。
-- 主进程存储层：`src/main/storage` 采用 JSON 原子写入与严格校验，封装词条与活跃度的读写更新，确保 SM-2 更新与活跃度累积一致且写入失败不破坏原文件。
+- 主进程存储层：`src/main/storage` 采用 JSON 原子写入与严格校验，封装词条与活跃度的读写更新，输出按日期排序的活跃度 `history` 供热力格使用，确保 SM-2 更新与活跃度累积一致且写入失败不破坏原文件。
 - AI 提供商适配：`src/main/ai` 统一封装 OpenAI/Gemini/Mock，集中提示、字段解析与超时控制，默认走 mock 以便无密钥开发，由 IPC 层安全暴露。
 - IPC 安全桥接：`src/shared/ipc.ts` 定义频道与契约，`src/main/ipc` 校验入参并调度 DataStore/AI，`src/preload` 只暴露白名单 API，减少渲染进程能力面。
+- 渲染层：`src/renderer/components` 覆盖活跃度概览、复习与新增词条三大流程，热力格与 streak 展示依赖 store 提供的扩展活动摘要。

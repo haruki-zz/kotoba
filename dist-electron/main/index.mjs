@@ -8085,15 +8085,20 @@ const calculateStreak = (activity) => {
   }
   return streak;
 };
+const toSummaryDay = (date, day) => ({
+  date,
+  added_count: day.added_count,
+  review_count: day.review_count,
+  total: day.added_count + day.review_count
+});
 const summarizeActivity = (activity, now = Date.now()) => {
   const todayKey = formatDateKey(now);
   const today = activity.days[todayKey] ?? { added_count: 0, review_count: 0 };
+  const history = Object.entries(activity.days).map(([date, day]) => toSummaryDay(date, day)).sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
   return {
-    today: {
-      ...today,
-      total: today.added_count + today.review_count
-    },
-    streak: calculateStreak(activity)
+    today: toSummaryDay(todayKey, today),
+    streak: calculateStreak(activity),
+    history
   };
 };
 const JSON_SPACING = 2;

@@ -16,7 +16,11 @@ const buildWord = (id: string): Word => ({
   sm2: { repetition: 0, interval: 0, easiness: 2.5, next_review_at: 1 },
 });
 
-const activity: ActivitySummary = { today: { added_count: 1, review_count: 2, total: 3 }, streak: 5 };
+const activity: ActivitySummary = {
+  today: { date: "2024-01-01", added_count: 1, review_count: 2, total: 3 },
+  streak: 5,
+  history: [{ date: "2024-01-01", added_count: 1, review_count: 2, total: 3 }],
+};
 
 const providerState: ProviderState = { provider: "mock", hasApiKey: true, timeoutMs: 12_000 };
 

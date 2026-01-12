@@ -1,5 +1,5 @@
 import { DAY_IN_MS } from "../../shared/sm2";
-import { ActivityData, ActivityDay } from "../../shared/types";
+import { ActivityData, ActivityDay, ActivitySummaryDay } from "../../shared/types";
 
 export const formatDateKey = (timestamp = Date.now()) => new Date(timestamp).toISOString().slice(0, 10);
 
@@ -58,15 +58,23 @@ export const calculateStreak = (activity: ActivityData): number => {
   return streak;
 };
 
+const toSummaryDay = (date: string, day: ActivityDay): ActivitySummaryDay => ({
+  date,
+  added_count: day.added_count,
+  review_count: day.review_count,
+  total: day.added_count + day.review_count,
+});
+
 export const summarizeActivity = (activity: ActivityData, now = Date.now()) => {
   const todayKey = formatDateKey(now);
   const today: ActivityDay = activity.days[todayKey] ?? { added_count: 0, review_count: 0 };
+  const history = Object.entries(activity.days)
+    .map(([date, day]) => toSummaryDay(date, day))
+    .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
 
   return {
-    today: {
-      ...today,
-      total: today.added_count + today.review_count,
-    },
+    today: toSummaryDay(todayKey, today),
     streak: calculateStreak(activity),
+    history,
   };
 };
