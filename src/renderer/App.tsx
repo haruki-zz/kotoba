@@ -1,5 +1,6 @@
 import AddWordForm from "./components/AddWordForm";
 import ActivityOverview from "./components/ActivityOverview";
+import DataTransferPanel from "./components/DataTransferPanel";
 import ReviewSession from "./components/ReviewSession";
 
 const App = () => (
@@ -7,6 +8,7 @@ const App = () => (
     <ActivityOverview />
     <ReviewSession />
     <AddWordForm />
+    <DataTransferPanel />
   </main>
 );
 

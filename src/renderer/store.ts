@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { ProviderSettings, ProviderState } from "../shared/ai";
 import { RendererApi } from "../shared/ipc";
+import { ExportRequest, ExportResult, ImportRequest, ImportResult } from "../shared/data-transfer";
 import { ActivitySummary, ReviewRating, Word, WordDraft, WordUpdate } from "../shared/types";
 
 type SessionState = {
@@ -23,6 +24,8 @@ export type AppState = {
   deleteWord: (id: string) => Promise<void>;
   submitReview: (id: string, grade: ReviewRating) => Promise<Word>;
   setProvider: (settings: ProviderSettings) => Promise<ProviderState>;
+  exportData: (request: ExportRequest) => Promise<ExportResult>;
+  importData: (request: ImportRequest) => Promise<ImportResult>;
 };
 
 const resolveApi = (api?: RendererApi): RendererApi => {
@@ -129,6 +132,8 @@ export const createAppStore = (api?: RendererApi) =>
         set({ provider });
         return provider;
       },
+      exportData: (request) => withLoading(() => client.exportData(request)),
+      importData: (request) => withLoading(() => client.importData(request)),
     };
   });
 

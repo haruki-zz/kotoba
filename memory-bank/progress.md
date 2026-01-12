@@ -55,3 +55,7 @@
 ## 2026-01-22
 - 完成实施计划第 13 步：扩展活跃度汇总返回带日期与总计的 `history`，在渲染端新增活跃度视图 `src/renderer/components/ActivityOverview.tsx` 展示 streak、今日新增/复习计数与近 6 周热力格（悬停显示详情），并挂载到 `App.tsx`。
 - 新增 `src/__test__/activity-overview.test.tsx` 覆盖热力格色阶和文案，更新现有 IPC/Store/Storage/ReviewSession 测试以匹配新的活动结构。测试由用户执行并通过。
+
+## 2026-01-23
+- 完成实施计划第 14 步：在渲染端新增导入/导出面板 `src/renderer/components/DataTransferPanel.tsx`，支持选择 words/activity JSON 与 CSV 路径、展示成功/错误与跳过记录，导入后自动刷新词库、复习队列与活跃度；`App.tsx` 挂载新面板，`store.ts` 补充 `exportData`/`importData` actions。
+- 添加 `src/__test__/data-transfer-panel.test.tsx` 覆盖导出成功、导入刷新数据与缺少路径提示。测试由用户执行并通过。***
