@@ -50,7 +50,8 @@ export default defineConfig(({ command }) => ({
     outDir: "dist/renderer",
   },
   test: {
-    environment: "node",
+    environment: "jsdom",
     include: ["src/__test__/**/*.test.{ts,tsx}"],
+    setupFiles: ["src/__test__/setup.ts"],
   },
 }));

@@ -47,3 +47,7 @@
 ## 2026-01-20
 - 完成实施计划第 11 步：新增词条 UI 表单 `src/renderer/components/AddWordForm.tsx`，支持输入单词后调用生成接口自动填充读音/释义/情境/例句，可手动编辑并保存，保存后刷新词库与活跃度。
 - `src/renderer/App.tsx` 使用 AddWordForm 取代占位页面，表单交互包含回车触发生成、进度/错误提示与保存成功反馈。测试由用户执行并通过。
+
+## 2026-01-21
+- 完成实施计划第 12 步：新增复习队列与评分界面 `src/renderer/components/ReviewSession.tsx`，支持加载今日计划或自选全词库、卡片翻面、按「容易/一般/困难」评分后调用 IPC 更新 SM-2 与活跃度，并将复习模块串联进 `src/renderer/App.tsx`。
+- 组件测试覆盖空态自选复习、翻面与评分调用（`src/__test__/review-session.test.tsx`），Vitest 切换 jsdom 环境并引入 RTL/jest-dom（`vite.config.ts`、`src/__test__/setup.ts`）。测试由用户执行并通过。

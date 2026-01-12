@@ -46,8 +46,9 @@
     ├── renderer
     │   ├── store.ts           # 渲染端全局 Zustand store，封装 IPC 异步 actions 与状态
     │   ├── components
-    │   │   └── AddWordForm.tsx# 新增词条表单，调用生成接口自动填充并保存
-    │   ├── App.tsx            # 渲染端占位界面
+    │   │   ├── AddWordForm.tsx# 新增词条表单，调用生成接口自动填充并保存
+    │   │   └── ReviewSession.tsx# 复习队列与评分 UI，翻转卡片并提交 SM-2 评分
+    │   ├── App.tsx            # 渲染端入口布局，串联复习与新增两大流程
     │   ├── electron-api.d.ts  # 声明 window.electronAPI 类型，限制渲染层可用接口
     │   └── main.tsx           # React 入口，挂载根组件
     ├── __test__
@@ -56,7 +57,9 @@
     │   ├── ai-providers.test.ts# 覆盖 OpenAI/Gemini/mock provider 的超时与解析逻辑
     │   ├── storage.test.ts    # 基于临时目录的存储层单测，验证原子写入与活跃度累积
     │   ├── store.test.ts      # 渲染端 store 行为单测，mock electronAPI 覆盖加载与错误路径
-    │   └── ipc.test.ts        # IPC 处理与 provider 管理的入参校验、频道注册覆盖
+    │   ├── ipc.test.ts        # IPC 处理与 provider 管理的入参校验、频道注册覆盖
+    │   ├── review-session.test.tsx# React 复习界面用例，覆盖翻转与评分调用
+    │   └── setup.ts           # Vitest setup，引入 jest-dom 匹配器
 ```
 
 ## 角色与依赖
@@ -64,7 +67,7 @@
 - **存储层**：`src/main/storage` 封装本地 JSON 读写与原子写入，`index.ts` 暴露 DataStore 以处理词条增删改、SM-2 评分更新、活跃度递增与数据导入/导出；`activity.ts` 负责 streak 计算，`transfer.ts` 解析外部 words/activity 文件、按 term 去重合并并生成 CSV。
 - **IPC 桥接**：`src/main/ipc` 将 DataStore、SM-2 与 AI provider 组合成受控频道，校验导入/导出路径与参数；`provider.ts` 管理密钥与超时；`src/preload/index.ts` 仅通过 contextBridge 暴露声明在 `shared/ipc.ts` 的白名单 API，渲染层无直接 Node 能力。
 - **共享逻辑**：`src/shared` 提供词条/活跃度类型（含草稿、更新与汇总）、导入/导出契约、SM-2 状态默认值与更新算法、AI/IPC 契约、JSON 校验与补全，供主/渲染进程复用。
-- **测试**：`src/__test__` 中的 Vitest 用例覆盖 SM-2 计算、复习队列排序、数据校验、AI provider、存储层导入导出与 IPC 入口，确保算法与通道契约稳定。
+- **测试**：`src/__test__` 中的 Vitest 用例覆盖 SM-2 计算、复习队列排序、数据校验、AI provider、存储层导入导出与 IPC 入口，新增 jsdom + React Testing Library 覆盖复习界面的翻转与评分交互。
 - **AI 适配层**：`src/main/ai` 封装 OpenAI/Gemini/Mock 三种 provider，统一生成词卡字段，内置提示文案、字段解析与超时控制，由 IPC/Preload 间接暴露。
-- **渲染层**：`src/renderer/store.ts` 提供全局 Zustand store 封装 IPC 异步 actions；`src/renderer/components/AddWordForm.tsx` 实现新增词条流程，调用生成接口自动填充并保存；`src/renderer/index.css` 定义主题 CSS 变量、背景渐变与通用容器/按钮样式；`src/renderer/main.tsx` + `App.tsx` 组成 UI 入口，并通过 `electron-api.d.ts` 绑定可用的 electronAPI 类型，确保 Vite/HMR 路径正常。
-- **构建工具链**：`vite.config.ts` 管理三端构建；`package.json` scripts 提供 `dev`、`build`、`build:desktop`，electron-builder 输出到 `release/`；`npm run lint`/`format` 依赖 ESLint + Prettier 统一风格。
+- **渲染层**：`src/renderer/store.ts` 提供全局 Zustand store 封装 IPC 异步 actions；`src/renderer/components/AddWordForm.tsx` 实现新增词条流程，调用生成接口自动填充并保存；`src/renderer/components/ReviewSession.tsx` 提供复习队列、卡片翻转与评分更新 UI；`src/renderer/index.css` 定义主题 CSS 变量、背景渐变与通用容器/按钮样式；`src/renderer/main.tsx` + `App.tsx` 组成 UI 入口，并通过 `electron-api.d.ts` 绑定可用的 electronAPI 类型，确保 Vite/HMR 路径正常。
+- **构建工具链**：`vite.config.ts` 管理三端构建与 Vitest（现使用 jsdom 环境与 setupFiles）；`package.json` scripts 提供 `dev`、`build`、`build:desktop`，electron-builder 输出到 `release/`；`npm run lint`/`format` 依赖 ESLint + Prettier 统一风格。
