@@ -64,5 +64,5 @@
 - **共享逻辑**：`src/shared` 提供词条/活跃度类型（含草稿、更新与汇总）、导入/导出契约、SM-2 状态默认值与更新算法、AI/IPC 契约、JSON 校验与补全，供主/渲染进程复用。
 - **测试**：`src/__test__` 中的 Vitest 用例覆盖 SM-2 计算、复习队列排序、数据校验、AI provider、存储层导入导出与 IPC 入口，确保算法与通道契约稳定。
 - **AI 适配层**：`src/main/ai` 封装 OpenAI/Gemini/Mock 三种 provider，统一生成词卡字段，内置提示文案、字段解析与超时控制，由 IPC/Preload 间接暴露。
-- **渲染层**：`src/renderer/store.ts` 提供全局 Zustand store 封装 IPC 异步 actions；`src/renderer/main.tsx` + `App.tsx` 组成最小 UI 占位，并通过 `electron-api.d.ts` 绑定可用的 electronAPI 类型，确保 Vite/HMR 路径正常。
+- **渲染层**：`src/renderer/store.ts` 提供全局 Zustand store 封装 IPC 异步 actions；`src/renderer/index.css` 定义主题 CSS 变量、背景渐变与通用容器/按钮样式；`src/renderer/main.tsx` + `App.tsx` 组成最小 UI 占位，并通过 `electron-api.d.ts` 绑定可用的 electronAPI 类型，确保 Vite/HMR 路径正常。
 - **构建工具链**：`vite.config.ts` 管理三端构建；`package.json` scripts 提供 `dev`、`build`、`build:desktop`，electron-builder 输出到 `release/`；`npm run lint`/`format` 依赖 ESLint + Prettier 统一风格。

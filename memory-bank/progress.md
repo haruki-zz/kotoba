@@ -38,3 +38,8 @@
 ## 2026-01-18
 - 完成实施计划第 9 步：在渲染端建立全局 Zustand store（`src/renderer/store.ts`），集中管理词库、复习队列、活跃度、provider 及 session 状态，封装调用 IPC 的异步 action（加载、增改删词条、评分、provider 配置）。
 - 新增 store 单测（`src/__test__/store.test.ts`）mock electronAPI 覆盖成功与错误路径、增改删词条、评分后移除队列、provider/活跃度刷新。测试由用户执行并通过。
+
+## 2026-01-19
+- 完成实施计划第 10 步：集成 Tailwind 主题配置与 PostCSS 管线（`tailwind.config.js`、`postcss.config.cjs`），引入颜色/字体/阴影 tokens。
+- 新增全局样式（`src/renderer/index.css`）使用 CSS 变量实现背景渐变、文字/按钮/面板基样式，并在 `src/renderer/main.tsx` 引入。
+- 调整 PostCSS 插件为 `@tailwindcss/postcss` 并去除未声明的 @apply 自定义类，解决 Tailwind v4 构建报错。测试由用户执行并通过。

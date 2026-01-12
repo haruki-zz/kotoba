@@ -31,6 +31,7 @@
 - `src/preload/index.ts`: 预加载脚本，占位暴露 `electronAPI`，后续可按需扩展受控桥接。
 - `src/renderer/main.tsx`: React 入口，挂载根组件并启用 StrictMode。
 - `src/renderer/store.ts`: 渲染端全局 Zustand store，集中管理词库、复习队列、活跃度、provider 与 session 状态，封装调用 IPC 的异步 actions。
+- `src/renderer/index.css`: Tailwind 基线与全局主题样式，定义颜色/字体/阴影 CSS 变量、背景渐变以及通用容器/按钮类。
 - `src/renderer/App.tsx`: 渲染占位页面，后续 UI 将在此拓展。
 - `src/renderer/electron-api.d.ts`: 声明 window.electronAPI 类型，渲染端只能调用白名单 IPC API。
 - `src/shared/index.ts`: 汇总导出 shared 模块。
