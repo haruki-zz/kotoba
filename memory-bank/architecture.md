@@ -1,7 +1,7 @@
 # 架构概览
 
 ## 当前目录结构与职责
-- `package.json`: npm 清单，设定 ES module、私有包标记与 dev/build/build:desktop/lint/format/test 脚本，配置 electron-builder 产物与 Electron 主入口（ESM），`npm test` 使用 Vitest。
+- `package.json`: npm 清单，设定 ES module、私有包标记与 dev/build/pack/build:desktop/lint/format/test 脚本；配置 electron-builder（asar 开启、keytar 解包、mac dmg/zip 与 Windows nsis/portable 目标、统一产物命名），Electron 主入口为 ESM，`npm test` 使用 Vitest。
 - `package-lock.json`: 锁定依赖版本，确保安装结果可复现。
 - `.gitignore`: 忽略 `node_modules`、打包产物与本地环境变量，保持仓库整洁与密钥安全。
 - `.env.local`: 本地密钥占位文件（OpenAI/Google），避免后续读取缺失变量时报错，实际值不入库。
@@ -10,7 +10,7 @@
 - `tsconfig.json`: TypeScript 严格配置，启用 React JSX/DOM 库，noEmit 仅做类型检查。
 - `vite.config.ts`: Vite 与 `vite-plugin-electron` 配置，分别构建 renderer（`dist/renderer`）与 Electron 主/预加载（`dist-electron`，主进程输出 ESM `index.mjs`，预加载输出 CJS），Vitest 使用 jsdom 环境并加载自定义 setup。
 - `index.html`: 渲染进程入口，挂载 React 根节点并加载 `src/renderer/main.tsx`。
-- `src/main/index.ts`: Electron 主进程入口，创建窗口、加载 dev/prod 资源，预设安全选项（contextIsolation=true、nodeIntegration=false）。
+- `src/main/index.ts`: Electron 主进程入口，创建窗口、加载 dev/prod 资源，预设安全选项（contextIsolation=true、nodeIntegration=false）；打包版数据目录定位 `app.getPath("userData")/data`，开发模式使用仓库 `data/`。
 - `src/main/ai/index.ts`: AI 适配入口，根据配置构建 OpenAI/Gemini/Mock provider，统一生成词卡接口。
 - `src/main/ai/openai.ts`: OpenAI provider，使用 chat completions 非流式 JSON 输出（默认 gpt-4o-mini），支持超时与最大 tokens 限制。
 - `src/main/ai/gemini.ts`: Gemini provider，使用 Flash 2.5 Lite 预览模型 JSON 输出，透传超时并限制输出 tokens。

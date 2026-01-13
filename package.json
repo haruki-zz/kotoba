@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build && electron-builder --dir",
-    "build:desktop": "vite build && electron-builder",
+    "pack": "vite build && electron-builder",
+    "build:desktop": "npm run pack",
     "lint": "npm run lint:eslint && npm run lint:prettier",
     "lint:eslint": "eslint \"src/**/*.{ts,tsx}\" \"vite.config.ts\"",
     "lint:prettier": "prettier --check \"src/**/*.{ts,tsx,jsx}\" \"package.json\" \"tsconfig.json\" \"vite.config.ts\" \"eslint.config.js\"",
@@ -32,6 +33,11 @@
   "build": {
     "appId": "com.haruki.kotoba",
     "productName": "Kotoba",
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/keytar/**"
+    ],
+    "artifactName": "Kotoba-${version}-${os}-${arch}.${ext}",
     "files": [
       "dist/**",
       "dist-electron/**",
@@ -40,6 +46,24 @@
     ],
     "directories": {
       "output": "release"
+    },
+    "mac": {
+      "category": "public.app-category.education",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
     }
   },
   "dependencies": {

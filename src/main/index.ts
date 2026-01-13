@@ -4,14 +4,22 @@ import { fileURLToPath } from "node:url";
 import { registerIpcHandlers } from "./ipc";
 import { createProviderManager } from "./ipc/provider";
 import type { ProviderManager } from "./ipc/provider";
-import { createDataStore } from "./storage";
+import { createDataStore, defaultDataDir } from "./storage";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const isDev = !app.isPackaged;
-const dataStore = createDataStore();
+let dataStore!: ReturnType<typeof createDataStore>;
 let providerManager!: ProviderManager;
 let unregisterIpc: (() => void) | undefined;
+
+const resolveDataDir = () => {
+  if (app.isPackaged) {
+    return path.join(app.getPath("userData"), "data");
+  }
+
+  return defaultDataDir;
+};
 
 const createMainWindow = async () => {
   const mainWindow = new BrowserWindow({
@@ -33,6 +41,7 @@ const createMainWindow = async () => {
 };
 
 app.whenReady().then(async () => {
+  dataStore = createDataStore(resolveDataDir());
   providerManager = await createProviderManager();
   unregisterIpc = registerIpcHandlers({ dataStore, providerManager });
   await createMainWindow();

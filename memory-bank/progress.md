@@ -63,3 +63,8 @@
 ## 2026-01-24
 - 完成实施计划第 15 步：新增设置页能力，支持选择 LLM provider 并安全保存密钥。主进程引入钥匙串密钥存储 `src/main/security/secret-store.ts` 与配置文件持久化 `src/main/settings/provider-settings.ts`，`createProviderManager` 异步化、合并钥匙串/环境变量/配置文件并校验密钥，启动时加载持久化配置；IPC 生成卡片改为等待 provider 实例。
 - 渲染端新增 `src/renderer/components/SettingsPanel.tsx` 并挂载到 `App.tsx`，提供 provider 下拉、密钥输入与提示文案，调用 store 的 `setProvider`/`refreshProvider`。添加 `src/__test__/settings-panel.test.tsx` 覆盖必填校验、密钥去空格与已保存提示；更新 `src/__test__/ipc.test.ts` 覆盖钥匙串/配置恢复场景。测试由用户执行并通过。
+
+## 2026-01-25
+- 完成实施计划第 16 步：完善打包与发布流程。`package.json` 新增 `pack` 脚本供正式产物（dmg/zip/nsis/portable）打包，`build:desktop` 复用该脚本，`build` 保持 `--dir` 调试产物；electron-builder 增补 mac dmg/zip 与 Windows nsis/portable 目标、统一产物命名、开启 asar 并解包 keytar。
+- 主进程运行时数据目录在打包版改为 `app.getPath("userData")/data`，开发环境继续使用仓库 `data/`，确保 JSON 写入不落在只读 asar 内。
+- 运行 `npm run build`（调试包）与 `npm run pack`（正式包）均成功生成 mac arm64 产物，未配置签名/公证。测试由用户执行并通过。
