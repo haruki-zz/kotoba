@@ -57,6 +57,7 @@ describe("ReviewSession", () => {
 
     expect(api.loadWords).toHaveBeenCalled();
     expect(await screen.findByText(word.term)).toBeInTheDocument();
+    expect(await screen.findByText(/进度 1\/1/)).toBeInTheDocument();
   });
 
   it("flips card and submits rating to update queue", async () => {
@@ -74,13 +75,44 @@ describe("ReviewSession", () => {
     expect(await screen.findByText(word.term)).toBeInTheDocument();
     expect(screen.queryByText(word.definition_ja)).not.toBeInTheDocument();
 
-    await user.click(screen.getByLabelText("翻转卡片"));
-    expect(screen.getByText(word.definition_ja)).toBeInTheDocument();
+    await user.keyboard("{Space}");
+    expect(await screen.findByText(word.definition_ja)).toBeInTheDocument();
 
-    await user.click(screen.getByTestId("rate-容易"));
+    await user.keyboard("1");
 
     await waitFor(() => expect(api.submitReview).toHaveBeenCalledWith({ id: word.id, grade: 5 }));
     await waitFor(() => expect(api.loadActivitySummary).toHaveBeenCalled());
     await waitFor(() => expect(screen.getByText("今日无计划复习")).toBeInTheDocument());
+  });
+
+  it("shows progress and navigation state when switching cards", async () => {
+    const first = buildWord("first");
+    const second = buildWord("second");
+    const api = createMockApi({
+      loadReviewQueue: vi.fn().mockResolvedValue([first, second]),
+    });
+    const store = createAppStore(api);
+    const user = userEvent.setup();
+
+    render(<ReviewSession store={store} />);
+
+    expect(await screen.findByText(first.term)).toBeInTheDocument();
+    expect(screen.getByText(/进度 1\/2/)).toBeInTheDocument();
+
+    const prevButton = screen.getByRole("button", { name: "← 上一张" });
+    const nextButton = screen.getByRole("button", { name: "下一张 →" });
+
+    expect(prevButton).toBeDisabled();
+    expect(nextButton).toBeEnabled();
+
+    await user.click(nextButton);
+    await waitFor(() => expect(screen.getByText(/进度 2\/2/)).toBeInTheDocument());
+    expect(screen.getByText(second.term)).toBeInTheDocument();
+    expect(nextButton).toBeDisabled();
+    expect(prevButton).toBeEnabled();
+
+    await user.keyboard("{ArrowLeft}");
+    await waitFor(() => expect(screen.getByText(/进度 1\/2/)).toBeInTheDocument());
+    await waitFor(() => expect(prevButton).toBeDisabled());
   });
 });

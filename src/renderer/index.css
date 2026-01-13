@@ -313,6 +313,61 @@
     box-shadow: none;
   }
 
+  .review-card-shell {
+    position: relative;
+    width: min(100%, 760px);
+    margin-inline: auto;
+    perspective: 1400px;
+  }
+
+  .review-card {
+    position: relative;
+    width: 100%;
+    min-height: 320px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transition: transform var(--transition-normal) ease;
+  }
+
+  .review-card.is-flipped {
+    transform: rotateY(180deg);
+  }
+
+  .review-card:focus-visible {
+    outline: 2px solid rgba(31, 111, 139, 0.24);
+    outline-offset: 4px;
+  }
+
+  .review-card__face {
+    position: absolute;
+    inset: 0;
+    border-radius: calc(var(--radius-card) * 0.92);
+    border: 1px solid var(--color-border);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(238, 241, 244, 0.92));
+    box-shadow: var(--shadow-card);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    justify-content: space-between;
+    backface-visibility: hidden;
+  }
+
+  .review-card__face--back {
+    transform: rotateY(180deg);
+  }
+
+  .review-term {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    color: var(--color-ink);
+    word-break: break-word;
+    line-height: 1.1;
+  }
+
   .pill {
     display: inline-flex;
     align-items: center;
@@ -366,7 +421,8 @@
   @media (prefers-reduced-motion: reduce) {
     .btn,
     .cta,
-    .choice-card {
+    .choice-card,
+    .review-card {
       transition: none;
     }
   }

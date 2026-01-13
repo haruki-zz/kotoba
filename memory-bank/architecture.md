@@ -35,12 +35,12 @@
 - `src/renderer/main.tsx`: React 入口，挂载根组件并启用 StrictMode。
 - `src/renderer/store.ts`: 渲染端全局 Zustand store，集中管理词库、复习队列、活跃度、provider 与 session 状态，封装调用 IPC 的异步 actions（含导入/导出）；复习评分后同步移除队列并刷新活跃度。
 - `src/renderer/components/AddWordForm.tsx`: 新增词条表单与三步骨架（输入→生成预览→保存/手动完成），默认聚焦输入框，支持生成自动填充、手动编辑与实时预览卡片，保存后刷新词库/活跃度并重新聚焦。
-- `src/renderer/components/ReviewSession.tsx`: 复习界面，加载今日队列或自选全词库，支持卡片翻转与「容易/一般/困难」评分，评分后调用 IPC 更新 SM-2 与活跃度，复用主题进度条、卡片与选项样式。
+- `src/renderer/components/ReviewSession.tsx`: 复习界面中央单卡布局，带 200ms 翻转动画与 clamp 文本自适应，支持空格翻面、左右箭头切换、1/2/3 快捷键评分，显示剩余/进度文案并在评分后调用 IPC 更新 SM-2 与活跃度。
 - `src/renderer/components/ActivityOverview.tsx`: 活跃度与 streak 视图，展示今日新增/复习计数、连续天数与近六周热力格（悬停显示每日详情），采用统一统计卡片与提示样式。
 - `src/renderer/components/DataTransferPanel.tsx`: 导入/导出界面，填写或选择 words/activity JSON 与 CSV 路径，调用 IPC 执行导出或导入并展示跳过记录，导入后刷新前端状态，按钮/输入/提示与主题保持一致。
 - `src/renderer/components/SettingsPanel.tsx`: 设置面板，选择 provider、输入密钥并调用 store/setProvider 持久化设置，展示已保存密钥提示，应用全局输入/按钮/提示样式。
 - `src/renderer/components/LibraryHub.tsx`: 词库页骨架，汇总导入/导出与 provider 设置，列出当前可用操作并声明后续将补充词库列表/筛选/编辑。
-- `src/renderer/index.css`: Tailwind 基线与全局主题样式，提供颜色/字体/阴影/半径/过渡变量，叠加轻噪点纸纹理背景，定义 panel、按钮、输入、callout、选项卡片与侧边导航样式。
+- `src/renderer/index.css`: Tailwind 基线与全局主题样式，提供颜色/字体/阴影/半径/过渡变量，叠加轻噪点纸纹理背景，定义 panel、按钮、输入、callout、选项卡片与侧边导航样式，并新增复习卡片透视翻转、长词排版与动画降级处理。
 - `src/renderer/App.tsx`: 渲染入口布局，新增左侧窄栏导航（新增/复习/词库/统计）与主区域单列（约 960px），顶部页面标题+主行动按钮可滚动到对应锚点，串联新增、复习、词库（导入/导出+设置）与统计视图。
 - `src/renderer/electron-api.d.ts`: 声明 window.electronAPI 类型，渲染端只能调用白名单 IPC API。
 - `src/shared/index.ts`: 汇总导出 shared 模块。
