@@ -94,23 +94,23 @@ const AddWordForm = () => {
   return (
     <section className="panel mx-auto max-w-3xl space-y-6 p-6">
       <div className="space-y-2">
-        <p className="text-sm uppercase tracking-[0.08em] text-slate-500">新增单词</p>
-        <h1 className="text-3xl font-semibold text-slate-900">最少 3 步完成造卡</h1>
-        <p className="text-slate-600">
+        <p className="eyebrow">新增单词</p>
+        <h1 className="text-3xl font-semibold text-ink">最少 3 步完成造卡</h1>
+        <p className="text-muted">
           输入单词后自动生成读音、释义、情境与例句，必要时可手动调整。
         </p>
       </div>
 
       <form className="space-y-5" onSubmit={handleSubmit}>
         <div className="space-y-3">
-          <label className="block text-sm font-medium text-slate-700" htmlFor="term">
+          <label className="block text-sm font-semibold text-ink" htmlFor="term">
             单词
           </label>
           <div className="flex flex-col gap-3 md:flex-row">
             <input
               id="term"
               name="term"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-lg shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="input text-lg"
               placeholder="输入单词，回车生成"
               value={fields.term}
               onChange={(event) => updateField("term", event.target.value)}
@@ -124,7 +124,7 @@ const AddWordForm = () => {
             />
             <button
               type="button"
-              className="cta min-w-[140px]"
+              className="btn btn-primary min-w-[140px]"
               onClick={handleGenerate}
               disabled={saving || generating}
             >
@@ -170,19 +170,17 @@ const AddWordForm = () => {
         <div className="flex items-center gap-3">
           <button
             type="submit"
-            className="cta"
+            className="btn btn-primary"
             disabled={saving || generating || !isComplete}
           >
             {saving ? "保存中…" : "保存卡片"}
           </button>
-          <p className="text-sm text-slate-600">保存后将加入今日复习计划</p>
+          <p className="text-sm text-muted">保存后将加入今日复习计划</p>
         </div>
 
         {(error || message) && (
           <div
-            className={`rounded-lg border px-4 py-3 text-sm ${
-              error ? "border-red-200 bg-red-50 text-red-700" : "border-green-200 bg-green-50 text-green-700"
-            }`}
+            className={`callout ${error ? "callout-error" : "callout-success"}`}
           >
             {error ?? message}
           </div>
@@ -202,13 +200,13 @@ interface FieldProps {
 }
 
 const Field = ({ id, label, value, onChange, disabled, textarea }: FieldProps) => (
-  <label className="flex flex-col gap-2 text-sm font-medium text-slate-700" htmlFor={id}>
+  <label className="flex flex-col gap-2 text-sm font-semibold text-ink" htmlFor={id}>
     {label}
     {textarea ? (
       <textarea
         id={id}
         name={id}
-        className="min-h-[120px] rounded-lg border border-slate-300 px-3 py-2 text-base text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+        className="input min-h-[120px] text-base"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}
@@ -217,7 +215,7 @@ const Field = ({ id, label, value, onChange, disabled, textarea }: FieldProps) =
       <input
         id={id}
         name={id}
-        className="rounded-lg border border-slate-300 px-3 py-2 text-base text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+        className="input text-base"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}

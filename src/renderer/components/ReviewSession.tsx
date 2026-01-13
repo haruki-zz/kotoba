@@ -136,11 +136,11 @@ const ReviewSession = ({ store = useAppStore }: ReviewSessionProps) => {
     return (
       <div className="space-y-3">
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm text-slate-600">
+          <div className="flex items-center justify-between text-sm text-muted">
             <span>{mode === "custom" ? "自选复习" : "今日计划"} · {activeQueue.length} 张</span>
             <span>剩余 {Math.max(activeQueue.length - currentIndex - 1, 0)} 张</span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+          <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
             <div
               className="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
               style={{ width: `${progress}%` }}
@@ -161,18 +161,18 @@ const ReviewSession = ({ store = useAppStore }: ReviewSessionProps) => {
           aria-label="翻转卡片"
         >
           <div className="flex items-baseline gap-3">
-            <p className="text-4xl font-semibold text-slate-900">{activeWord.term}</p>
-            <p className="text-xl text-slate-600">{activeWord.kana}</p>
+            <p className="text-4xl font-semibold text-ink">{activeWord.term}</p>
+            <p className="text-xl text-muted">{activeWord.kana}</p>
           </div>
 
           {flipped ? (
-            <div className="space-y-2 text-slate-700">
-              <p className="text-lg font-medium text-slate-900">{activeWord.definition_ja}</p>
-              <p className="text-slate-700">{activeWord.scene_ja}</p>
-              <p className="text-slate-700">{activeWord.example_ja}</p>
+            <div className="space-y-2 text-ink">
+              <p className="text-lg font-medium text-ink">{activeWord.definition_ja}</p>
+              <p className="text-ink">{activeWord.scene_ja}</p>
+              <p className="text-ink">{activeWord.example_ja}</p>
             </div>
           ) : (
-            <p className="text-sm text-slate-600">点击或按空格翻面，再选择评分</p>
+            <p className="text-sm text-muted">点击或按空格翻面，再选择评分</p>
           )}
         </button>
 
@@ -181,13 +181,13 @@ const ReviewSession = ({ store = useAppStore }: ReviewSessionProps) => {
             <button
               key={option.label}
               type="button"
-              className="flex flex-col rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
+              className="choice-card"
               onClick={() => handleReview(option.grade)}
               disabled={session.loading}
               data-testid={`rate-${option.label}`}
             >
-              <span className="text-lg font-semibold text-slate-900">{option.label}</span>
-              <span className="text-sm text-slate-600">{option.hint}</span>
+              <span className="text-lg font-semibold text-ink">{option.label}</span>
+              <span className="text-sm text-muted">{option.hint}</span>
             </button>
           ))}
         </div>
@@ -196,13 +196,13 @@ const ReviewSession = ({ store = useAppStore }: ReviewSessionProps) => {
   };
 
   const renderEmpty = () => (
-    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-slate-700">
-      <p className="text-lg font-semibold text-slate-900">今日无计划复习</p>
-      <p className="mt-1 text-sm text-slate-600">可以刷新队列或进入自选复习随便练习几张。</p>
+    <div className="rounded-xl border border-dashed border-border bg-surface-muted px-4 py-6 text-center text-ink">
+      <p className="text-lg font-semibold text-ink">今日无计划复习</p>
+      <p className="mt-1 text-sm text-muted">可以刷新队列或进入自选复习随便练习几张。</p>
       <div className="mt-4 flex justify-center gap-3">
         <button
           type="button"
-          className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm"
+          className="btn btn-outline text-sm"
           onClick={handleRefreshQueue}
           disabled={session.loading}
         >
@@ -210,7 +210,7 @@ const ReviewSession = ({ store = useAppStore }: ReviewSessionProps) => {
         </button>
         <button
           type="button"
-          className="cta min-w-[140px]"
+          className="btn btn-primary min-w-[140px]"
           onClick={startCustomReview}
           disabled={session.loading}
         >
@@ -224,16 +224,16 @@ const ReviewSession = ({ store = useAppStore }: ReviewSessionProps) => {
     <section className="panel mx-auto max-w-4xl space-y-6 p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
-          <p className="text-sm uppercase tracking-[0.08em] text-slate-500">复习</p>
-          <h2 className="text-3xl font-semibold text-slate-900">复习队列与评分</h2>
-          <p className="text-slate-600">
+          <p className="eyebrow">复习</p>
+          <h2 className="text-3xl font-semibold text-ink">复习队列与评分</h2>
+          <p className="text-muted">
             先看正面尝试回忆，翻面后按记忆程度选择「容易/一般/困难」，系统将更新 SM-2 计划与今日活跃度。
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm"
+            className="btn btn-outline text-sm"
             onClick={handleRefreshQueue}
             disabled={session.loading}
           >
@@ -241,7 +241,7 @@ const ReviewSession = ({ store = useAppStore }: ReviewSessionProps) => {
           </button>
           <button
             type="button"
-            className="cta min-w-[140px]"
+            className="btn btn-primary min-w-[140px]"
             onClick={startCustomReview}
             disabled={session.loading}
           >
@@ -253,11 +253,7 @@ const ReviewSession = ({ store = useAppStore }: ReviewSessionProps) => {
       {activeQueue.length ? renderCard() : renderEmpty()}
 
       {(error || message) && (
-        <div
-          className={`rounded-lg border px-4 py-3 text-sm ${
-            error ? "border-red-200 bg-red-50 text-red-700" : "border-green-200 bg-green-50 text-green-700"
-          }`}
-        >
+        <div className={`callout ${error ? "callout-error" : "callout-success"}`}>
           {error ?? message}
         </div>
       )}

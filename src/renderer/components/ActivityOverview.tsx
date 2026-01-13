@@ -40,7 +40,7 @@ const buildRecentDays = (history: ActivitySummaryDay[], days = DAYS_TO_RENDER, a
 };
 
 const colorForValue = (value: number, max: number) => {
-  if (max === 0 || value === 0) return "bg-slate-200";
+  if (max === 0 || value === 0) return "bg-surface-muted";
   const ratio = value / max;
   if (ratio >= 0.75) return "bg-primary";
   if (ratio >= 0.5) return "bg-primary/70";
@@ -91,44 +91,44 @@ const ActivityOverview = ({ store = useAppStore }: ActivityOverviewProps) => {
   return (
     <section className="panel mx-auto max-w-5xl space-y-6 p-6">
       <div className="flex flex-col gap-2">
-        <p className="text-sm uppercase tracking-[0.08em] text-slate-500">活跃度</p>
-        <h2 className="text-3xl font-semibold text-slate-900">每日坚持与 streak</h2>
-        <p className="text-slate-600">
+        <p className="eyebrow">活跃度</p>
+        <h2 className="text-3xl font-semibold text-ink">每日坚持与 streak</h2>
+        <p className="text-muted">
           按天查看新增与复习次数，快速了解连续活跃天数与近六周的学习节奏。
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white/90 p-4 shadow-sm">
-          <p className="text-xs uppercase tracking-[0.08em] text-slate-500">连续活跃</p>
+        <div className="stat-card">
+          <p className="eyebrow text-xs">连续活跃</p>
           <p className="text-3xl font-semibold text-primary">
             {activity?.streak ?? 0}
-            <span className="ml-1 text-lg text-slate-600">天</span>
+            <span className="ml-1 text-lg text-muted">天</span>
           </p>
-          <p className="mt-1 text-sm text-slate-600">保持节奏，任何一次复习或新增都算活跃</p>
+          <p className="mt-1 text-sm text-muted">保持节奏，任何一次复习或新增都算活跃</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white/90 p-4 shadow-sm">
-          <p className="text-xs uppercase tracking-[0.08em] text-slate-500">今日新增</p>
-          <p className="text-3xl font-semibold text-slate-900">{today.added_count}</p>
-          <p className="mt-1 text-sm text-slate-600">已写入词库的单词数量</p>
+        <div className="stat-card">
+          <p className="eyebrow text-xs">今日新增</p>
+          <p className="text-3xl font-semibold text-ink">{today.added_count}</p>
+          <p className="mt-1 text-sm text-muted">已写入词库的单词数量</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white/90 p-4 shadow-sm">
-          <p className="text-xs uppercase tracking-[0.08em] text-slate-500">今日复习</p>
-          <p className="text-3xl font-semibold text-slate-900">{today.review_count}</p>
-          <p className="mt-1 text-sm text-slate-600">完成 SM-2 评分的次数</p>
+        <div className="stat-card">
+          <p className="eyebrow text-xs">今日复习</p>
+          <p className="text-3xl font-semibold text-ink">{today.review_count}</p>
+          <p className="mt-1 text-sm text-muted">完成 SM-2 评分的次数</p>
         </div>
       </div>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-slate-800">近 6 周活跃度</p>
-            <p className="text-sm text-slate-600">方块颜色越深，表示当日新增+复习次数越多</p>
+            <p className="text-sm font-medium text-ink">近 6 周活跃度</p>
+            <p className="text-sm text-muted">方块颜色越深，表示当日新增+复习次数越多</p>
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-600">
-            <span className="rounded-full border border-slate-300 bg-white px-2 py-1">0</span>
+          <div className="flex items-center gap-2 text-xs text-muted">
+            <span className="rounded-full border border-border bg-white/90 px-2 py-1">0</span>
             <div className="flex items-center gap-1">
               {[0.2, 0.5, 0.8].map((ratio) => (
                 <span
@@ -137,7 +137,7 @@ const ActivityOverview = ({ store = useAppStore }: ActivityOverviewProps) => {
                 />
               ))}
             </div>
-            <span className="rounded-full border border-slate-300 bg-white px-2 py-1">多</span>
+            <span className="rounded-full border border-border bg-white/90 px-2 py-1">多</span>
           </div>
         </div>
 
@@ -158,13 +158,11 @@ const ActivityOverview = ({ store = useAppStore }: ActivityOverviewProps) => {
         </div>
 
         {(error || session.error) && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error ?? session.error}
-          </div>
+          <div className="callout callout-error text-sm">{error ?? session.error}</div>
         )}
 
         {session.loading && !activity && (
-          <p className="text-sm text-slate-600">正在加载活跃度数据…</p>
+          <p className="text-sm text-muted">正在加载活跃度数据…</p>
         )}
       </div>
     </section>

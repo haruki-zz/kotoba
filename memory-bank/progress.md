@@ -68,3 +68,8 @@
 - 完成实施计划第 16 步：完善打包与发布流程。`package.json` 新增 `pack` 脚本供正式产物（dmg/zip/nsis/portable）打包，`build:desktop` 复用该脚本，`build` 保持 `--dir` 调试产物；electron-builder 增补 mac dmg/zip 与 Windows nsis/portable 目标、统一产物命名、开启 asar 并解包 keytar。
 - 主进程运行时数据目录在打包版改为 `app.getPath("userData")/data`，开发环境继续使用仓库 `data/`，确保 JSON 写入不落在只读 asar 内。
 - 运行 `npm run build`（调试包）与 `npm run pack`（正式包）均成功生成 mac arm64 产物，未配置签名/公证。测试由用户执行并通过。
+
+## 2026-01-26
+- 完成实施计划第 17 步：落实 UI 设计规范主题。扩展 Tailwind 主题色与阴影，`src/renderer/index.css` 添加全局色板/字体变量、轻噪点纸纹理背景、按钮/输入/提示卡片统一状态样式与面板纹理层。
+- 更新 AddWordForm、ReviewSession、ActivityOverview、DataTransferPanel、SettingsPanel 以使用新按钮/输入/状态样式与色阶，进度条与统计卡片同步新主题。
+- 未运行测试，等待用户验证。

@@ -78,22 +78,22 @@ const SettingsPanel = ({ store = useAppStore }: SettingsPanelProps) => {
   return (
     <section className="panel mx-auto max-w-3xl space-y-6 p-6">
       <div className="space-y-2">
-        <p className="text-sm uppercase tracking-[0.08em] text-slate-500">设置</p>
-        <h2 className="text-3xl font-semibold text-slate-900">选择模型与保存密钥</h2>
-        <p className="text-slate-600">
+        <p className="eyebrow">设置</p>
+        <h2 className="text-3xl font-semibold text-ink">选择模型与保存密钥</h2>
+        <p className="text-muted">
           切换 LLM 提供商或密钥时，密钥会写入系统钥匙串，不会在界面上回显完整内容。
         </p>
       </div>
 
       <form className="space-y-5" onSubmit={handleSubmit}>
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700" htmlFor="provider">
+          <label className="block text-sm font-semibold text-ink" htmlFor="provider">
             LLM 提供商
           </label>
           <select
             id="provider"
             name="provider"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-base text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="input text-base"
             value={selectedProvider}
             onChange={(event) => setSelectedProvider(event.target.value as ProviderName)}
             disabled={session.loading}
@@ -104,26 +104,26 @@ const SettingsPanel = ({ store = useAppStore }: SettingsPanelProps) => {
               </option>
             ))}
           </select>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted">
             {providerOptions.find((option) => option.value === selectedProvider)?.helper}
           </p>
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700" htmlFor="apiKey">
+          <label className="block text-sm font-semibold text-ink" htmlFor="apiKey">
             API 密钥
           </label>
           <input
             id="apiKey"
             name="apiKey"
             type="password"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-base text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="input text-base"
             placeholder="sk-... 或 AIzx..."
             value={apiKey}
             onChange={(event) => setApiKey(event.target.value)}
             disabled={session.loading}
           />
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted">
             {providerState?.hasApiKey && providerState.provider === selectedProvider
               ? "当前 provider 的密钥已安全保存，不会在此处展示。"
               : "不会上传到服务器，仅保存在本机系统钥匙串。"}
@@ -133,22 +133,18 @@ const SettingsPanel = ({ store = useAppStore }: SettingsPanelProps) => {
         <div className="flex items-center gap-3">
           <button
             type="submit"
-            className="cta"
+            className="btn btn-primary"
             disabled={session.loading}
           >
             {session.loading ? "保存中…" : "保存设置"}
           </button>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted">
             切换到 Mock 可离线调试，OpenAI/Gemini 需填写有效密钥。
           </p>
         </div>
 
         {(error || message) && (
-          <div
-            className={`rounded-lg border px-4 py-3 text-sm ${
-              error ? "border-red-200 bg-red-50 text-red-700" : "border-green-200 bg-green-50 text-green-700"
-            }`}
-          >
+          <div className={`callout ${error ? "callout-error" : "callout-success"}`}>
             {error ?? message}
           </div>
         )}

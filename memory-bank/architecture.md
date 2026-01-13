@@ -10,6 +10,7 @@
 - `tsconfig.json`: TypeScript 严格配置，启用 React JSX/DOM 库，noEmit 仅做类型检查。
 - `vite.config.ts`: Vite 与 `vite-plugin-electron` 配置，分别构建 renderer（`dist/renderer`）与 Electron 主/预加载（`dist-electron`，主进程输出 ESM `index.mjs`，预加载输出 CJS），Vitest 使用 jsdom 环境并加载自定义 setup。
 - `index.html`: 渲染进程入口，挂载 React 根节点并加载 `src/renderer/main.tsx`。
+- `tailwind.config.js`: Tailwind 主题配置，定义基础色板/字体/阴影，扩充 muted/success/danger 语义色与 soft/floating 阴影供渲染端取用。
 - `src/main/index.ts`: Electron 主进程入口，创建窗口、加载 dev/prod 资源，预设安全选项（contextIsolation=true、nodeIntegration=false）；打包版数据目录定位 `app.getPath("userData")/data`，开发模式使用仓库 `data/`。
 - `src/main/ai/index.ts`: AI 适配入口，根据配置构建 OpenAI/Gemini/Mock provider，统一生成词卡接口。
 - `src/main/ai/openai.ts`: OpenAI provider，使用 chat completions 非流式 JSON 输出（默认 gpt-4o-mini），支持超时与最大 tokens 限制。
@@ -33,12 +34,12 @@
 - `src/preload/index.ts`: 预加载脚本，占位暴露 `electronAPI`，后续可按需扩展受控桥接。
 - `src/renderer/main.tsx`: React 入口，挂载根组件并启用 StrictMode。
 - `src/renderer/store.ts`: 渲染端全局 Zustand store，集中管理词库、复习队列、活跃度、provider 与 session 状态，封装调用 IPC 的异步 actions（含导入/导出）；复习评分后同步移除队列并刷新活跃度。
-- `src/renderer/components/AddWordForm.tsx`: 新增词条表单，调用生成接口自动填充读音/释义/情境/例句，支持手动编辑并保存，保存后刷新词库与活跃度。
-- `src/renderer/components/ReviewSession.tsx`: 复习界面，加载今日队列或自选全词库，支持卡片翻转与「容易/一般/困难」评分，评分后调用 IPC 更新 SM-2 与活跃度。
-- `src/renderer/components/ActivityOverview.tsx`: 活跃度与 streak 视图，展示今日新增/复习计数、连续天数与近六周热力格（悬停显示每日详情）。
-- `src/renderer/components/DataTransferPanel.tsx`: 导入/导出界面，填写或选择 words/activity JSON 与 CSV 路径，调用 IPC 执行导出或导入并展示跳过记录，导入后刷新前端状态。
-- `src/renderer/components/SettingsPanel.tsx`: 设置面板，选择 provider、输入密钥并调用 store/setProvider 持久化设置，展示已保存密钥提示。
-- `src/renderer/index.css`: Tailwind 基线与全局主题样式，定义颜色/字体/阴影 CSS 变量、背景渐变以及通用容器/按钮类。
+- `src/renderer/components/AddWordForm.tsx`: 新增词条表单，调用生成接口自动填充读音/释义/情境/例句，支持手动编辑并保存，保存后刷新词库与活跃度，使用全局按钮/输入/提示样式。
+- `src/renderer/components/ReviewSession.tsx`: 复习界面，加载今日队列或自选全词库，支持卡片翻转与「容易/一般/困难」评分，评分后调用 IPC 更新 SM-2 与活跃度，复用主题进度条、卡片与选项样式。
+- `src/renderer/components/ActivityOverview.tsx`: 活跃度与 streak 视图，展示今日新增/复习计数、连续天数与近六周热力格（悬停显示每日详情），采用统一统计卡片与提示样式。
+- `src/renderer/components/DataTransferPanel.tsx`: 导入/导出界面，填写或选择 words/activity JSON 与 CSV 路径，调用 IPC 执行导出或导入并展示跳过记录，导入后刷新前端状态，按钮/输入/提示与主题保持一致。
+- `src/renderer/components/SettingsPanel.tsx`: 设置面板，选择 provider、输入密钥并调用 store/setProvider 持久化设置，展示已保存密钥提示，应用全局输入/按钮/提示样式。
+- `src/renderer/index.css`: Tailwind 基线与全局主题样式，提供颜色/字体/阴影/半径/过渡变量，叠加轻噪点纸纹理背景，定义 panel、按钮、输入、callout、选项卡片等基础类供组件复用。
 - `src/renderer/App.tsx`: 渲染入口布局，串联活跃度概览、复习、新增词条与导入/导出四大流程。
 - `src/renderer/electron-api.d.ts`: 声明 window.electronAPI 类型，渲染端只能调用白名单 IPC API。
 - `src/shared/index.ts`: 汇总导出 shared 模块。
@@ -75,3 +76,4 @@
 - IPC 安全桥接：`src/shared/ipc.ts` 定义频道与契约，`src/main/ipc` 校验入参并调度 DataStore/AI，`src/preload` 只暴露白名单 API，减少渲染进程能力面。
 - 渲染层：`src/renderer/components` 覆盖活跃度概览、复习、新增与导入/导出四大流程，热力格与 streak 展示依赖 store 提供的扩展活动摘要。
 - Provider 设置持久化：主进程通过 `secret-store.ts` 将密钥写入系统钥匙串，通过 `provider-settings.ts` 持久化 provider/timeout，`createProviderManager` 异步合并环境变量/钥匙串/配置文件并校验密钥；渲染端 SettingsPanel 提供切换与提示。
+- 主题与样式统一：Tailwind 配置与 `src/renderer/index.css` 提供色板、字体、阴影、噪点纹理、按钮/输入/提示等基础类，组件统一复用，保证一致的交互与视觉层级。

@@ -124,18 +124,18 @@ const DataTransferPanel = ({ store = useAppStore }: DataTransferPanelProps) => {
   return (
     <section className="panel mx-auto max-w-5xl space-y-6 p-6">
       <div className="space-y-2">
-        <p className="text-sm uppercase tracking-[0.08em] text-slate-500">导入 / 导出</p>
-        <h2 className="text-3xl font-semibold text-slate-900">迁移词库与活跃度</h2>
-        <p className="text-slate-600">
+        <p className="eyebrow">导入 / 导出</p>
+        <h2 className="text-3xl font-semibold text-ink">迁移词库与活跃度</h2>
+        <p className="text-muted">
           导入外部 JSON 时会进行校验并按单词去重，导出可生成 words/activity JSON 与 CSV，所有操作会在完成后刷新当前数据。
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-white/90 p-5 shadow-sm">
+        <div className="stat-card space-y-1 p-5">
           <div className="space-y-1">
-            <h3 className="text-xl font-semibold text-slate-900">导出 JSON / CSV</h3>
-            <p className="text-sm text-slate-600">填写目标文件路径，可选择导出词库 JSON、活跃度 JSON 与 CSV。</p>
+            <h3 className="text-xl font-semibold text-ink">导出 JSON / CSV</h3>
+            <p className="text-sm text-muted">填写目标文件路径，可选择导出词库 JSON、活跃度 JSON 与 CSV。</p>
           </div>
 
           <div className="mt-4 space-y-3">
@@ -167,32 +167,28 @@ const DataTransferPanel = ({ store = useAppStore }: DataTransferPanelProps) => {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                className="cta"
+                className="btn btn-primary"
                 onClick={handleExport}
                 disabled={session.loading}
               >
                 {session.loading ? "处理中…" : "导出文件"}
               </button>
-              <p className="text-sm text-slate-600">至少填写一个路径，可同时生成 JSON 与 CSV。</p>
+              <p className="text-sm text-muted">至少填写一个路径，可同时生成 JSON 与 CSV。</p>
             </div>
 
             {exportError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {exportError}
-              </div>
+              <div className="callout callout-error text-sm">{exportError}</div>
             )}
             {exportMessage && (
-              <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-                {exportMessage}
-              </div>
+              <div className="callout callout-success text-sm">{exportMessage}</div>
             )}
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white/90 p-5 shadow-sm">
+        <div className="stat-card space-y-1 p-5">
           <div className="space-y-1">
-            <h3 className="text-xl font-semibold text-slate-900">导入 JSON</h3>
-            <p className="text-sm text-slate-600">
+            <h3 className="text-xl font-semibold text-ink">导入 JSON</h3>
+            <p className="text-sm text-muted">
               选择 words.json 或 activity.json，系统会按 term 去重并跳过非法记录，导入后自动刷新词库与活跃度。
             </p>
           </div>
@@ -216,29 +212,25 @@ const DataTransferPanel = ({ store = useAppStore }: DataTransferPanelProps) => {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                className="cta"
+                className="btn btn-primary"
                 onClick={handleImport}
                 disabled={session.loading}
               >
                 {session.loading ? "处理中…" : "导入文件"}
               </button>
-              <p className="text-sm text-slate-600">至少选择一个文件，导入后数据会立即生效。</p>
+              <p className="text-sm text-muted">至少选择一个文件，导入后数据会立即生效。</p>
             </div>
 
             {importError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {importError}
-              </div>
+              <div className="callout callout-error text-sm">{importError}</div>
             )}
             {importMessage && (
-              <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-                {importMessage}
-              </div>
+              <div className="callout callout-success text-sm">{importMessage}</div>
             )}
             {importIssues.length > 0 && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                <p className="font-medium">以下记录被跳过：</p>
-                <ul className="mt-2 list-disc space-y-1 pl-5">
+              <div className="callout callout-warning text-sm">
+                <p className="font-medium text-ink">以下记录被跳过：</p>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-ink">
                   {importIssues.map((issue) => (
                     <li key={issue}>{issue}</li>
                   ))}
@@ -262,12 +254,12 @@ interface TextFieldProps {
 }
 
 const TextField = ({ id, label, placeholder, value, onChange, disabled }: TextFieldProps) => (
-  <label className="flex flex-col gap-2 text-sm font-medium text-slate-700" htmlFor={id}>
+  <label className="flex flex-col gap-2 text-sm font-semibold text-ink" htmlFor={id}>
     {label}
     <input
       id={id}
       name={id}
-      className="rounded-lg border border-slate-300 px-3 py-2 text-base text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+      className="input text-base"
       placeholder={placeholder}
       value={value}
       onChange={(event) => onChange(event.target.value)}
@@ -285,7 +277,7 @@ interface FileFieldProps {
 }
 
 const FileField = ({ id, label, value, disabled, onChange }: FileFieldProps) => (
-  <div className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+  <div className="flex flex-col gap-2 text-sm font-semibold text-ink">
     <label className="flex flex-col gap-2" htmlFor={id}>
       {label}
       <input
@@ -293,13 +285,13 @@ const FileField = ({ id, label, value, disabled, onChange }: FileFieldProps) => 
         name={id}
         type="file"
         accept="application/json"
-        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 shadow-sm file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-800 hover:file:bg-slate-200"
+        className="input file-input bg-white text-base"
         onChange={onChange}
         disabled={disabled}
         data-testid={`${id}-input`}
       />
     </label>
-    <p className="text-xs font-normal text-slate-600">已选择：{value || "未选择文件"}</p>
+    <p className="text-xs font-normal text-muted">已选择：{value || "未选择文件"}</p>
   </div>
 );
 
