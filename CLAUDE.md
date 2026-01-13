@@ -50,12 +50,13 @@
     ├── renderer
     │   ├── store.ts           # 渲染端全局 Zustand store，封装 IPC 异步 actions 与状态
     │   ├── components
-    │   │   ├── AddWordForm.tsx# 新增词条表单，调用生成接口自动填充并保存
+    │   │   ├── AddWordForm.tsx# 新增词条三步骨架（输入→生成预览→保存/手动完成），支持自动填充与实时预览
     │   │   ├── ReviewSession.tsx# 复习队列与评分 UI，翻转卡片并提交 SM-2 评分
     │   │   ├── ActivityOverview.tsx# 活跃度与 streak 视图，渲染近六周热力格与今日统计
     │   │   ├── DataTransferPanel.tsx# 导入/导出界面，收集路径并调用 IPC 生成/读取 JSON 与 CSV
-    │   │   └── SettingsPanel.tsx# 设置面板，选择 provider/输入密钥并调用 store 持久化设置
-    │   ├── App.tsx            # 渲染端入口布局，串联活跃度概览、复习与新增流程
+    │   │   ├── SettingsPanel.tsx# 设置面板，选择 provider/输入密钥并调用 store 持久化设置
+    │   │   └── LibraryHub.tsx # 词库页骨架，汇总导入/导出与 provider 设置，待接入词库列表
+    │   ├── App.tsx            # 渲染端入口布局，左侧窄栏导航+居中单栏内容，串联新增/复习/词库/统计视图
     │   ├── electron-api.d.ts  # 声明 window.electronAPI 类型，限制渲染层可用接口
     │   └── main.tsx           # React 入口，挂载根组件
     ├── __test__
@@ -79,5 +80,5 @@
 - **共享逻辑**：`src/shared` 提供词条/活跃度类型（含草稿、更新与汇总）、导入/导出契约、SM-2 状态默认值与更新算法、AI/IPC 契约、JSON 校验与补全，供主/渲染进程复用。
 - **测试**：`src/__test__` 中的 Vitest 用例覆盖 SM-2 计算、复习队列排序、数据校验、AI provider、存储层导入导出与 IPC 入口，新增 jsdom + React Testing Library 覆盖复习、活跃度与导入/导出界面交互。
 - **AI 适配层**：`src/main/ai` 封装 OpenAI/Gemini/Mock 三种 provider，统一生成词卡字段，内置提示文案、字段解析与超时控制，由 IPC/Preload 间接暴露。
-- **渲染层**：`src/renderer/store.ts` 提供全局 Zustand store 封装 IPC 异步 actions（含导入/导出调用）；`src/renderer/components/AddWordForm.tsx` 实现新增词条流程，调用生成接口自动填充并保存；`src/renderer/components/ReviewSession.tsx` 提供复习队列、卡片翻转与评分更新 UI；`src/renderer/components/ActivityOverview.tsx` 展示活跃度/streak 与近六周热力格；`src/renderer/components/DataTransferPanel.tsx` 提供导入/导出入口与错误提示；`src/renderer/components/SettingsPanel.tsx` 提供 provider 下拉与密钥输入，调用 store/setProvider 持久化设置；`src/renderer/index.css` 定义主题 CSS 变量、背景渐变以及通用容器/按钮样式；`src/renderer/main.tsx` + `App.tsx` 串联活跃度概览、复习、新增、导入/导出与设置，并通过 `electron-api.d.ts` 绑定可用的 electronAPI 类型。
+- **渲染层**：`src/renderer/App.tsx` 提供左侧窄栏导航与居中单栏主区域，串联新增/复习/词库/统计视图并滚动至锚点；`src/renderer/store.ts` 封装 IPC 异步 actions；`AddWordForm` 提供三步造卡骨架（含实时预览与手动完成）；`ReviewSession` 支持今日计划与自选复习；`ActivityOverview` 展示 streak 与热力格；`DataTransferPanel`/`SettingsPanel`/`LibraryHub` 负责数据迁移与 provider 设置；`index.css` 定义主题变量、背景与导航样式；`main.tsx` + `electron-api.d.ts` 绑定入口与可用 API。
 - **构建工具链**：`vite.config.ts` 管理三端构建与 Vitest（现使用 jsdom 环境与 setupFiles）；`package.json` scripts 提供 `dev`、`build`、`build:desktop`，electron-builder 输出到 `release/`；`npm run lint`/`format` 依赖 ESLint + Prettier 统一风格。

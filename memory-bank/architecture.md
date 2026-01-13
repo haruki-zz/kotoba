@@ -34,13 +34,14 @@
 - `src/preload/index.ts`: 预加载脚本，占位暴露 `electronAPI`，后续可按需扩展受控桥接。
 - `src/renderer/main.tsx`: React 入口，挂载根组件并启用 StrictMode。
 - `src/renderer/store.ts`: 渲染端全局 Zustand store，集中管理词库、复习队列、活跃度、provider 与 session 状态，封装调用 IPC 的异步 actions（含导入/导出）；复习评分后同步移除队列并刷新活跃度。
-- `src/renderer/components/AddWordForm.tsx`: 新增词条表单，调用生成接口自动填充读音/释义/情境/例句，支持手动编辑并保存，保存后刷新词库与活跃度，使用全局按钮/输入/提示样式。
+- `src/renderer/components/AddWordForm.tsx`: 新增词条表单与三步骨架（输入→生成预览→保存/手动完成），默认聚焦输入框，支持生成自动填充、手动编辑与实时预览卡片，保存后刷新词库/活跃度并重新聚焦。
 - `src/renderer/components/ReviewSession.tsx`: 复习界面，加载今日队列或自选全词库，支持卡片翻转与「容易/一般/困难」评分，评分后调用 IPC 更新 SM-2 与活跃度，复用主题进度条、卡片与选项样式。
 - `src/renderer/components/ActivityOverview.tsx`: 活跃度与 streak 视图，展示今日新增/复习计数、连续天数与近六周热力格（悬停显示每日详情），采用统一统计卡片与提示样式。
 - `src/renderer/components/DataTransferPanel.tsx`: 导入/导出界面，填写或选择 words/activity JSON 与 CSV 路径，调用 IPC 执行导出或导入并展示跳过记录，导入后刷新前端状态，按钮/输入/提示与主题保持一致。
 - `src/renderer/components/SettingsPanel.tsx`: 设置面板，选择 provider、输入密钥并调用 store/setProvider 持久化设置，展示已保存密钥提示，应用全局输入/按钮/提示样式。
-- `src/renderer/index.css`: Tailwind 基线与全局主题样式，提供颜色/字体/阴影/半径/过渡变量，叠加轻噪点纸纹理背景，定义 panel、按钮、输入、callout、选项卡片等基础类供组件复用。
-- `src/renderer/App.tsx`: 渲染入口布局，串联活跃度概览、复习、新增词条与导入/导出四大流程。
+- `src/renderer/components/LibraryHub.tsx`: 词库页骨架，汇总导入/导出与 provider 设置，列出当前可用操作并声明后续将补充词库列表/筛选/编辑。
+- `src/renderer/index.css`: Tailwind 基线与全局主题样式，提供颜色/字体/阴影/半径/过渡变量，叠加轻噪点纸纹理背景，定义 panel、按钮、输入、callout、选项卡片与侧边导航样式。
+- `src/renderer/App.tsx`: 渲染入口布局，新增左侧窄栏导航（新增/复习/词库/统计）与主区域单列（约 960px），顶部页面标题+主行动按钮可滚动到对应锚点，串联新增、复习、词库（导入/导出+设置）与统计视图。
 - `src/renderer/electron-api.d.ts`: 声明 window.electronAPI 类型，渲染端只能调用白名单 IPC API。
 - `src/shared/index.ts`: 汇总导出 shared 模块。
 - `src/shared/types.ts`: 词条、SM-2 状态、复习日志与活跃度数据的共享类型。
@@ -74,6 +75,6 @@
 - 主进程存储层：`src/main/storage` 采用 JSON 原子写入与严格校验，封装词条与活跃度的读写更新，输出按日期排序的活跃度 `history` 供热力格使用，确保 SM-2 更新与活跃度累积一致且写入失败不破坏原文件。
 - AI 提供商适配：`src/main/ai` 统一封装 OpenAI/Gemini/Mock，集中提示、字段解析与超时控制，默认走 mock 以便无密钥开发，由 IPC 层安全暴露。
 - IPC 安全桥接：`src/shared/ipc.ts` 定义频道与契约，`src/main/ipc` 校验入参并调度 DataStore/AI，`src/preload` 只暴露白名单 API，减少渲染进程能力面。
-- 渲染层：`src/renderer/components` 覆盖活跃度概览、复习、新增与导入/导出四大流程，热力格与 streak 展示依赖 store 提供的扩展活动摘要。
+- 渲染层：`src/renderer/App.tsx` 提供左侧导航与单栏主内容区，串联新增（含实时预览与手动完成）、复习、词库（导入/导出+设置）与统计视图；`LibraryHub` 汇总数据迁移与 provider 设置，后续可扩展词库列表。
 - Provider 设置持久化：主进程通过 `secret-store.ts` 将密钥写入系统钥匙串，通过 `provider-settings.ts` 持久化 provider/timeout，`createProviderManager` 异步合并环境变量/钥匙串/配置文件并校验密钥；渲染端 SettingsPanel 提供切换与提示。
 - 主题与样式统一：Tailwind 配置与 `src/renderer/index.css` 提供色板、字体、阴影、噪点纹理、按钮/输入/提示等基础类，组件统一复用，保证一致的交互与视觉层级。
