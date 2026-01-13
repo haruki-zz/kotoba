@@ -2,6 +2,12 @@ import { ProviderName, ProviderSettings, ProviderState } from "../../shared/ai";
 import { buildAiProvider } from "../ai";
 import { AiProvider, ProviderConfig } from "../ai/types";
 import { DEFAULT_TIMEOUT_MS } from "../ai/utils";
+import { createKeychainStore, SecretStore } from "../security/secret-store";
+import {
+  createFileProviderSettingsStore,
+  ProviderSettingsStore,
+  StoredProviderSettings,
+} from "../settings/provider-settings";
 
 const resolveEnvApiKey = (provider: ProviderName) => {
   if (provider === "openai") {
@@ -19,64 +25,110 @@ const normalizeProvider = (provider?: ProviderName): ProviderName => provider ??
 
 const normalizeApiKey = (value?: string) => value?.trim() || undefined;
 
-const resolveApiKey = (provider: ProviderName, candidate?: string) =>
-  normalizeApiKey(candidate) ?? resolveEnvApiKey(provider);
+const pickTimeout = (next?: number, current?: number) => next ?? current ?? DEFAULT_TIMEOUT_MS;
 
-const normalizeConfig = (current: ProviderConfig, update: ProviderSettings): ProviderConfig => {
-  const provider = normalizeProvider(update.provider ?? current.provider);
-  const apiKey = resolveApiKey(provider, update.apiKey ?? current.apiKey);
-  const timeoutMs = update.timeoutMs ?? current.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+const resolveStoredApiKey = async (provider: ProviderName, secretStore: SecretStore) => {
+  const secret = await secretStore.getSecret(provider);
+  return normalizeApiKey(secret);
+};
 
-  return { provider, apiKey, timeoutMs, fetch: current.fetch };
+const resolveApiKey = async (
+  provider: ProviderName,
+  secretStore: SecretStore,
+  candidate?: string,
+): Promise<string | undefined> => {
+  const normalized = normalizeApiKey(candidate);
+  if (normalized) {
+    return normalized;
+  }
+
+  const stored = await resolveStoredApiKey(provider, secretStore);
+  if (stored) {
+    return stored;
+  }
+
+  return resolveEnvApiKey(provider);
 };
 
 export interface ProviderManager {
-  getProvider: () => AiProvider;
-  getState: () => ProviderState;
-  setConfig: (settings: ProviderSettings) => ProviderState;
+  getProvider: () => Promise<AiProvider>;
+  getState: () => Promise<ProviderState>;
+  setConfig: (settings: ProviderSettings) => Promise<ProviderState>;
 }
 
-export const createProviderManager = (
-  initialSettings: ProviderSettings = {},
+interface ProviderManagerOptions {
+  initialSettings?: ProviderSettings;
+  providerFactory?: (config: ProviderConfig) => AiProvider;
+  secretStore?: SecretStore;
+  settingsStore?: ProviderSettingsStore;
+}
+
+export const createProviderManager = async ({
+  initialSettings = {},
   providerFactory = buildAiProvider,
-): ProviderManager => {
-  let config: ProviderConfig = normalizeConfig(
-    { provider: "mock", apiKey: resolveEnvApiKey("mock"), timeoutMs: DEFAULT_TIMEOUT_MS },
-    initialSettings,
-  );
+  secretStore = createKeychainStore(),
+  settingsStore = createFileProviderSettingsStore(),
+}: ProviderManagerOptions = {}): Promise<ProviderManager> => {
+  const persisted: StoredProviderSettings = await settingsStore.load();
+  let provider = normalizeProvider(initialSettings.provider ?? persisted.provider);
+  let timeoutMs = pickTimeout(initialSettings.timeoutMs, persisted.timeoutMs);
+  let apiKey = await resolveApiKey(provider, secretStore, initialSettings.apiKey);
   let cachedProvider: AiProvider | undefined;
 
-  const getState = (): ProviderState => {
-    const provider = normalizeProvider(config.provider);
-    const apiKey = resolveApiKey(provider, config.apiKey);
+  const getState = async (): Promise<ProviderState> => ({
+    provider,
+    hasApiKey: Boolean(apiKey ?? resolveEnvApiKey(provider)),
+    timeoutMs,
+  });
 
-    return {
-      provider,
-      hasApiKey: Boolean(apiKey),
-      timeoutMs: config.timeoutMs,
-    };
-  };
+  const setConfig = async (settings: ProviderSettings): Promise<ProviderState> => {
+    const nextProvider = normalizeProvider(settings.provider ?? provider);
+    const nextTimeout = pickTimeout(settings.timeoutMs, timeoutMs);
+    const providedKey = normalizeApiKey(settings.apiKey);
+    let nextApiKey = apiKey;
 
-  const setConfig = (settings: ProviderSettings): ProviderState => {
-    const next = normalizeConfig(config, settings);
-    const provider = normalizeProvider(next.provider);
-    const apiKey = resolveApiKey(provider, next.apiKey);
-
-    if (provider !== "mock" && !apiKey) {
-      throw new Error(`${provider} provider 需要有效的 API 密钥`);
+    if (settings.apiKey !== undefined) {
+      nextApiKey = providedKey;
+      if (providedKey) {
+        await secretStore.setSecret(nextProvider, providedKey);
+      } else {
+        await secretStore.deleteSecret(nextProvider);
+      }
+    } else if (nextProvider !== provider) {
+      nextApiKey = await resolveStoredApiKey(nextProvider, secretStore);
     }
 
-    config = { ...next, provider, apiKey };
+    if (!nextApiKey) {
+      nextApiKey = resolveEnvApiKey(nextProvider);
+    }
+
+    if (nextProvider !== "mock" && !nextApiKey) {
+      throw new Error(`${nextProvider} provider 需要有效的 API 密钥`);
+    }
+
+    provider = nextProvider;
+    timeoutMs = nextTimeout;
+    apiKey = nextApiKey;
     cachedProvider = undefined;
+
+    await settingsStore.save({ provider, timeoutMs });
 
     return getState();
   };
 
-  const getProvider = () => {
+  const getProvider = async () => {
     if (!cachedProvider) {
-      const provider = normalizeProvider(config.provider);
-      const apiKey = resolveApiKey(provider, config.apiKey);
-      cachedProvider = providerFactory({ ...config, provider, apiKey });
+      const resolvedKey = apiKey ?? resolveEnvApiKey(provider);
+
+      if (provider !== "mock" && !resolvedKey) {
+        throw new Error(`${provider} provider 需要有效的 API 密钥`);
+      }
+
+      cachedProvider = providerFactory({
+        provider,
+        apiKey: resolvedKey,
+        timeoutMs,
+      });
     }
 
     return cachedProvider;

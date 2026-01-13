@@ -19,11 +19,13 @@
 - `src/main/ai/types.ts`: provider、配置与生成字段类型定义。
 - `src/main/ai/utils.ts`: term 校验、字段解析、超时控制等通用工具。
 - `src/main/ipc/handlers.ts`: IPC 频道处理器，校验入参并调度 DataStore、SM-2 队列与 AI provider；支持导入/导出路径校验。
-- `src/main/ipc/provider.ts`: 管理 AI provider 配置与实例的状态，合并超时/密钥来源，保证密钥仅在主进程使用。
+- `src/main/ipc/provider.ts`: 管理 AI provider 配置与实例的状态，异步加载配置并合并超时/密钥来源（钥匙串、配置文件、环境变量），保证密钥仅在主进程使用。
 - `src/main/ipc/index.ts`: 注册/卸载 ipcMain handlers，便于测试注入与生命周期管理。
+- `src/main/security/secret-store.ts`: 封装密钥存储接口，默认使用 keytar 写入系统钥匙串，提供内存版本用于测试。
+- `src/main/settings/provider-settings.ts`: provider 选择与超时的 JSON 持久化读写，默认存放于 `data/provider-settings.json`。
 - `src/main/storage/index.ts`: 主进程数据入口，提供 `createDataStore` 以读写 `words.json`/`activity.json`，支持新增/更新/删除词条、按评分应用 SM-2 更新并累计活跃度，返回 streak 与今日统计；新增导入/导出 JSON 与 CSV 的接口。
 - `src/main/storage/json.ts`: 封装 JSON 读写与原子写入（临时文件 + rename），出现错误时清理临时文件避免污染。
-- `src/main/storage/paths.ts`: 解析默认数据目录 `data/`，提供 `getWordsPath`/`getActivityPath`。
+- `src/main/storage/paths.ts`: 解析默认数据目录 `data/`，提供 `getWordsPath`/`getActivityPath`/`getProviderSettingsPath`。
 - `src/main/storage/words.ts`: 构建词条草稿为完整 `Word`，合并更新时补全 `updated_at` 与 SM-2 字段。
 - `src/main/storage/activity.ts`: 活跃度工具，递增每日新增/复习计数、计算连续活跃天数（按 UTC 日期），汇总今日统计并输出按日期排序的 `history`。
 - `src/main/storage/transfer.ts`: 导入/导出辅助，解析外部 words/activity 文件、按 term 去重合并并生成 CSV。
@@ -35,6 +37,7 @@
 - `src/renderer/components/ReviewSession.tsx`: 复习界面，加载今日队列或自选全词库，支持卡片翻转与「容易/一般/困难」评分，评分后调用 IPC 更新 SM-2 与活跃度。
 - `src/renderer/components/ActivityOverview.tsx`: 活跃度与 streak 视图，展示今日新增/复习计数、连续天数与近六周热力格（悬停显示每日详情）。
 - `src/renderer/components/DataTransferPanel.tsx`: 导入/导出界面，填写或选择 words/activity JSON 与 CSV 路径，调用 IPC 执行导出或导入并展示跳过记录，导入后刷新前端状态。
+- `src/renderer/components/SettingsPanel.tsx`: 设置面板，选择 provider、输入密钥并调用 store/setProvider 持久化设置，展示已保存密钥提示。
 - `src/renderer/index.css`: Tailwind 基线与全局主题样式，定义颜色/字体/阴影 CSS 变量、背景渐变以及通用容器/按钮类。
 - `src/renderer/App.tsx`: 渲染入口布局，串联活跃度概览、复习、新增词条与导入/导出四大流程。
 - `src/renderer/electron-api.d.ts`: 声明 window.electronAPI 类型，渲染端只能调用白名单 IPC API。
@@ -53,6 +56,7 @@
 - `src/__test__/review-session.test.tsx`: React 复习界面测试，覆盖空队列自选复习、卡片翻面与评分调用流程。
 - `src/__test__/activity-overview.test.tsx`: 活跃度视图测试，覆盖 streak/今日计数与热力格色阶、文案。
 - `src/__test__/data-transfer-panel.test.tsx`: 导入/导出界面测试，覆盖缺少路径提示、导出成功与导入后刷新状态与错误列表。
+- `src/__test__/settings-panel.test.tsx`: 设置面板测试，覆盖 provider 校验、密钥去空格与已保存提示。
 - `src/__test__/setup.ts`: Vitest setup，注入 React Testing Library 的 jest-dom 匹配器供 jsdom 断言。
 - `prompts/`: 约束开发流程的全局提示集合（coding-principles、system-prompt），变更行为需遵循此处规则。
 - `memory-bank/`: 项目设计与进度文档中心（设计文档、技术栈、实施计划、架构说明、UI 设计、进度记录）。
@@ -70,3 +74,4 @@
 - AI 提供商适配：`src/main/ai` 统一封装 OpenAI/Gemini/Mock，集中提示、字段解析与超时控制，默认走 mock 以便无密钥开发，由 IPC 层安全暴露。
 - IPC 安全桥接：`src/shared/ipc.ts` 定义频道与契约，`src/main/ipc` 校验入参并调度 DataStore/AI，`src/preload` 只暴露白名单 API，减少渲染进程能力面。
 - 渲染层：`src/renderer/components` 覆盖活跃度概览、复习、新增与导入/导出四大流程，热力格与 streak 展示依赖 store 提供的扩展活动摘要。
+- Provider 设置持久化：主进程通过 `secret-store.ts` 将密钥写入系统钥匙串，通过 `provider-settings.ts` 持久化 provider/timeout，`createProviderManager` 异步合并环境变量/钥匙串/配置文件并校验密钥；渲染端 SettingsPanel 提供切换与提示。

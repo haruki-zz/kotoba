@@ -2,6 +2,8 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { registerIpcHandlers } from "../main/ipc";
 import { createIpcHandlers } from "../main/ipc/handlers";
 import { createProviderManager, ProviderManager } from "../main/ipc/provider";
+import { createMemoryProviderSettingsStore } from "../main/settings/provider-settings";
+import { createMemorySecretStore } from "../main/security/secret-store";
 import { IPC_CHANNELS } from "../shared/ipc";
 import { ActivitySummary, Word, WordDraft } from "../shared/types";
 
@@ -32,6 +34,7 @@ const summary: ActivitySummary = {
 
 describe("IPC handlers", () => {
   let providerManager: ProviderManager;
+  let provider: { name: "mock"; generateWordCard: ReturnType<typeof vi.fn> };
   let dataStore: {
     loadWords: ReturnType<typeof vi.fn>;
     loadActivitySummary: ReturnType<typeof vi.fn>;
@@ -44,11 +47,15 @@ describe("IPC handlers", () => {
   };
 
   beforeEach(() => {
-    const provider = { name: "mock" as const, generateWordCard: vi.fn(async (term: string) => ({ term })) };
+    provider = { name: "mock" as const, generateWordCard: vi.fn(async (term: string) => ({ term })) };
     providerManager = {
-      getProvider: () => provider,
-      getState: () => ({ provider: "mock", hasApiKey: true, timeoutMs: 12_000 }),
-      setConfig: vi.fn((payload) => ({ provider: payload?.provider ?? "mock", hasApiKey: true, timeoutMs: 12_000 })),
+      getProvider: vi.fn(async () => provider),
+      getState: vi.fn(async () => ({ provider: "mock", hasApiKey: true, timeoutMs: 12_000 })),
+      setConfig: vi.fn(async (payload) => ({
+        provider: payload?.provider ?? "mock",
+        hasApiKey: true,
+        timeoutMs: 12_000,
+      })),
     };
 
     dataStore = {
@@ -69,7 +76,7 @@ describe("IPC handlers", () => {
 
     const result = await handlers[IPC_CHANNELS.generateWordCard]({ term: "勉強" });
     expect(result.term).toBe("勉強");
-    expect(providerManager.getProvider().generateWordCard).toHaveBeenCalledWith("勉強");
+    expect(provider.generateWordCard).toHaveBeenCalledWith("勉強");
   });
 
   it("builds review queue using SM-2 due filter", async () => {
@@ -98,24 +105,51 @@ describe("IPC handlers", () => {
 });
 
 describe("Provider manager", () => {
-  it("requires API key when switching to non-mock provider", () => {
-    const manager = createProviderManager({}, () => ({
-      name: "mock",
-      generateWordCard: async () => ({ term: "t", kana: "k", definition_ja: "d", scene_ja: "s", example_ja: "e" }),
-    }));
+  it("requires API key when switching to non-mock provider", async () => {
+    const manager = await createProviderManager({
+      providerFactory: () => ({
+        name: "mock",
+        generateWordCard: async () => ({ term: "t", kana: "k", definition_ja: "d", scene_ja: "s", example_ja: "e" }),
+      }),
+      settingsStore: createMemoryProviderSettingsStore(),
+      secretStore: createMemorySecretStore(),
+    });
 
-    expect(() => manager.setConfig({ provider: "openai" })).toThrow("需要有效的 API 密钥");
+    await expect(manager.setConfig({ provider: "openai" })).rejects.toThrow("需要有效的 API 密钥");
   });
 
-  it("builds provider with merged timeout", () => {
+  it("builds provider with merged timeout and stored secret", async () => {
     const factory = vi.fn(() => ({
       name: "mock",
       generateWordCard: async () => ({ term: "t", kana: "k", definition_ja: "d", scene_ja: "s", example_ja: "e" }),
     }));
-    const manager = createProviderManager({ timeoutMs: 5000 }, factory);
-    manager.getProvider();
+    const manager = await createProviderManager({
+      initialSettings: { timeoutMs: 5000 },
+      providerFactory: factory,
+      settingsStore: createMemoryProviderSettingsStore(),
+      secretStore: createMemorySecretStore({ mock: "secret" }),
+    });
+    await manager.getProvider();
 
     expect(factory).toHaveBeenCalledWith(expect.objectContaining({ timeoutMs: 5000, provider: "mock" }));
+    const state = await manager.getState();
+    expect(state.hasApiKey).toBe(true);
+  });
+
+  it("restores provider and key from persisted stores", async () => {
+    const manager = await createProviderManager({
+      providerFactory: () => ({
+        name: "gemini",
+        generateWordCard: async () => ({ term: "t", kana: "k", definition_ja: "d", scene_ja: "s", example_ja: "e" }),
+      }),
+      settingsStore: createMemoryProviderSettingsStore({ provider: "gemini", timeoutMs: 8000 }),
+      secretStore: createMemorySecretStore({ gemini: "g-key" }),
+    });
+
+    const state = await manager.getState();
+    expect(state.provider).toBe("gemini");
+    expect(state.timeoutMs).toBe(8000);
+    await expect(manager.getProvider()).resolves.toBeDefined();
   });
 });
 
@@ -125,9 +159,9 @@ describe("IPC registration", () => {
     const provider = { name: "mock" as const, generateWordCard: vi.fn(async () => ({ term: "t" })) };
     const context = {
       providerManager: {
-        getProvider: () => provider,
-        getState: () => ({ provider: "mock", hasApiKey: true, timeoutMs: 12_000 }),
-        setConfig: vi.fn(() => ({ provider: "mock", hasApiKey: true, timeoutMs: 12_000 })),
+        getProvider: vi.fn(async () => provider),
+        getState: vi.fn(async () => ({ provider: "mock", hasApiKey: true, timeoutMs: 12_000 })),
+        setConfig: vi.fn(async () => ({ provider: "mock", hasApiKey: true, timeoutMs: 12_000 })),
       },
       dataStore: {
         loadWords: vi.fn(async () => []),

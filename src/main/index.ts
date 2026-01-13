@@ -3,13 +3,14 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { registerIpcHandlers } from "./ipc";
 import { createProviderManager } from "./ipc/provider";
+import type { ProviderManager } from "./ipc/provider";
 import { createDataStore } from "./storage";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const isDev = !app.isPackaged;
 const dataStore = createDataStore();
-const providerManager = createProviderManager();
+let providerManager!: ProviderManager;
 let unregisterIpc: (() => void) | undefined;
 
 const createMainWindow = async () => {
@@ -31,13 +32,14 @@ const createMainWindow = async () => {
   }
 };
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  providerManager = await createProviderManager();
   unregisterIpc = registerIpcHandlers({ dataStore, providerManager });
-  createMainWindow();
+  await createMainWindow();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createMainWindow();
+      void createMainWindow();
     }
   });
 });

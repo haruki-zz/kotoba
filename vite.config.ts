@@ -19,6 +19,7 @@ export default defineConfig(({ command }) => ({
             outDir: "dist-electron/main",
             sourcemap: command === "serve",
             rollupOptions: {
+              external: ["keytar"],
               output: {
                 entryFileNames: "index.mjs",
                 format: "es",

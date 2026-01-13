@@ -115,7 +115,7 @@ export const createIpcHandlers = ({ dataStore, providerManager, now }: IpcContex
     [IPC_CHANNELS.getProvider]: async () => providerManager.getState(),
     [IPC_CHANNELS.setProvider]: async (payload) => providerManager.setConfig(payload ?? {}),
     [IPC_CHANNELS.generateWordCard]: async (payload) => {
-      const provider = providerManager.getProvider();
+      const provider = await providerManager.getProvider();
       return provider.generateWordCard(requireTerm(payload?.term));
     },
     [IPC_CHANNELS.loadWords]: async () => dataStore.loadWords(getNow()),

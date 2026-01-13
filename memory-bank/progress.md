@@ -59,3 +59,7 @@
 ## 2026-01-23
 - 完成实施计划第 14 步：在渲染端新增导入/导出面板 `src/renderer/components/DataTransferPanel.tsx`，支持选择 words/activity JSON 与 CSV 路径、展示成功/错误与跳过记录，导入后自动刷新词库、复习队列与活跃度；`App.tsx` 挂载新面板，`store.ts` 补充 `exportData`/`importData` actions。
 - 添加 `src/__test__/data-transfer-panel.test.tsx` 覆盖导出成功、导入刷新数据与缺少路径提示。测试由用户执行并通过。***
+
+## 2026-01-24
+- 完成实施计划第 15 步：新增设置页能力，支持选择 LLM provider 并安全保存密钥。主进程引入钥匙串密钥存储 `src/main/security/secret-store.ts` 与配置文件持久化 `src/main/settings/provider-settings.ts`，`createProviderManager` 异步化、合并钥匙串/环境变量/配置文件并校验密钥，启动时加载持久化配置；IPC 生成卡片改为等待 provider 实例。
+- 渲染端新增 `src/renderer/components/SettingsPanel.tsx` 并挂载到 `App.tsx`，提供 provider 下拉、密钥输入与提示文案，调用 store 的 `setProvider`/`refreshProvider`。添加 `src/__test__/settings-panel.test.tsx` 覆盖必填校验、密钥去空格与已保存提示；更新 `src/__test__/ipc.test.ts` 覆盖钥匙串/配置恢复场景。测试由用户执行并通过。
