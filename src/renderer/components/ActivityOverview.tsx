@@ -1,20 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { DAY_IN_MS } from "../../shared/sm2";
 import { ActivitySummaryDay } from "../../shared/types";
+import ActivityHeatmap, { colorForValue } from "./ActivityHeatmap";
+import DifficultyChart from "./DifficultyChart";
 import { createAppStore, useAppStore } from "../store";
 
 type StoreHook = ReturnType<typeof createAppStore>;
 
 interface ActivityOverviewProps {
   store?: StoreHook;
+  onNavigateToReview?: () => void;
+  onNavigateToLibrary?: () => void;
 }
 
 const DAYS_TO_RENDER = 42;
 
 const formatDateKey = (timestamp: number) => new Date(timestamp).toISOString().slice(0, 10);
-
-const formatDayLabel = (date: string) =>
-  new Date(`${date}T00:00:00Z`).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" });
 
 const buildRecentDays = (history: ActivitySummaryDay[], days = DAYS_TO_RENDER, anchorDate?: string) => {
   const anchor = anchorDate ? Date.parse(`${anchorDate}T00:00:00Z`) : Date.now();
@@ -39,34 +40,53 @@ const buildRecentDays = (history: ActivitySummaryDay[], days = DAYS_TO_RENDER, a
   return recent;
 };
 
-const colorForValue = (value: number, max: number) => {
-  if (max === 0 || value === 0) return "bg-surface-muted";
-  const ratio = value / max;
-  if (ratio >= 0.75) return "bg-primary";
-  if (ratio >= 0.5) return "bg-primary/70";
-  if (ratio >= 0.25) return "bg-primary/50";
-  return "bg-primary/30";
-};
-
-const ActivityOverview = ({ store = useAppStore }: ActivityOverviewProps) => {
+const ActivityOverview = ({
+  store = useAppStore,
+  onNavigateToReview,
+  onNavigateToLibrary,
+}: ActivityOverviewProps) => {
   const activity = store((state) => state.activity);
+  const words = store((state) => state.words);
   const refreshActivity = store((state) => state.refreshActivity);
+  const refreshWords = store((state) => state.refreshWords);
   const session = store((state) => state.session);
-  const [error, setError] = useState<string | undefined>();
+  const [activityError, setActivityError] = useState<string | undefined>();
+  const [wordsError, setWordsError] = useState<string | undefined>();
 
   useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       try {
         await refreshActivity();
-        setError(undefined);
+        if (!cancelled) {
+          setActivityError(undefined);
+        }
       } catch (err) {
-        const message = err instanceof Error ? err.message : "加载活跃度失败";
-        setError(message);
+        if (!cancelled) {
+          const message = err instanceof Error ? err.message : "加载活跃度失败";
+          setActivityError(message);
+        }
+      }
+
+      try {
+        await refreshWords();
+        if (!cancelled) {
+          setWordsError(undefined);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const message = err instanceof Error ? err.message : "加载词库失败";
+          setWordsError(message);
+        }
       }
     };
 
     void load();
-  }, [refreshActivity]);
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshActivity, refreshWords]);
 
   const anchorDate = activity?.today.date;
   const recentDays = useMemo(
@@ -89,13 +109,35 @@ const ActivityOverview = ({ store = useAppStore }: ActivityOverviewProps) => {
     } satisfies ActivitySummaryDay);
 
   return (
-    <section className="panel mx-auto max-w-5xl space-y-6 p-6">
-      <div className="flex flex-col gap-2">
-        <p className="eyebrow">活跃度</p>
-        <h2 className="text-3xl font-semibold text-ink">每日坚持与 streak</h2>
-        <p className="text-muted">
-          按天查看新增与复习次数，快速了解连续活跃天数与近六周的学习节奏。
-        </p>
+    <section className="panel mx-auto max-w-5xl space-y-6 p-6" id="stats-summary">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex-1 space-y-2">
+          <p className="eyebrow">活跃度</p>
+          <h2 className="text-3xl font-semibold text-ink">每日坚持与词库健康度</h2>
+          <p className="text-muted">
+            今日新增/复习、连续活跃天数以及近六周热力格一屏可见，可随时跳转去复习。
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={onNavigateToReview}
+            aria-label="跳转到复习"
+          >
+            去复习
+          </button>
+          {onNavigateToLibrary && (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={onNavigateToLibrary}
+              aria-label="跳转到词库"
+            >
+              管理词库
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -141,30 +183,22 @@ const ActivityOverview = ({ store = useAppStore }: ActivityOverviewProps) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-2" role="grid" aria-label="活跃度热力格">
-          {recentDays.map((day) => {
-            const label = `${formatDayLabel(day.date)} · 新增 ${day.added_count} · 复习 ${day.review_count} · 总计 ${day.total}`;
+        <ActivityHeatmap days={recentDays} maxTotal={maxTotal} onSelectDay={onNavigateToReview} />
 
-            return (
-              <div
-                key={day.date}
-                className={`aspect-square w-full rounded-lg border border-white/60 shadow-sm transition ${colorForValue(day.total, maxTotal)}`}
-                title={label}
-                aria-label={label}
-                role="gridcell"
-              />
-            );
-          })}
-        </div>
-
-        {(error || session.error) && (
-          <div className="callout callout-error text-sm">{error ?? session.error}</div>
-        )}
-
-        {session.loading && !activity && (
-          <p className="text-sm text-muted">正在加载活跃度数据…</p>
-        )}
+        {session.loading && !activity && <p className="text-sm text-muted">正在加载活跃度数据…</p>}
       </div>
+
+      <DifficultyChart
+        words={words}
+        onNavigateToLibrary={onNavigateToLibrary}
+        onNavigateToReview={onNavigateToReview}
+      />
+
+      {(activityError || wordsError || session.error) && (
+        <div className="callout callout-error text-sm">
+          {activityError ?? wordsError ?? session.error}
+        </div>
+      )}
     </section>
   );
 };

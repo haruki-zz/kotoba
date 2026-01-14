@@ -10,7 +10,7 @@ const NAV_ITEMS: Array<{ id: ViewKey; label: string; hint: string }> = [
   { id: "add", label: "新增单词", hint: "输入并生成卡片" },
   { id: "review", label: "复习", hint: "今日计划与自选" },
   { id: "library", label: "词库", hint: "导入/导出与设置" },
-  { id: "stats", label: "统计", hint: "活跃度与 streak" },
+  { id: "stats", label: "统计", hint: "活跃度与难度" },
 ];
 
 const VIEW_META: Record<ViewKey, { title: string; description: string; action: string; anchor: string }> = {
@@ -34,8 +34,8 @@ const VIEW_META: Record<ViewKey, { title: string; description: string; action: s
   },
   stats: {
     title: "统计",
-    description: "查看 streak、今日活跃度与近六周热力格，保持学习节奏。",
-    action: "查看活跃度",
+    description: "查看 streak、活跃度热力格与词库难度占比，一屏掌握学习节奏。",
+    action: "去复习",
     anchor: "stats",
   },
 };
@@ -53,9 +53,21 @@ const App = () => {
 
   const header = useMemo(() => VIEW_META[activeView], [activeView]);
 
+  const navigateToView = (view: ViewKey) => {
+    setActiveView(view);
+    setTimeout(() => scrollToAnchor(VIEW_META[view].anchor), 32);
+  };
+
+  const handleNavigateToReview = () => navigateToView("review");
+  const handleNavigateToLibrary = () => navigateToView("library");
+
   const handlePrimaryAction = () => {
     if (activeView === "add") {
       setAddFocusToken((token) => token + 1);
+    }
+    if (activeView === "stats") {
+      handleNavigateToReview();
+      return;
     }
     scrollToAnchor(header.anchor);
   };
@@ -84,7 +96,10 @@ const App = () => {
       default:
         return (
           <div id="stats">
-            <ActivityOverview />
+            <ActivityOverview
+              onNavigateToReview={handleNavigateToReview}
+              onNavigateToLibrary={handleNavigateToLibrary}
+            />
           </div>
         );
     }
@@ -109,7 +124,7 @@ const App = () => {
                   key={item.id}
                   type="button"
                   className={`nav-item ${active ? "nav-item--active" : ""}`}
-                  onClick={() => setActiveView(item.id)}
+                  onClick={() => navigateToView(item.id)}
                   aria-pressed={active}
                 >
                   <span className="text-base font-semibold text-ink">{item.label}</span>
@@ -121,7 +136,7 @@ const App = () => {
 
           <div className="mt-auto pt-6 text-xs text-muted">
             <p>导入/导出与密钥设置位于「词库」。</p>
-            <p>统计页面可查看 streak 与热力格。</p>
+            <p>统计页面可查看 streak、热力格与难度占比。</p>
           </div>
         </aside>
 

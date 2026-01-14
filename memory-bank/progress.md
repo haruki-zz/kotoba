@@ -85,3 +85,9 @@
 - `src/renderer/components/ReviewSession.tsx` 重构键盘事件处理（避开表单控件）、增加上一张/下一张、快捷键评分与空格翻面，并在翻面时避免误触其他按钮；评分成功后仍刷新活跃度与进度文案。
 - `src/renderer/index.css` 添加 review-card 翻转样式、透视布局与长词排版优化，动画遵守全局时长并在降噪模式下关闭过渡。
 - 相关测试由用户执行并通过。***
+
+## 2026-01-29
+- 完成实施计划第 20 步：统计页首屏加入「去复习/管理词库」CTA，今日新增/复习/连续天数与近 6 周热力格一屏呈现，点击热力格或按钮可跳转复习或词库。
+- 抽出可复用热力格组件 `ActivityHeatmap`，新增 SM-2 易记系数分桶的词库难度扇形图 `DifficultyChart`，支持 tooltip 与图例/圆环点击跳转。
+- `ActivityOverview` 现在同时加载活跃度与词库数据，串联 CTA 与难度分布；`App.tsx` 导航提示更新并统一滚动跳转行为。
+- 扩充 `activity-overview.test.tsx` 覆盖热力格色阶、难度图 tooltip 及跳转交互。***

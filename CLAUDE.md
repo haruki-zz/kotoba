@@ -52,11 +52,13 @@
     │   ├── components
     │   │   ├── AddWordForm.tsx# 新增词条三步骨架（输入→生成预览→保存/手动完成），支持自动填充与实时预览
     │   │   ├── ReviewSession.tsx# 复习队列与评分 UI，翻转卡片并提交 SM-2 评分
-    │   │   ├── ActivityOverview.tsx# 活跃度与 streak 视图，渲染近六周热力格与今日统计
+    │   │   ├── ActivityOverview.tsx# 活跃度/streak 视图，含热力格、难度占比与去复习/管理词库 CTA
+    │   │   ├── ActivityHeatmap.tsx# 近六周活跃度热力格组件，按总次数色阶并支持点击跳转
+    │   │   ├── DifficultyChart.tsx# 依据 SM-2 易记系数的词库难度扇形图，圆环/图例可跳转复习或词库
     │   │   ├── DataTransferPanel.tsx# 导入/导出界面，收集路径并调用 IPC 生成/读取 JSON 与 CSV
     │   │   ├── SettingsPanel.tsx# 设置面板，选择 provider/输入密钥并调用 store 持久化设置
     │   │   └── LibraryHub.tsx # 词库页骨架，汇总导入/导出与 provider 设置，待接入词库列表
-    │   ├── App.tsx            # 渲染端入口布局，左侧窄栏导航+居中单栏内容，串联新增/复习/词库/统计视图
+    │   ├── App.tsx            # 渲染端入口布局，左侧窄栏导航+居中单栏内容，统计页 CTA 直达复习并带导航滚动
     │   ├── electron-api.d.ts  # 声明 window.electronAPI 类型，限制渲染层可用接口
     │   └── main.tsx           # React 入口，挂载根组件
     ├── __test__
@@ -67,7 +69,7 @@
     │   ├── store.test.ts      # 渲染端 store 行为单测，mock electronAPI 覆盖加载与错误路径
     │   ├── ipc.test.ts        # IPC 处理与 provider 管理的入参校验、频道注册覆盖
     │   ├── review-session.test.tsx# React 复习界面用例，覆盖翻转与评分调用
-    │   ├── activity-overview.test.tsx# 活跃度视图用例，验证热力格色阶与 streak/今日计数文案
+    │   ├── activity-overview.test.tsx# 活跃度视图用例，验证热力格色阶/点击、难度占比 tooltip 与导航行为
     │   ├── data-transfer-panel.test.tsx# 导入/导出 UI 用例，覆盖成功、错误与刷新行为
     │   ├── settings-panel.test.tsx# 设置面板用例，验证校验与 setProvider 调用
     │   └── setup.ts           # Vitest setup，引入 jest-dom 匹配器

@@ -36,12 +36,14 @@
 - `src/renderer/store.ts`: 渲染端全局 Zustand store，集中管理词库、复习队列、活跃度、provider 与 session 状态，封装调用 IPC 的异步 actions（含导入/导出）；复习评分后同步移除队列并刷新活跃度。
 - `src/renderer/components/AddWordForm.tsx`: 新增词条表单与三步骨架（输入→生成预览→保存/手动完成），默认聚焦输入框，支持生成自动填充、手动编辑与实时预览卡片，保存后刷新词库/活跃度并重新聚焦。
 - `src/renderer/components/ReviewSession.tsx`: 复习界面中央单卡布局，带 200ms 翻转动画与 clamp 文本自适应，支持空格翻面、左右箭头切换、1/2/3 快捷键评分，显示剩余/进度文案并在评分后调用 IPC 更新 SM-2 与活跃度。
-- `src/renderer/components/ActivityOverview.tsx`: 活跃度与 streak 视图，展示今日新增/复习计数、连续天数与近六周热力格（悬停显示每日详情），采用统一统计卡片与提示样式。
+- `src/renderer/components/ActivityOverview.tsx`: 活跃度与 streak 视图，加载词库数据并提供“去复习/管理词库”CTA，展示今日计数、连续天数、近六周热力格（可点击跳转）与词库难度占比。
+- `src/renderer/components/ActivityHeatmap.tsx`: 复用的活跃度热力格组件，按总次数映射色阶，支持点击单元格跳转。
+- `src/renderer/components/DifficultyChart.tsx`: 基于 SM-2 易记系数划分容易/一般/困难的词库扇形图，展示数量占比与提示，圆环与图例可跳转复习或词库。
 - `src/renderer/components/DataTransferPanel.tsx`: 导入/导出界面，填写或选择 words/activity JSON 与 CSV 路径，调用 IPC 执行导出或导入并展示跳过记录，导入后刷新前端状态，按钮/输入/提示与主题保持一致。
 - `src/renderer/components/SettingsPanel.tsx`: 设置面板，选择 provider、输入密钥并调用 store/setProvider 持久化设置，展示已保存密钥提示，应用全局输入/按钮/提示样式。
 - `src/renderer/components/LibraryHub.tsx`: 词库页骨架，汇总导入/导出与 provider 设置，列出当前可用操作并声明后续将补充词库列表/筛选/编辑。
 - `src/renderer/index.css`: Tailwind 基线与全局主题样式，提供颜色/字体/阴影/半径/过渡变量，叠加轻噪点纸纹理背景，定义 panel、按钮、输入、callout、选项卡片与侧边导航样式，并新增复习卡片透视翻转、长词排版与动画降级处理。
-- `src/renderer/App.tsx`: 渲染入口布局，新增左侧窄栏导航（新增/复习/词库/统计）与主区域单列（约 960px），顶部页面标题+主行动按钮可滚动到对应锚点，串联新增、复习、词库（导入/导出+设置）与统计视图。
+- `src/renderer/App.tsx`: 渲染入口布局，左侧窄栏导航（新增/复习/词库/统计）与主区域单列（约 960px），顶部页面标题+主行动按钮可滚动到对应锚点，统计页主按钮直达复习，导航提示涵盖热力格与难度占比。
 - `src/renderer/electron-api.d.ts`: 声明 window.electronAPI 类型，渲染端只能调用白名单 IPC API。
 - `src/shared/index.ts`: 汇总导出 shared 模块。
 - `src/shared/types.ts`: 词条、SM-2 状态、复习日志与活跃度数据的共享类型。
@@ -56,7 +58,7 @@
 - `src/__test__/ai-providers.test.ts`: 覆盖 OpenAI/Gemini/Mock provider 的字段解析、超时与默认分支。
 - `src/__test__/store.test.ts`: 渲染端 store 的 Vitest 用例，mock electronAPI 覆盖加载/错误、词条增改删、评分更新队列与 provider/活跃度刷新。
 - `src/__test__/review-session.test.tsx`: React 复习界面测试，覆盖空队列自选复习、卡片翻面与评分调用流程。
-- `src/__test__/activity-overview.test.tsx`: 活跃度视图测试，覆盖 streak/今日计数与热力格色阶、文案。
+- `src/__test__/activity-overview.test.tsx`: 活跃度视图测试，覆盖 streak/今日计数、热力格色阶与点击跳转、词库难度扇形图 tooltip 与导航。
 - `src/__test__/data-transfer-panel.test.tsx`: 导入/导出界面测试，覆盖缺少路径提示、导出成功与导入后刷新状态与错误列表。
 - `src/__test__/settings-panel.test.tsx`: 设置面板测试，覆盖 provider 校验、密钥去空格与已保存提示。
 - `src/__test__/setup.ts`: Vitest setup，注入 React Testing Library 的 jest-dom 匹配器供 jsdom 断言。
