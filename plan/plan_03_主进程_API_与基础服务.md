@@ -44,7 +44,7 @@
 ## 技术方案
 
 ### 架构设计
-主进程内运行 Fastify，采用插件化路由与服务层分离；请求经校验后调用数据访问与业务逻辑。
+主进程内运行 Fastify，采用插件化路由与服务层分离；请求经校验后调用数据访问与业务逻辑。默认桌面模式不对外 listen，渲染端通过 IPC 调用 fastify.inject；统一路由前缀 `/api/v1`，健康检查 `/healthz`。可选 dev/web 模式在 127.0.0.1 listen（严格 CORS allowlist 与鉴权）。
 
 ### 核心技术选型
 - Fastify：高性能插件化 HTTP 服务
@@ -59,6 +59,16 @@
 - 复习：获取待复习队列、提交结果、回退上一条
 - 统计：连续天数、掌握度分布、近期新增/复习计数、高遗忘风险词
 - 设置：读取与保存复习队列长度、例句风格、AI provider 等
+- 路由前缀：`/api/v1/*`；健康检查：`/healthz`
+
+### 错误与响应规范
+- 统一错误响应 ErrorResponse：`{ ok: false, code, message, details?, requestId? }`，code 使用命名空间（VAL_/AUTH_/PERM_/RES_/SRS_/DB_/AI_/SYS_/REQ_/RULE_），消息短小可本地化，details 不含敏感信息。
+- HTTP 状态与业务 code 固定映射：400→VAL_/REQ_；401→AUTH_；403→PERM_；404→RES_NOT_FOUND/WORD_NOT_FOUND/SETTINGS_NOT_FOUND；409→RES_CONFLICT/WORD_DUPLICATE/DB_CONSTRAINT；422→SRS_/RULE_；429→AI_RATE_LIMIT/REQ_RATE_LIMIT；502→AI_PROVIDER_BAD_GATEWAY；503→AI_PROVIDER_UNAVAILABLE；500→SYS_/DB_* 其他。
+- Zod 校验错误（VAL_INVALID_BODY/QUERY/PARAMS）details：issues（path/code/message）与 fieldErrors（path.join('.') → string[]），保留索引。
+
+### 安全与限流
+- 默认 IPC 模式：不启用 CORS/鉴权；方法白名单 GET/POST/PUT/PATCH/DELETE（OPTIONS 仅在 listen+CORS 时）；body 全局 1MB，AI 相关 256KB；限流（按应用实例）：POST `/api/v1/ai/*` 10 次/分钟，其他写 120 次/分钟，读 600 次/分钟；记录 requestId/调用来源。
+- 可选 dev/web listen 模式：127.0.0.1 listen，严格 CORS allowlist（Vite dev origin + Electron 协议），credentials=false，allowedHeaders 仅 content-type/authorization/x-request-id；鉴权要求 Bearer token（主进程生成并经 IPC 下发），无 token 返回 401；限流按 IP/token：AI 5 次/分钟/键，其余写 60 次/分钟/键，读 300 次/分钟/键；body/方法白名单同默认。
 
 ---
 

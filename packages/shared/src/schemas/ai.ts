@@ -1,13 +1,13 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-import { nonEmptyTrimmedString } from "./common";
-import { aiProviderEnum, exampleStyleSchema } from "./settings";
+import { aiProviderEnum, exampleStyleSchema } from './settings';
+import { nonEmptyTrimmedString } from './common';
 
 export const aiGenerateWordRequestSchema = z.object({
   word: nonEmptyTrimmedString,
   hint: nonEmptyTrimmedString.optional(),
-  locale: nonEmptyTrimmedString.default("ja"),
-  provider: aiProviderEnum.default("gemini"),
+  locale: nonEmptyTrimmedString.default('ja'),
+  provider: aiProviderEnum.default('gemini'),
   exampleStyle: exampleStyleSchema.optional(),
 });
 
@@ -19,6 +19,4 @@ export const aiGenerateWordResponseSchema = z.object({
 });
 
 export type AiGenerateWordRequest = z.infer<typeof aiGenerateWordRequestSchema>;
-export type AiGenerateWordResponse = z.infer<
-  typeof aiGenerateWordResponseSchema
->;
+export type AiGenerateWordResponse = z.infer<typeof aiGenerateWordResponseSchema>;
