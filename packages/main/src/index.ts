@@ -1,1 +1,1 @@
-export const mainPlaceholder = true;
+export * from "./db";

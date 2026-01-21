@@ -3,10 +3,21 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
     "dev": "echo \"packages/shared: dev server not required yet\"",
     "build": "tsc -p tsconfig.json --pretty",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
     "test": "vitest --passWithNoTests"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
   }
 }
