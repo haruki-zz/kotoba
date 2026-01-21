@@ -1,0 +1,12 @@
+{
+  "name": "@kotoba/renderer",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "echo \"packages/renderer: Vite dev server not wired yet\"",
+    "build": "tsc -p tsconfig.json --pretty",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
+    "test": "vitest --passWithNoTests"
+  }
+}
