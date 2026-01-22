@@ -5,14 +5,14 @@ import {
   EF_MIN,
   INITIAL_INTERVAL_DAYS,
   INITIAL_REPETITION,
-} from "../sm2";
+} from "../sm2.js";
 import {
   difficultyEnum,
   isoDateTimeString,
   nonEmptyTrimmedString,
   numericId,
   optionalTrimmedString,
-} from "./common";
+} from "./common.js";
 
 export const wordCoreSchema = z.object({
   word: nonEmptyTrimmedString,

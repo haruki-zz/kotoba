@@ -13,3 +13,10 @@
 - 数据层：在 packages/main/src/db 搭建 config/connection/migrator/migrations/0001_init（words 表+索引）/word-repository（CRUD+过滤+分页）/word-mapper/transaction/setup（initializeDatabase）并依赖 @kotoba/shared。
 - 文档：新增 docs/data-model.md（字段与 schema 说明）、docs/data-testing-plan.md（测试计划），更新 memory-bank/architecture.md 记录文件作用与默认值。
 - 校验：运行 pnpm typecheck、pnpm test（暂无用例）；清理误生成的 src 下 .js/.d.ts 产物。
+
+## 2026-01-22（主进程 API 与 ESM 兼容）
+
+- 主进程 Fastify：新增 server 模块（app/config/plugins/routes/services/standalone）提供健康检查、词条 CRUD、复习队列/提交/撤销、统计摘要、设置读写；引入 CORS + Bearer 校验（http 模式）、按读写的限流、统一错误格式与 Zod 校验。
+- 运行脚本：packages/main dev 现在编译后启动 standalone（API_MODE=http 默认），支持 env 配置 host/port/cors/token；添加 settings.json 本地持久化。
+- ESM 规范：为 Node ESM 运行修复所有相对导入/导出为显式 .js 扩展，并修正目录引用到 index 文件，解决 pnpm dev 的 ERR_MODULE_NOT_FOUND。
+- 校验：通过 pnpm --filter @kotoba/main lint/build、pnpm --filter @kotoba/shared lint/build，运行 pnpm test（暂无用例）；手动 smoke 启动 API_PORT=0 node dist/server/standalone.js 正常监听后退出。

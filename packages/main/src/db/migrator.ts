@@ -1,4 +1,4 @@
-import type { SqliteDatabase } from "./connection";
+import type { SqliteDatabase } from "./connection.js";
 
 export type Migration = {
   id: string;

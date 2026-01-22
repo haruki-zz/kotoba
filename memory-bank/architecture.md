@@ -10,7 +10,7 @@
 
 - 质量：ESLint（flat config，@typescript-eslint + React/Hooks + simple-import-sort）、Prettier 默认规则。
 - 测试：Vitest（`pnpm test` 运行 `vitest run --passWithNoTests`，后续补充 RTL）。
-- 根级脚本：`pnpm dev`（逐包占位 dev）、`pnpm build`（逐包 tsc）、`pnpm lint`、`pnpm format` / `format:check`、`pnpm typecheck`。
+- 根级脚本：`pnpm dev`（逐包 dev）、`pnpm build`（逐包 tsc）、`pnpm lint`、`pnpm format` / `format:check`、`pnpm typecheck`。
 - simple-git-hooks 安装 pre-commit（lint + format:check + test），`postinstall` 自动写入 git hooks。
 
 ## 文件作用说明
@@ -20,6 +20,7 @@
 - TypeScript 配置：`tsconfig.base.json` 共享编译基线；根 `tsconfig.json` 维护包引用用于 `tsc -b`；`tsconfig.eslint.json` 为 ESLint 提供 noEmit 项目上下文；各包 `tsconfig.json` 设 composite/rootDir/outDir/tsBuildInfo。
 - Lint/Format：`eslint.config.mjs` 采用 flat config，启用 TS/React/Hooks/import-sort，并忽略 dist/data；`.prettierrc`/`.prettierignore` 控制格式；`.gitignore` 排除 node_modules、dist、data、.env\* 等。
 - 环境与文档：`.env.example` 给出 OPENAI/GEMINI key 与 DATABASE_PATH 示例；`docs/engineering.md` 汇总目录约定、脚本、命名与钩子；`docs/data-model.md` 说明字段/校验与数据访问；`docs/data-testing-plan.md` 记录校验与存储测试计划；本文件追踪当前架构与 schema。
+- ESM 规范：所有相对导入/导出使用显式 `.js` 扩展，目录引用需指向 index 文件，避免 Node ESM 模式下（standalone/dev）出现 ERR_MODULE_NOT_FOUND。
 - 共享 Schema 细分：
   - `packages/shared/src/sm2.ts`：SM-2 常量（EF 默认 2.5、下限 1.3，质量映射 easy=5/medium=4/hard=3，默认批量 30，句长/场景长度范围）。
   - `packages/shared/src/schemas/common.ts`：通用 Zod 基元（ISO 时间、非空字符串、枚举 difficulty、正整数 id）。
@@ -36,12 +37,18 @@
   - `packages/main/src/db/word-repository.ts`：词条 CRUD、search/difficulty/dueBefore 过滤、分页与默认排序。
   - `packages/main/src/db/transaction.ts`：通用事务包装。
   - `packages/main/src/db/setup.ts`：initializeDatabase 聚合配置、连接、迁移与仓储实例。
-  - `packages/main/src/index.ts`：对外导出 db 模块。
+  - `packages/main/src/server/app.ts`：构建 Fastify（Zod type provider、错误处理、限流、安全插件、路由装配）。
+  - `packages/main/src/server/routes/*`：健康检查、词条 CRUD、复习队列/提交/撤销、统计摘要、设置读写，统一 `/api/v1` 前缀。
+  - `packages/main/src/server/plugins/*`：上下文（数据库 + 复习/统计/设置服务注入）、安全（CORS + Bearer token）、限流、错误格式化。
+  - `packages/main/src/server/services/*`：复习服务（队列 + 暂存撤销栈，当前仅更新 lastReviewAt/nextDueAt）、统计汇总（难度分布/到期计数/新增统计/硬词样本）、设置持久化（data/settings.json）。
+  - `packages/main/src/server/standalone.ts`：从环境变量读取端口/host/CORS/token，启动 HTTP 模式。
+  - `packages/main/src/index.ts`：对外导出 db 模块与 server 构建器。
 
 ## 环境与数据
 
 - 环境变量：`.env.example` 提供 `OPENAI_API_KEY`、`GEMINI_API_KEY`、`DATABASE_PATH` 示例，使用时复制为 `.env.local`。`.env*` 与 `data/` 已加入 `.gitignore`。
-- 数据库路径：默认 `data/kotoba.sqlite`，可通过 `DATABASE_PATH` 覆盖；初始化使用 `initializeDatabase()` 连接并执行迁移。
+- API 环境：`API_MODE`（默认 http 用于 standalone）、`API_HOST`/`API_PORT`、`API_CORS_ORIGINS`、`API_AUTH_TOKEN`（默认 dev-token，http 模式需 Bearer）。`pnpm --filter @kotoba/main dev` 先编译再启动。
+- 数据库路径：默认 `data/kotoba.sqlite`，可通过 `DATABASE_PATH` 覆盖；初始化使用 `initializeDatabase()` 连接并执行迁移。设置持久化文件默认 `data/settings.json`。
 
 ## 数据库 Schema（SQLite）
 

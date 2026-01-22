@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { nonEmptyTrimmedString } from "./common";
-import { aiProviderEnum, exampleStyleSchema } from "./settings";
+import { nonEmptyTrimmedString } from "./common.js";
+import { aiProviderEnum, exampleStyleSchema } from "./settings.js";
 
 export const aiGenerateWordRequestSchema = z.object({
   word: nonEmptyTrimmedString,

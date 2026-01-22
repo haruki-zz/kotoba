@@ -1,6 +1,6 @@
 import { difficultyValues, EF_DEFAULT, EF_MIN } from "@kotoba/shared";
 
-import type { Migration } from "../migrator";
+import type { Migration } from "../migrator.js";
 
 export const migration_0001: Migration = {
   id: "0001_init_words",

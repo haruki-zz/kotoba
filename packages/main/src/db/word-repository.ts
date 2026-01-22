@@ -8,8 +8,8 @@ import {
   wordUpdateSchema,
 } from "@kotoba/shared";
 
-import type { SqliteDatabase } from "./connection";
-import { mapRowToWord, mapWordInputToRow, WordRow } from "./word-mapper";
+import type { SqliteDatabase } from "./connection.js";
+import { mapRowToWord, mapWordInputToRow, WordRow } from "./word-mapper.js";
 
 type WordUpdateColumn =
   | "word"

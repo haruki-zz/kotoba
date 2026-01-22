@@ -1,6 +1,6 @@
 import Database from "better-sqlite3";
 
-import { DatabaseConfig, loadDatabaseConfig } from "./config";
+import { DatabaseConfig, loadDatabaseConfig } from "./config.js";
 
 export type SqliteDatabase = Database.Database;
 

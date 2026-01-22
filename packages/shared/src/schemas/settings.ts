@@ -4,8 +4,8 @@ import {
   DEFAULT_REVIEW_BATCH_SIZE,
   EXAMPLE_SENTENCE_RANGE,
   SCENE_LENGTH_RANGE,
-} from "../sm2";
-import { nonEmptyTrimmedString } from "./common";
+} from "../sm2.js";
+import { nonEmptyTrimmedString } from "./common.js";
 
 export const aiProviderEnum = z.enum(["openai", "gemini", "mock"]);
 export const themePreferenceEnum = z.enum(["light", "dark", "system"]);

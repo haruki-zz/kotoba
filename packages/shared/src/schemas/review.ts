@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { EF_MIN, REVIEW_GRADE_TO_QUALITY, ReviewGrade } from "../sm2";
-import { isoDateTimeString, numericId } from "./common";
+import { EF_MIN, REVIEW_GRADE_TO_QUALITY, ReviewGrade } from "../sm2.js";
+import { isoDateTimeString, numericId } from "./common.js";
 
 export const reviewGradeEnum = z.enum(["easy", "medium", "hard"]);
 

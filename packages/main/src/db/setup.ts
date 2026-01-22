@@ -1,8 +1,8 @@
-import { loadDatabaseConfig } from "./config";
-import { createDatabaseConnection, type SqliteDatabase } from "./connection";
-import { migrations } from "./migrations";
-import { applyMigrations } from "./migrator";
-import { WordRepository } from "./word-repository";
+import { loadDatabaseConfig } from "./config.js";
+import { createDatabaseConnection, type SqliteDatabase } from "./connection.js";
+import { migrations } from "./migrations/index.js";
+import { applyMigrations } from "./migrator.js";
+import { WordRepository } from "./word-repository.js";
 
 export type DataAccessLayer = {
   db: SqliteDatabase;
