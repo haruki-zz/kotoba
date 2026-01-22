@@ -37,11 +37,7 @@ export const securityPlugin = fp<ApiServerOptions>(async (app, opts) => {
         ? header.replace("Bearer ", "")
         : null;
       if (!provided || provided !== authToken) {
-        throw new AppError(
-          "AUTH_INVALID_TOKEN",
-          "Unauthorized",
-          401,
-        );
+        throw new AppError("AUTH_INVALID_TOKEN", "Unauthorized", 401);
       }
     });
   }

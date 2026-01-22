@@ -56,11 +56,7 @@ export class ReviewService {
   undoLast() {
     const last = this.history.pop();
     if (!last) {
-      throw new AppError(
-        "RES_NOT_FOUND",
-        "No review history to undo",
-        404,
-      );
+      throw new AppError("RES_NOT_FOUND", "No review history to undo", 404);
     }
 
     this.words.update(last.before.id, {

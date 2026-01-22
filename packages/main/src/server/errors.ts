@@ -60,15 +60,10 @@ export const fromZodError = (
     query: "VAL_INVALID_QUERY",
     params: "VAL_INVALID_PARAMS",
   } as const;
-  return new AppError(
-    codeMap[source],
-    `Invalid request ${source}`,
-    400,
-    {
-      issues: error.issues,
-      fieldErrors: buildFieldErrors(error),
-    },
-  );
+  return new AppError(codeMap[source], `Invalid request ${source}`, 400, {
+    issues: error.issues,
+    fieldErrors: buildFieldErrors(error),
+  });
 };
 
 export const fromFastifyError = (error: FastifyError) => {

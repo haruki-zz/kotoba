@@ -69,7 +69,9 @@ export const wordRoutes = fp<ApiServerOptions>((app, opts, done) => {
     {
       schema: {
         body: wordCreateSchema,
-        response: { 201: z.object({ ok: z.literal(true), data: wordRecordSchema }) },
+        response: {
+          201: z.object({ ok: z.literal(true), data: wordRecordSchema }),
+        },
       },
       config: { rateLimit: getRateLimitConfig(mode, "write") },
     },
@@ -86,7 +88,9 @@ export const wordRoutes = fp<ApiServerOptions>((app, opts, done) => {
     {
       schema: {
         params: wordIdParamSchema,
-        response: { 200: z.object({ ok: z.literal(true), data: wordRecordSchema }) },
+        response: {
+          200: z.object({ ok: z.literal(true), data: wordRecordSchema }),
+        },
       },
       config: { rateLimit: getRateLimitConfig(mode, "read") },
     },
@@ -106,7 +110,9 @@ export const wordRoutes = fp<ApiServerOptions>((app, opts, done) => {
       schema: {
         params: wordIdParamSchema,
         body: wordUpdateSchema,
-        response: { 200: z.object({ ok: z.literal(true), data: wordRecordSchema }) },
+        response: {
+          200: z.object({ ok: z.literal(true), data: wordRecordSchema }),
+        },
       },
       config: { rateLimit: getRateLimitConfig(mode, "write") },
     },

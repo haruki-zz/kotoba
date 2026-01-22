@@ -18,9 +18,7 @@ import { registerApiRoutes } from "./routes/index.js";
 
 export type ApiServer = Awaited<ReturnType<typeof buildApiServer>>;
 
-export const buildApiServer = async (
-  options: ApiServerOptions = {},
-) => {
+export const buildApiServer = async (options: ApiServerOptions = {}) => {
   const resolved: NormalizedServerOptions = normalizeServerOptions(options);
   const app = Fastify({
     logger: resolved.logger,
@@ -41,7 +39,10 @@ export const buildApiServer = async (
 };
 
 export const startHttpServer = async (options: ApiServerOptions = {}) => {
-  const app = await buildApiServer({ ...options, mode: options.mode ?? "http" });
+  const app = await buildApiServer({
+    ...options,
+    mode: options.mode ?? "http",
+  });
   const resolved = normalizeServerOptions({ ...options, mode: "http" });
   await app.listen({ port: resolved.port, host: resolved.host });
   app.log.info(

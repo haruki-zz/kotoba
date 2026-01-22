@@ -77,9 +77,7 @@ export const reviewRoutes = fp<ApiServerOptions>((app, opts, done) => {
       config: { rateLimit: getRateLimitConfig(mode, "write") },
     },
     (request) => {
-      const { word, result } = app.ctx.reviewService.applyReview(
-        request.body,
-      );
+      const { word, result } = app.ctx.reviewService.applyReview(request.body);
       return success({ word, result });
     },
   );
