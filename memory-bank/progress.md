@@ -20,3 +20,10 @@
 - 运行脚本：packages/main dev 现在编译后启动 standalone（API_MODE=http 默认），支持 env 配置 host/port/cors/token；添加 settings.json 本地持久化。
 - ESM 规范：为 Node ESM 运行修复所有相对导入/导出为显式 .js 扩展，并修正目录引用到 index 文件，解决 pnpm dev 的 ERR_MODULE_NOT_FOUND。
 - 校验：通过 pnpm --filter @kotoba/main lint/build、pnpm --filter @kotoba/shared lint/build，运行 pnpm test（暂无用例）；手动 smoke 启动 API_PORT=0 node dist/server/standalone.js 正常监听后退出。
+
+## 2026-01-22（SM-2 算法与复习队列）
+
+- SM-2 核心：在 packages/shared/src/sm2.ts 增加 computeSm2Review 纯函数（quality 映射、EF 更新、间隔计算、UTC 加天、最小 1 天），补充类型与测试。
+- 复习服务：packages/main/src/server/services/review-service.ts 接入 SM-2 计算，更新 ef/interval/repetition/last/next 与 difficulty，缓存队列与指针，支持幂等提交检测与单步撤销回滚队列。
+- 测试与配置：新增 Vitest 单元测试（shared 的 SM-2 逻辑，main 的队列/撤销/幂等），根级 vitest.config.ts 将 @kotoba/shared 指向源码；tsconfig 排除测试路径避免打包。
+- 构建链路：main 包 build 改为 tsc -b，确保依赖的 shared 先行编译；pnpm --filter @kotoba/main run build 通过。
