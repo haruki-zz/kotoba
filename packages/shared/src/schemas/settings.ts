@@ -8,6 +8,7 @@ import {
 import { nonEmptyTrimmedString } from "./common.js";
 
 export const aiProviderEnum = z.enum(["openai", "gemini", "mock"]);
+export type AiProvider = z.infer<typeof aiProviderEnum>;
 export const themePreferenceEnum = z.enum(["light", "dark", "system"]);
 
 const orderedRangeSchema = z
@@ -39,7 +40,7 @@ export const appSettingsSchema = z.object({
     .positive()
     .max(500)
     .default(DEFAULT_REVIEW_BATCH_SIZE),
-  aiProvider: aiProviderEnum.default("openai"),
+  aiProvider: aiProviderEnum.default("gemini"),
   exampleStyle: exampleStyleSchema.default(defaultExampleStyle),
   theme: themePreferenceEnum.default("system"),
 });

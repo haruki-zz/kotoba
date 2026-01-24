@@ -7,7 +7,7 @@ export const aiGenerateWordRequestSchema = z.object({
   word: nonEmptyTrimmedString,
   hint: nonEmptyTrimmedString.optional(),
   locale: nonEmptyTrimmedString.default("ja"),
-  provider: aiProviderEnum.default("gemini"),
+  provider: aiProviderEnum.optional(),
   exampleStyle: exampleStyleSchema.optional(),
 });
 

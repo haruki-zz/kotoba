@@ -14,6 +14,9 @@ export type ErrorCode =
   | "SETTINGS_NOT_FOUND"
   | "AUTH_TOKEN_REQUIRED"
   | "AUTH_INVALID_TOKEN"
+  | "AI_PROVIDER_UNAVAILABLE"
+  | "AI_GENERATION_FAILED"
+  | "AI_CONTENT_REJECTED"
   | "SYS_INTERNAL";
 
 export type ErrorResponse = {

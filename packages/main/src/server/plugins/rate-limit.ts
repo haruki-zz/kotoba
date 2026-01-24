@@ -3,14 +3,16 @@ import fp from "fastify-plugin";
 
 import { ApiServerOptions, ServerMode } from "../config.js";
 
-const RATE_LIMITS: Record<ServerMode, { read: number; write: number }> = {
-  ipc: { read: 600, write: 120 },
-  http: { read: 300, write: 60 },
+type RateLimitBucket = "read" | "write" | "ai";
+
+const RATE_LIMITS: Record<ServerMode, Record<RateLimitBucket, number>> = {
+  ipc: { read: 600, write: 120, ai: 30 },
+  http: { read: 300, write: 60, ai: 15 },
 };
 
 export const getRateLimitConfig = (
   mode: ServerMode,
-  bucket: "read" | "write",
+  bucket: RateLimitBucket,
 ) => ({
   max: RATE_LIMITS[mode][bucket],
   timeWindow: "1 minute",

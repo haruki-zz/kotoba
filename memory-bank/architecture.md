@@ -19,7 +19,7 @@
 - 根 `package.json`：声明包管理器版本、跨包脚本（dev/build/lint/format/test/typecheck）、postinstall 安装 git hooks、开发依赖版本。
 - TypeScript 配置：`tsconfig.base.json` 共享编译基线；根 `tsconfig.json` 维护包引用用于 `tsc -b`；`tsconfig.eslint.json` 为 ESLint 提供 noEmit 项目上下文；各包 `tsconfig.json` 设 composite/rootDir/outDir/tsBuildInfo。
 - Lint/Format：`eslint.config.mjs` 采用 flat config，启用 TS/React/Hooks/import-sort，并忽略 dist/data；`.prettierrc`/`.prettierignore` 控制格式；`.gitignore` 排除 node_modules、dist、data、.env\* 等。
-- 环境与文档：`.env.example` 给出 OPENAI/GEMINI key 与 DATABASE_PATH 示例；`docs/engineering.md` 汇总目录约定、脚本、命名与钩子；`docs/data-model.md` 说明字段/校验与数据访问；`docs/data-testing-plan.md` 记录校验与存储测试计划；本文件追踪当前架构与 schema。
+- 环境与文档：`.env.example` 给出 OPENAI/GEMINI key、模型名（OPENAI_MODEL/GEMINI_MODEL）、AI 请求超时（AI_REQUEST_TIMEOUT_MS）与 DATABASE_PATH 示例；`docs/engineering.md` 汇总目录约定、脚本、命名与钩子；`docs/data-model.md` 说明字段/校验与数据访问；`docs/data-testing-plan.md` 记录校验与存储测试计划；本文件追踪当前架构与 schema。
 - ESM 规范：所有相对导入/导出使用显式 `.js` 扩展，目录引用需指向 index 文件，避免 Node ESM 模式下（standalone/dev）出现 ERR_MODULE_NOT_FOUND。
 - 测试配置：`vitest.config.ts` 提供 alias（@kotoba/shared → packages/shared/src/index.ts）以在测试时直连源码。
 - 共享 Schema 细分：
@@ -27,8 +27,8 @@
   - `packages/shared/src/schemas/common.ts`：通用 Zod 基元（ISO 时间、非空字符串、枚举 difficulty、正整数 id）。
   - `packages/shared/src/schemas/word.ts`：wordCore/Create/Update/Record/Query schema 与类型，含默认值与分页过滤。
   - `packages/shared/src/schemas/review.ts`：reviewRequest（wordId、grade、reviewedAt 默认 now）、reviewResult（EF/间隔/重复/next_due_at）schema。
-  - `packages/shared/src/schemas/settings.ts`：appSettings（reviewBatchSize、aiProvider、theme、exampleStyle 范围校验与默认）。
-  - `packages/shared/src/schemas/ai.ts`：AI 生成词条的请求/响应 schema（word/hint/locale/provider/exampleStyle）。
+  - `packages/shared/src/schemas/settings.ts`：appSettings（reviewBatchSize、aiProvider，默认 gemini、theme、exampleStyle 范围校验与默认）。
+  - `packages/shared/src/schemas/ai.ts`：AI 生成词条的请求/响应 schema（word/hint/locale，provider 可选，exampleStyle 可选）。
 - 数据层文件：
   - `packages/main/src/db/config.ts`：解析 DATABASE_PATH（默认 data/kotoba.sqlite），确保目录存在。
   - `packages/main/src/db/connection.ts`：创建 better-sqlite3 连接。
@@ -39,16 +39,17 @@
   - `packages/main/src/db/transaction.ts`：通用事务包装。
   - `packages/main/src/db/setup.ts`：initializeDatabase 聚合配置、连接、迁移与仓储实例。
   - `packages/main/src/server/app.ts`：构建 Fastify（Zod type provider、错误处理、限流、安全插件、路由装配）。
-  - `packages/main/src/server/routes/*`：健康检查、词条 CRUD、复习队列/提交/撤销、统计摘要、设置读写，统一 `/api/v1` 前缀。
-  - `packages/main/src/server/plugins/*`：上下文（数据库 + 复习/统计/设置服务注入）、安全（CORS + Bearer token）、限流、错误格式化。
+  - `packages/main/src/server/routes/*`：健康检查、词条 CRUD、复习队列/提交/撤销、统计摘要、设置读写、AI 生成（/api/v1/ai/generate-word），统一 `/api/v1` 前缀。
+  - `packages/main/src/server/plugins/*`：上下文（数据库 + 复习/统计/设置/AI 服务注入）、安全（CORS + Bearer token）、限流（读/写/ai 桶）、错误格式化。
   - `packages/main/src/server/services/*`：复习服务（按 next_due_at 生成队列并缓存指针、SM-2 计算 EF/间隔/重复/时间、更新 difficulty 为最新 grade、支持幂等提交与一步撤销）、统计汇总（难度分布/到期计数/新增统计/硬词样本）、设置持久化（data/settings.json）。
+  - `packages/main/src/server/ai/*`：AI 生成抽象层；`prompt.ts` 构建统一 JSON 输出提示；`audit.ts` 长度/安全审计；`config.ts` 解析模型与超时 env；`types.ts` 规范 Normalized 请求与返回；`providers/{gemini-provider,openai-provider,mock-provider}.ts` 封装官方 SDK/Mock；`service.ts` 聚合超时、降级、审计与解析；`routes/ai.ts` 暴露 /api/v1/ai/generate-word。
   - `packages/main/src/server/standalone.ts`：从环境变量读取端口/host/CORS/token，启动 HTTP 模式。
   - `packages/main/src/index.ts`：对外导出 db 模块与 server 构建器。
-  - `packages/shared/src/__tests__/sm2.test.ts`、`packages/main/src/server/services/__tests__/review-service.test.ts`：Vitest 覆盖 SM-2 计算、队列生成/幂等提交/撤销回滚。
+  - `packages/shared/src/__tests__/sm2.test.ts`、`packages/main/src/server/services/__tests__/review-service.test.ts`、`packages/main/src/server/ai/__tests__/ai-service.test.ts`：Vitest 覆盖 SM-2 计算、队列生成/幂等提交/撤销回滚、AI provider 抽象的降级与审计行为。
 
 ## 环境与数据
 
-- 环境变量：`.env.example` 提供 `OPENAI_API_KEY`、`GEMINI_API_KEY`、`DATABASE_PATH` 示例，使用时复制为 `.env.local`。`.env*` 与 `data/` 已加入 `.gitignore`。
+- 环境变量：`.env.example` 提供 `OPENAI_API_KEY`、`GEMINI_API_KEY`、`OPENAI_MODEL`、`GEMINI_MODEL`、`AI_REQUEST_TIMEOUT_MS`、`DATABASE_PATH` 示例，使用时复制为 `.env.local`。`.env*` 与 `data/` 已加入 `.gitignore`。
 - API 环境：`API_MODE`（默认 http 用于 standalone）、`API_HOST`/`API_PORT`、`API_CORS_ORIGINS`、`API_AUTH_TOKEN`（默认 dev-token，http 模式需 Bearer）。`pnpm --filter @kotoba/main dev` 先编译再启动。
 - 数据库路径：默认 `data/kotoba.sqlite`，可通过 `DATABASE_PATH` 覆盖；初始化使用 `initializeDatabase()` 连接并执行迁移。设置持久化文件默认 `data/settings.json`。
 

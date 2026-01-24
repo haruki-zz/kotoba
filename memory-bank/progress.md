@@ -27,3 +27,11 @@
 - 复习服务：packages/main/src/server/services/review-service.ts 接入 SM-2 计算，更新 ef/interval/repetition/last/next 与 difficulty，缓存队列与指针，支持幂等提交检测与单步撤销回滚队列。
 - 测试与配置：新增 Vitest 单元测试（shared 的 SM-2 逻辑，main 的队列/撤销/幂等），根级 vitest.config.ts 将 @kotoba/shared 指向源码；tsconfig 排除测试路径避免打包。
 - 构建链路：main 包 build 改为 tsc -b，确保依赖的 shared 先行编译；pnpm --filter @kotoba/main run build 通过。
+
+## 2026-01-22（AI 生成与 Provider 抽象）
+
+- 抽象与配置：在 packages/main/src/server/ai 下新增 prompt（统一 JSON 输出提示）、audit（长度/安全检查）、config（env 解析与默认模型）、types/base（Normalized 请求与 Provider 接口）、service（超时、重试、降级、审计封装）。
+- Provider 适配：实现 Gemini/OpenAI 官方 SDK 封装及 Mock provider，支持按设置/请求选择 provider，缺省回退顺序，超时自动 abort。
+- API：新增 /api/v1/ai/generate-word 路由，使用共享 schema 校验并返回 provider/output/latency；限流增加 ai bucket；context 注入 aiService。
+- 共享 schema：aiGenerateWordRequest provider 改为可选；默认 aiProvider 设为 gemini；新增 env 示例（OPENAI_MODEL/GEMINI_MODEL/AI_REQUEST_TIMEOUT_MS）。
+- 依赖与测试：main 包加入 @google/genai、openai；添加 Vitest 用例覆盖 provider 降级与审计失败路径；lint/typecheck/test 通过。

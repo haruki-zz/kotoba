@@ -19,8 +19,8 @@
 
 - Word：`wordCoreSchema`（基础字段+默认值）、`wordCreateSchema`、`wordUpdateSchema`、`wordQuerySchema`（search/difficulty/dueBefore/分页）。
 - Review：`reviewRequestSchema`（wordId、grade 默认 medium、reviewedAt 默认当前时间）、`reviewResultSchema`（EF/间隔/重复次数/下次时间）。
-- Settings：`appSettingsSchema`（reviewBatchSize 默认 30，aiProvider 枚举 openai/gemini/mock，exampleStyle 包含 tone、句长/场景长度范围、theme）。
-- AI：`aiGenerateWordRequestSchema`（word、hint、locale、provider、exampleStyle）、`aiGenerateWordResponseSchema`（reading/contextExpl/sceneDesc/example 均为非空字符串）。
+- Settings：`appSettingsSchema`（reviewBatchSize 默认 30，aiProvider 枚举 openai/gemini/mock，默认 gemini；exampleStyle 包含 tone、句长/场景长度范围、theme）。
+- AI：`aiGenerateWordRequestSchema`（word、hint、locale 默认 ja、provider 可选、exampleStyle 可选，可覆盖设置）；`aiGenerateWordResponseSchema`（reading/contextExpl/sceneDesc/example 均为非空字符串）。
 - SM-2 常量：EF_MIN/EF_DEFAULT、REVIEW_GRADE_TO_QUALITY（easy=5/medium=4/hard=3）、默认长度范围与批量大小。
 
 ## 数据库表与迁移
