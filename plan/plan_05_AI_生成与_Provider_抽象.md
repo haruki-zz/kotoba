@@ -49,6 +49,39 @@
 ### 核心技术选型
 - 可插拔 Provider 抽象：面向接口编程，便于后续扩展
 - 环境变量配置：.env.local 管理密钥与模型参数
+- 官方 SDK 强制要求：Gemini 使用 `@google/genai`，OpenAI 使用 `openai`，拒绝非官方 SDK 或裸 HTTP
+
+### SDK 约束与默认模型
+- 默认模型：Gemini 2.5 Flash-Lit（优先作为主调用模型）
+- Gemini 官方 SDK 示例：
+```ts
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({});
+
+async function main() {
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: "Explain how AI works in a few words",
+  });
+  console.log(response.text);
+}
+
+await main();
+```
+- OpenAI 官方 SDK 示例：
+```ts
+import OpenAI from "openai";
+
+const openai = new OpenAI();
+
+const response = await openai.responses.create({
+  model: "gpt-4.1",
+  input: "Tell me a three sentence bedtime story about a unicorn.",
+});
+
+console.log(response);
+```
 
 ### 数据模型
 生成请求字段：word、阅读风格偏好、长度与语气约束；生成结果字段：reading、context_expl、scene_desc、example，以及关联的创建时间与来源标记。
