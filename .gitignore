@@ -1,0 +1,14 @@
+﻿node_modules/
+dist/
+out/
+.temp/
+.pnp.*
+.vscode/
+.idea/
+.DS_Store
+*.log
+coverage/
+.env.local
+.env*.local
+packages/**/node_modules/
+data/*.sqlite

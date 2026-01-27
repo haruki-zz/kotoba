@@ -1,0 +1,8 @@
+﻿{
+  "files": [],
+  "references": [
+    { "path": "./packages/main" },
+    { "path": "./packages/renderer" },
+    { "path": "./packages/shared" }
+  ]
+}
