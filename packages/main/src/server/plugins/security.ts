@@ -21,7 +21,7 @@ export const securityPlugin = fp<ApiServerOptions>(async (app, opts) => {
       allowedHeaders: ["content-type", "authorization", "x-request-id"],
     });
 
-    app.addHook("onRequest", (request) => {
+    app.addHook("onRequest", async (request) => {
       if (request.url === "/healthz") {
         return;
       }
