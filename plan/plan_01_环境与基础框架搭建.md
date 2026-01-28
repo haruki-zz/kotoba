@@ -15,7 +15,7 @@
 ### 前置条件
 - **前置任务**：plan_00 - 总体实施计划
 - **前置数据**：技术栈选型确定
-- **前置环境**：Node.js 与 pnpm 可用，Git 仓库可访问
+- **前置环境**：Node.js 与 pnpm 可用（采用当前最新 LTS 版本），Git 仓库可访问
 
 ### 后续影响
 - **后续任务**：plan_02 - 数据库与数据模型设计；plan_03 - SM-2 调度核心；plan_04 - Fastify API 与数据访问层；plan_05 - AI 辅助功能与提示工程；plan_06 - Electron 主进程与应用壳；plan_07 - 渲染层体验
@@ -27,25 +27,24 @@
 **每一个子任务都必须小而具体**
 
 - sub_plan_01 - 初始化多包工作区
-  - 简述：配置 pnpm workspace 与基础目录结构
+  - 简述：配置 pnpm workspace 与基础目录结构，创建 `packages/main`、`packages/renderer`、`packages/shared`、`scripts`、`data`（仅最小必须的 starter 文件）
 - sub_plan_02 - 设置通用脚本与别名
   - 简述：定义开发、构建、测试、格式化命令
 - sub_plan_03 - 建立代码规范
   - 简述：配置 ESLint、Prettier、TypeScript 基础规则
 - sub_plan_04 - 环境变量与示例
-  - 简述：提供本地环境变量模板与加载策略
+  - 简述：提供 `.env.example`（示例）与 `.env.local`（本地优先加载且 git 忽略）的模板与加载策略
 - sub_plan_05 - CI/CD 雏形
-  - 简述：准备最小化流水线步骤（安装、测试、构建占位）
-
+  - 简述：以 GitHub Actions 为目标，准备最小化流水线（checkout → setup-node 20 + corepack → pnpm install --frozen-lockfile → pnpm -r build）
 ---
 
 ## 技术方案
 
 ### 架构设计
-采用 pnpm 工作区管理多包；统一根级配置继承到各子包，保持 lint/format/test 一致性。
+采用 pnpm 工作区管理多包；统一根级配置继承到各子包，保持 lint/format/test 一致性。目录以 `packages/main`、`packages/renderer`、`packages/shared`、`scripts`、`data` 为骨架。
 
 ### 核心技术选型
-- **技术1**：pnpm workspace
+- **技术1**：pnpm workspace（Node.js 最新 LTS + pnpm，corepack 启用）
 - **技术2**：ESLint + Prettier + TypeScript 基线
 
 ### 数据模型
@@ -65,12 +64,12 @@
 ### 处理
 - 创建目录与 workspace
 - 配置脚本与规范
-- 设置环境变量模板与基础 CI
+- 设置环境变量模板与基础 CI（GitHub Actions）
 
 ### 输出
 - 可运行的开发脚本
 - 统一的 lint/format 设置
-- 环境变量示例文件
+- 环境变量示例文件 `.env.example`（含关键占位符）与 `.env.local` 加载策略
 
 ---
 
@@ -78,9 +77,10 @@
 **验收标准必须清晰明确**
 
 ### 功能验收
-- 工作区包含预期的主进程、渲染、共享、数据、脚本目录
+- 工作区包含 `packages/main`、`packages/renderer`、`packages/shared`、`scripts`、`data` 目录及最小 starter 文件
 - 根级脚本可执行开发、测试、构建、格式化命令
-- 环境变量示例文件存在并被忽略提交
+- `.env.example` 提供所需键名占位符，`.env.local` 被 git 忽略并优先加载
+- `.github/workflows/ci.yml` 定义最小 CI：checkout → setup-node 20（cache pnpm）→ corepack enable → `pnpm install --frozen-lockfile` → `pnpm -r build`
 
 ### 质量验收
 - Lint 与格式化命令运行通过
@@ -94,10 +94,11 @@
 - 工程配置文件：数量覆盖根与各子包所需配置
 
 ### 配置文件
-- 环境变量示例与忽略规则
+- 环境变量示例与忽略规则（`.env.example`、`.env.local`）
 
 ### 文档
 - 简要使用说明置于计划或根级说明
+- GitHub Actions 工作流文件 `.github/workflows/ci.yml`
 
 ### 测试文件
 - 无（仅需脚本可运行性验证）

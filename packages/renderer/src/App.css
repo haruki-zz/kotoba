@@ -1,0 +1,116 @@
+.app-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 20% 20%, #f5f7ff, #f1f5f9 45%),
+    linear-gradient(135deg, #e2e8f0 0%, #f8fafc 60%);
+  color: #0f172a;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 2rem;
+}
+
+.logo {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+nav a {
+  margin-left: 1rem;
+  color: #0f172a;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.app-main {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1rem 2rem 3rem;
+}
+
+.hero {
+  padding: 2rem;
+  border-radius: 18px;
+  background: #0f172a;
+  color: #f8fafc;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: #cbd5f5;
+}
+
+.hero h1 {
+  margin: 0.5rem 0;
+  font-size: 2rem;
+}
+
+.lede {
+  max-width: 640px;
+  line-height: 1.6;
+  color: #e2e8f0;
+}
+
+.cta-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.btn {
+  padding: 0.75rem 1.2rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #22d3ee, #3b82f6);
+  color: #0b1224;
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.35);
+}
+
+.btn.ghost {
+  background: transparent;
+  color: #e2e8f0;
+  border-color: rgba(226, 232, 240, 0.4);
+}
+
+.panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.panel h2 {
+  margin-top: 0;
+}
+
+.panel ul {
+  padding-left: 1.25rem;
+}
+
+.panel li {
+  margin: 0.4rem 0;
+}
