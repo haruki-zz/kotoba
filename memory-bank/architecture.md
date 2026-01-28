@@ -38,3 +38,22 @@
 
 - SM-2 logic currently represented only in shared Zod schema; scheduling engine/API/data layer remain TODO (plan_02+).
 - Renderer uses placeholder content; hook up Fastify API and shared schemas when endpoints exist.
+
+## File roles (current footprint)
+
+- Root configs:  
+  - `package.json` — workspace scripts (dev/build/lint/format/test/typecheck) and shared devDeps.  
+  - `pnpm-workspace.yaml` — declares packages/sctipts and `onlyBuiltDependencies: [esbuild]` for Vite/tsx.  
+  - `tsconfig.base.json` — strict TS baseline for all packages.  
+  - `.eslintrc.cjs` — base lint rules; React/JSX rules scoped to renderer via overrides.  
+  - `.prettierrc` — formatting defaults (singleQuote, semi, trailingComma es5).  
+  - `.gitignore` — ignores node_modules, build artifacts, env locals, data/; keeps `.env.example`.
+- Env: `.env.example` documents required vars; `.env.local` (not tracked) loaded first by main server.
+- CI: `.github/workflows/ci.yml` runs lint → test → build on Node 20 with pnpm cache.
+- Packages:
+  - `packages/shared/src/index.ts` — Zod schema/type for word + SM-2 metadata.  
+  - `packages/main/src/index.ts` — Fastify bootstrap, env loading, `/health` + `/sample-word` sample using shared schema.  
+  - `packages/renderer/src/*` — Vite entry (`main.tsx`), placeholder App UI, styling (`App.css`, `index.css`), Vite env types and config.  
+  - Each package has `package.json`, `tsconfig.json`, and build output under `dist/` (from initial build; safe to clean/regenerate).
+- Data: `data/.gitkeep` keeps git-empty directory ready for SQLite (`data/kotoba.sqlite`).
+- Scripts: `scripts/README.md` placeholder for automation to be added later.
