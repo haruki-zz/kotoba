@@ -57,7 +57,7 @@
   - 若 q<3：repetition=0，interval=1。
   - 否则 repetition+1；repetition=1 → interval=1；repetition=2 → interval=6；之后 interval=round(prev_interval*EF)。
   - EF' = EF + (0.1 - (5-q) * (0.08 + (5-q) * 0.02))，下限 1.3。
-  - next_due_at = last_review_at + interval_days。
+  - next_due_at = last_review_at + interval_days（仅在更新涉及调度字段或未提供自定义 next_due_at 时重算；否则保持原值以允许手动导入/调整）。
 - 调度：复习页按 next_due_at 升序取队列；跳过直接使用 easy（q=5）；未选择掌握度默认 medium（q=4）。
 
 ## 9. 体验与规则

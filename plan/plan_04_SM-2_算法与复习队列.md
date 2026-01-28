@@ -31,7 +31,7 @@
 - sub_plan_02 - 构建队列生成策略
   - 简述：按 next_due_at 升序截取队列，支持可配置长度
 - sub_plan_03 - 实现结果提交与持久化
-  - 简述：根据评分更新 ef、interval_days、repetition、last_review_at、next_due_at
+- 简述：根据评分更新 ef、interval_days、repetition、last_review_at，必要时（当调度字段变化且未显式提供 next_due_at）重算 next_due_at
 - sub_plan_04 - 实现回退与撤销
   - 简述：保存最近一次提交上下文，支持一步撤销并回滚字段
 - sub_plan_05 - 更新统计指标

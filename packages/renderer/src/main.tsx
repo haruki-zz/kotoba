@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { WordRecord } from '@kotoba/shared';
 
 const sample: WordRecord = {
+  id: 1,
   word: 'kotoba',
   reading: 'ことば',
   contextExpl: 'placeholder context',

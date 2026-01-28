@@ -1,11 +1,13 @@
-﻿{
+{
   "name": "@kotoba/main",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "main": "dist/index.js",
   "dependencies": {
-    "@kotoba/shared": "workspace:*"
+    "@kotoba/shared": "workspace:*",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.6.2"
   },
   "scripts": {
     "dev": "pnpm run typecheck",
@@ -13,6 +15,6 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "format": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,md}\"",
-    "test": "vitest --version"
+    "test": "vitest run"
   }
 }

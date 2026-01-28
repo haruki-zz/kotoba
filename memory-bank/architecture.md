@@ -49,3 +49,24 @@
 - `packages/main/src/index.ts`：占位函数 `describeBootstrap`，确保主进程包可 lint/typecheck。
 - `packages/renderer/src/main.tsx`：占位 React 入口，创建 root，展示共享类型样例数据。
 - `docs/engineering-conventions.md`：总结目录划分、命名规范、脚本与提交流程，便于新成员快速对齐。
+## Data layer (2026-01-28)
+- SQLite file lives at `data/kotoba.sqlite`; `connectDatabase` auto-creates the directory and runs migrations.
+- Schema (`words`):
+  - `id` INTEGER PRIMARY KEY AUTOINCREMENT
+  - `word` TEXT NOT NULL
+  - `reading` TEXT NOT NULL
+  - `context_expl` TEXT NOT NULL
+  - `scene_desc` TEXT NOT NULL
+  - `example` TEXT NOT NULL
+  - `difficulty` TEXT NOT NULL CHECK IN ('easy','medium','hard')
+  - `ef` REAL NOT NULL DEFAULT 2.5
+  - `interval_days` INTEGER NOT NULL DEFAULT 0
+  - `repetition` INTEGER NOT NULL DEFAULT 0
+  - `last_review_at` TEXT NOT NULL (ISO)
+  - `next_due_at` TEXT NOT NULL (ISO)
+  - `created_at` TEXT NOT NULL (ISO)
+  - `updated_at` TEXT NOT NULL (ISO)
+  - Index: `idx_words_next_due_at` on `next_due_at`.
+- Scheduling rule: `next_due_at` is recomputed from `last_review_at + interval_days` only when scheduling fields change or a new `next_due_at` is provided; otherwise existing custom values are preserved.
+- Data access lives in `packages/main/src/db/`: `connection.ts`, `migrate.ts`, `words-repository.ts`, and a `connectDatabase` helper that wires the pieces together.
+- Shared Zod schemas/types are in `packages/shared/src/schemas/word.ts` exporting `difficultySchema`, `wordRowSchema`, `newWordInputSchema`, and `wordUpdateSchema` to keep renderer/main in sync.
