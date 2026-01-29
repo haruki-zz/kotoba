@@ -3,7 +3,7 @@
 ## 计划概述
 
 ### 计划目标
-设计并落地本地 SQLite 数据库结构，覆盖词条、调度字段、标签、来源与元数据；以 Drizzle schema 作为单一事实源，生成迁移与 TypeScript 类型，建立访问约束与备份策略。
+定义词条核心数据模型、SQLite 表结构与共享校验 schema，确保主进程与渲染端一致。
 
 ### 在项目中的位置
 作为数据源核心，为调度算法、API、渲染层提供一致的数据模型与持久化能力；主进程集中访问，支撑上层 SM-2 算法与 Library/Review 等功能。
@@ -14,95 +14,77 @@
 
 ### 前置条件
 - **前置任务**：plan_01 - 环境与基础框架搭建
-- **前置数据**：需求中的字段、调度规则、SM-2 数据点
-- **前置环境**：`better-sqlite3` 可用；Drizzle CLI/`drizzle-kit` 安装完成
+- **前置数据**：设计文档中的字段定义与 SM-2 规则
+- **前置环境**：SQLite 驱动与 TypeScript 工具链可用
 
 ### 后续影响
 - **后续任务**：plan_03 - SM-2 调度核心；plan_04 - Fastify API 与数据访问层；plan_05 - AI 辅助功能与提示工程；plan_08 - Library 与内容管理
-- **产出数据**：数据库模式定义（Drizzle schema）、迁移脚本、访问抽象接口、备份策略
+- **产出数据**：数据库表、共享 schema、类型定义
 
 ---
 
 ## 子任务分解
 **每一个子任务都必须小而具体**
 
-- sub_plan_01 - 梳理实体与字段  
-  简述：确认词条、调度、标签、来源等字段及约束（含软删与时间戳）
-- sub_plan_02 - 设计表与索引  
-  简述：基于 Drizzle schema 定义表结构、索引、唯一性与外键；明确一词一来源（`source_id`）方案
-- sub_plan_03 - 迁移与初始化  
-  简述：使用 `drizzle-kit` 生成/维护迁移；放置于 `packages/main/src/db/migrations/`，命名 `0001_init.sql` 递增；无需强制种子，仅可选 1~3 条演示词条
-- sub_plan_04 - 数据访问抽象  
-  简述：在主进程封装 `better-sqlite3` + Drizzle 的 CRUD/批量导入/事务/软删除接口；默认查询过滤 `deleted_at IS NULL`
-- sub_plan_05 - 数据质量与备份策略  
-  简述：启用 WAL、busy_timeout；制定每日备份与迁移前强制备份，备份到 `<appData>/backups/`，备份后运行 `PRAGMA quick_check`
+- sub_plan_01 - 确认字段与约束
+  - 简述：梳理必填、默认值、时间格式与枚举取值
+- sub_plan_02 - 定义共享校验 schema
+  - 简述：用统一校验描述词条、设置、请求与响应格式
+- sub_plan_03 - 设计数据库表结构
+  - 简述：制定 SQLite 表结构与索引策略
+- sub_plan_04 - 规划迁移与初始化
+  - 简述：以手写迁移脚本定义建表、默认值写入与初始检查流程
+- sub_plan_05 - 编写数据访问约定
+  - 简述：约定读写接口、事务与错误处理模式
 
 ---
 
 ## 技术方案
 
 ### 架构设计
-本地 SQLite 单库，主进程单连接、串行写；开启 WAL、配置 `busy_timeout`，以 Drizzle schema 描述模式并驱动迁移/类型生成，`better-sqlite3` 提供同步访问。
+共享 schema 驱动数据层，SQLite 持久化，数据访问通过仓储模式隔离调用方。
 
 ### 核心技术选型
-- **技术1**：SQLite + `better-sqlite3`（同步驱动，主进程内）
-- **技术2**：Drizzle (sqlite) 作为查询构建/轻量 ORM 与模式事实源，配合 `drizzle-kit` 生成迁移与 TS 类型
-- **运行时校验**：Zod 于 shared 层复用类型/校验
+- Zod schema：统一请求/响应与表单校验
+- SQLite（better-sqlite3，使用手写迁移脚本，不引入 Drizzle）：本地持久化与同步访问
 
-### 数据模型（v1 初稿）
-- `words`（词条 + 调度字段合表）  
-  - PK：`id INTEGER PRIMARY KEY`  
-  - 字段：`word, reading, context_expl, scene_desc, example, difficulty, ef, interval_days, repetition, last_review_at, next_due_at, created_at, updated_at, source_id INTEGER NULL, deleted_at TEXT NULL`  
-  - 约束：`UNIQUE(word, reading)`（reading NOT NULL，默认空串）；`FOREIGN KEY(source_id) REFERENCES sources(id)`  
-  - 索引：`idx_words_next_due_at(next_due_at)`, `idx_words_difficulty(difficulty)`, `idx_words_updated_at(updated_at)`, `idx_words_deleted_at(deleted_at)`, `idx_words_source_id(source_id)`
-- `tags`  
-  - PK：`id INTEGER PRIMARY KEY`  
-  - 字段：`name TEXT NOT NULL`  
-  - 约束：`UNIQUE(name)`
-- `word_tags`（词条-标签关联）  
-  - PK：`PRIMARY KEY(word_id, tag_id)`  
-  - 外键：`word_id → words(id)`, `tag_id → tags(id)`  
-  - 索引：`idx_word_tags_tag_id(tag_id)`
-- `sources`  
-  - PK：`id INTEGER PRIMARY KEY`  
-  - 字段：`name TEXT NOT NULL`（v1 可选 `type/meta` 暂不加入）  
-  - 约束：`UNIQUE(name)`
+### 数据模型
+核心表 words：
+- id：整数主键自增
+- word：文本
+- reading：文本
+- context_expl：文本
+- scene_desc：文本
+- example：文本
+- difficulty：文本枚举（easy/medium/hard）
+- ef：实数，默认 2.5
+- interval_days：整数
+- repetition：整数
+- last_review_at：文本（ISO 时间）
+- next_due_at：文本（ISO 时间）
+- created_at：文本（ISO 时间）
+- updated_at：文本（ISO 时间）
 
 ### 接口设计
-- 数据层提供抽象的读写接口（查询、插入、更新、软删除、批量导入、标签关联维护），默认过滤 `deleted_at IS NULL`
-- 事务支持：批量导入/批量打标签/生成落库需事务封装
-- 并发策略：单进程单连接，写串行；开启 WAL + `busy_timeout`
-
-### 迁移与版本控制
-- 工具：`drizzle-kit`  
-- 位置：`packages/main/src/db/migrations/`（纳入版本控制）  
-- 命名：有序版本号 + slug（例 `0001_init.sql`, `0002_add_tags.sql`）  
-- SQLite 文件：`data/kotoba.sqlite`（gitignored）
-- 种子：默认不强制；如需仅提供 1~3 条演示词条 seed
-
-### 备份与一致性
-- 频率：每日 1 次自动备份 + 每次迁移前强制备份  
-- 存放：`<appData>/backups/`（本地，不上云）  
-- 校验：备份后运行 `PRAGMA quick_check`；失败则标记该备份不可用并保留上一次可用备份
+抽象数据访问接口：创建、读取列表、按条件查询、更新、删除；提供批量读写与事务封装以支撑队列生成与统计。
 
 ---
 
 ## 执行摘要
 
 ### 输入
-- 需求字段列表、SM-2 所需数据点
-- Drizzle/`better-sqlite3`/`drizzle-kit` 已可用的开发环境
+- 字段定义与 SM-2 规则
+- 工作区与 TypeScript 工具链
 
 ### 处理
-- 建模与约束设计（Drizzle schema）
-- 迁移生成与版本化
-- 数据访问抽象实现（含事务、软删、批量导入）
-- 备份与一致性策略落地
+- 确定字段规则与默认值
+- 生成共享 schema 与表结构
+- 约定数据访问接口与迁移流程
 
 ### 输出
-- 已版本化的数据库模式与迁移
-- 数据访问抽象接口/类型定义
-- 备份计划与校验流程
+- words 表结构与索引方案
+- 共享校验 schema 与类型
+- 数据访问约定与初始化步骤
 
 ---
 
@@ -110,31 +92,26 @@
 **验收标准必须清晰明确**
 
 ### 功能验收
-- 数据库模式覆盖调度字段、时间戳、标签、来源与软删字段
-- 迁移可在空库上成功创建所有表、索引与约束，命名/位置符合约定
-- 数据访问抽象提供 CRUD、批量导入、软删除、事务封装；默认查询排除软删记录
+- words 表结构完整、字段及默认值与设计一致
+- 共享 schema 覆盖词条、复习记录、设置、AI 请求响应
+- 数据访问约定包含增删改查、批量与事务模式
 
 ### 质量验收
-- 字段类型、默认值、约束、索引定义齐全且与 Drizzle schema/生成类型一致
-- 迁移脚本可重复执行并具备有序版本号；Drizzle schema 为单一事实源
-- 备份流程按计划可执行，`PRAGMA quick_check` 通过；失败备份被标记不可用
+- 字段校验规则明确且可复用
+- 迁移与初始化流程可重复执行无副作用
 
 ---
 
 ## 交付物清单
 
 ### 代码文件
-- Drizzle schema 定义与 TypeScript 推导（主事实源）
-- 迁移文件：`packages/main/src/db/migrations/*.sql`
-- 数据访问抽象接口/实现（含事务、批量导入、软删策略）
+- 数据访问与迁移约定：1 套
 
 ### 配置文件
-- Drizzle/`drizzle-kit` 配置（若需）
-- 数据库路径配置与环境变量占位（`data/kotoba.sqlite`，`.env.example` 已含）
+- 数据库初始化配置：1 份
 
 ### 文档
-- 模式说明与字段含义（含索引、约束、软删规则）
-- 备份与恢复流程说明（含 quick_check 校验）
+- 字段说明与 schema 说明：1 份
 
 ### 测试文件
-- 数据层验证用例：创建、查询、更新、删除、软删过滤、批量导入、约束校验
+- 数据校验与存储测试计划：1 份
