@@ -21,8 +21,11 @@ const readEnvString = (key: string) => {
 };
 
 const baseFromEnv = readEnvString("VITE_API_BASE");
+const tokenFromEnv =
+  readEnvString("VITE_API_TOKEN") ?? readEnvString("VITE_API_AUTH_TOKEN");
 
 const defaultBaseUrl = baseFromEnv ?? "http://localhost:4000/api/v1";
+const defaultAuthToken = tokenFromEnv ?? "dev-token";
 
 const buildUrl = (
   path: string,
@@ -53,6 +56,7 @@ const request = async <T>(path: string, options?: RequestOptions) => {
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
+      Authorization: `Bearer ${defaultAuthToken}`,
       ...headers,
     },
   });
