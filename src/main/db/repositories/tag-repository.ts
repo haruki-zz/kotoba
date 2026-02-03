@@ -2,7 +2,7 @@ import BetterSqlite3 from 'better-sqlite3';
 
 import { TagCreateInput, TagRecord, tagCreateSchema } from '@shared/types';
 
-import { mapTagRow } from '../mappers';
+import { mapTagRow, TagRow } from '../mappers';
 import { nowIso } from '../time';
 
 export class TagRepository {
@@ -24,6 +24,17 @@ export class TagRepository {
       .prepare('SELECT id, name, description, created_at, updated_at FROM tags WHERE id = ?')
       .get(id);
     return row ? mapTagRow(row) : undefined;
+  }
+
+  findByNames(names: string[]): TagRecord[] {
+    if (names.length === 0) return [];
+    const placeholders = names.map(() => '?').join(', ');
+    const rows = this.db
+      .prepare(
+        `SELECT id, name, description, created_at, updated_at FROM tags WHERE name IN (${placeholders})`
+      )
+      .all(...names) as TagRow[];
+    return rows.map(mapTagRow);
   }
 
   upsert(input: TagCreateInput): TagRecord {
@@ -78,5 +89,33 @@ export class TagRepository {
       )
       .all(wordId);
     return rows.map(mapTagRow);
+  }
+
+  listByWordIds(wordIds: number[]): Record<number, TagRecord[]> {
+    if (wordIds.length === 0) return {};
+    const placeholders = wordIds.map(() => '?').join(', ');
+    const rows = this.db
+      .prepare(
+        `SELECT wt.word_id as word_id, t.id, t.name, t.description, t.created_at, t.updated_at
+         FROM word_tags wt
+         INNER JOIN tags t ON t.id = wt.tag_id
+         WHERE wt.word_id IN (${placeholders})
+         ORDER BY t.name ASC`
+      )
+      .all(...wordIds) as (TagRow & { word_id: number })[];
+
+    return rows.reduce<Record<number, TagRecord[]>>((acc, row) => {
+      if (!acc[row.word_id]) acc[row.word_id] = [];
+      acc[row.word_id].push(
+        mapTagRow({
+          id: row.id,
+          name: row.name,
+          description: row.description,
+          created_at: row.created_at,
+          updated_at: row.updated_at,
+        })
+      );
+      return acc;
+    }, {});
   }
 }

@@ -26,6 +26,24 @@ export class SourceRepository {
     return row ? mapSourceRow(row) : undefined;
   }
 
+  findByIds(ids: number[]): SourceRecord[] {
+    if (ids.length === 0) return [];
+    const placeholders = ids.map(() => '?').join(', ');
+    const rows = this.db
+      .prepare(
+        `SELECT id, name, url, note, created_at, updated_at FROM sources WHERE id IN (${placeholders})`
+      )
+      .all(...ids);
+    return rows.map(mapSourceRow);
+  }
+
+  listAll(): SourceRecord[] {
+    const rows = this.db
+      .prepare('SELECT id, name, url, note, created_at, updated_at FROM sources ORDER BY name ASC')
+      .all();
+    return rows.map(mapSourceRow);
+  }
+
   upsert(input: SourceCreateInput): SourceRecord {
     const existing = this.findByName(input.name);
     const noteProvided = input.note !== undefined;

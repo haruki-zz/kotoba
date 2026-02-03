@@ -78,4 +78,31 @@ describe('WordRepository', () => {
 
     db.close();
   });
+
+  it('clears tags when updating with an empty list', () => {
+    const { db, wordRepo } = buildRepos();
+
+    const created = wordRepo.create(
+      {
+        word: 'notebook',
+        reading: 'notebook',
+        contextExpl: 'portable paper book',
+        sceneDesc: 'buying supplies before class',
+        example: 'I picked up a notebook on the way to school.',
+        difficulty: 'easy',
+      },
+      { tagNames: ['stationery', 'noun'] }
+    );
+
+    expect(wordRepo.listTags(created.id).map((t) => t.name)).toEqual(
+      expect.arrayContaining(['stationery', 'noun'])
+    );
+
+    const updated = wordRepo.update(created.id, {}, { tagNames: [] });
+
+    expect(updated).toBeDefined();
+    expect(wordRepo.listTags(created.id)).toEqual([]);
+
+    db.close();
+  });
 });

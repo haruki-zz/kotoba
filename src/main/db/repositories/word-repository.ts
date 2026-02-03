@@ -4,6 +4,7 @@ import {
   DEFAULT_INTERVAL_DAYS,
   DEFAULT_REPETITION,
   SM2_DEFAULT_EF,
+  Difficulty,
   WordCreateInput,
   WordRecord,
   WordUpdateInput,
@@ -29,6 +30,21 @@ type WordUpdateOptions = {
   sourceName?: string;
   sourceUrl?: string | null;
   sourceNote?: string;
+};
+
+type OrderField = 'next_due_at' | 'created_at' | 'updated_at';
+type SortOrder = 'ASC' | 'DESC';
+
+export type WordSearchParams = {
+  query?: string;
+  difficulties?: Difficulty[];
+  tagNames?: string[];
+  sourceId?: number;
+  dueBefore?: string;
+  limit: number;
+  offset: number;
+  orderBy: OrderField;
+  order: SortOrder;
 };
 
 export class WordRepository {
@@ -111,6 +127,109 @@ export class WordRepository {
     return rows.map((row) => mapWordRow(row));
   }
 
+  search(params: WordSearchParams): { items: WordRecord[]; total: number } {
+    const conditions: string[] = [];
+    const args: unknown[] = [];
+
+    if (params.query) {
+      const like = `%${params.query.toLowerCase()}%`;
+      conditions.push(
+        `(lower(word) LIKE ? OR lower(reading) LIKE ? OR lower(context_expl) LIKE ? OR lower(scene_desc) LIKE ? OR lower(example) LIKE ?)`
+      );
+      args.push(like, like, like, like, like);
+    }
+
+    if (params.difficulties?.length) {
+      const placeholders = params.difficulties.map(() => '?').join(', ');
+      conditions.push(`difficulty IN (${placeholders})`);
+      args.push(...params.difficulties);
+    }
+
+    if (params.sourceId) {
+      conditions.push('source_id = ?');
+      args.push(params.sourceId);
+    }
+
+    if (params.dueBefore) {
+      conditions.push('next_due_at <= ?');
+      args.push(params.dueBefore);
+    }
+
+    const tagNames = params.tagNames?.filter((tag) => tag.trim().length > 0) ?? [];
+    if (tagNames.length > 0) {
+      const placeholders = tagNames.map(() => '?').join(', ');
+      conditions.push(
+        `w.id IN (
+          SELECT wt.word_id
+          FROM word_tags wt
+          INNER JOIN tags t ON t.id = wt.tag_id
+          WHERE t.name IN (${placeholders})
+          GROUP BY wt.word_id
+          HAVING COUNT(DISTINCT t.name) = ${tagNames.length}
+        )`
+      );
+      args.push(...tagNames);
+    }
+
+    const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const base = `FROM words w ${whereClause}`;
+
+    const orderMap: Record<WordSearchParams['orderBy'], string> = {
+      next_due_at: 'w.next_due_at',
+      created_at: 'w.created_at',
+      updated_at: 'w.updated_at',
+    };
+    const orderField = orderMap[params.orderBy] ?? 'w.next_due_at';
+    const orderDir = params.order === 'DESC' ? 'DESC' : 'ASC';
+
+    const selectSql = `SELECT w.id, w.word, w.reading, w.context_expl, w.scene_desc, w.example, w.difficulty, w.ef, w.interval_days, w.repetition, w.last_review_at, w.next_due_at, w.source_id, w.created_at, w.updated_at ${base} ORDER BY ${orderField} ${orderDir} LIMIT ? OFFSET ?`;
+    const totalSql = `SELECT COUNT(*) as count ${base}`;
+
+    const rows = this.db
+      .prepare(selectSql)
+      .all(...args, params.limit, params.offset) as WordRow[];
+    const totalRow = this.db.prepare(totalSql).get(...args) as { count: number } | undefined;
+
+    return {
+      items: rows.map(mapWordRow),
+      total: totalRow?.count ?? 0,
+    };
+  }
+
+  countDue(asOfIso = nowIso()): number {
+    const row = this.db
+      .prepare('SELECT COUNT(*) as count FROM words WHERE next_due_at <= ?')
+      .get(asOfIso) as { count: number } | undefined;
+    return row?.count ?? 0;
+  }
+
+  countAll(): number {
+    const row = this.db.prepare('SELECT COUNT(*) as count FROM words').get() as
+      | { count: number }
+      | undefined;
+    return row?.count ?? 0;
+  }
+
+  countByDifficulty(): Record<Difficulty, number> {
+    const rows = this.db
+      .prepare('SELECT difficulty, COUNT(*) as count FROM words GROUP BY difficulty')
+      .all() as { difficulty: Difficulty; count: number }[];
+    return rows.reduce<Record<Difficulty, number>>(
+      (acc, row) => {
+        acc[row.difficulty] = row.count;
+        return acc;
+      },
+      { easy: 0, medium: 0, hard: 0 }
+    );
+  }
+
+  countCreatedSince(sinceIso: string): number {
+    const row = this.db
+      .prepare('SELECT COUNT(*) as count FROM words WHERE created_at >= ?')
+      .get(sinceIso) as { count: number } | undefined;
+    return row?.count ?? 0;
+  }
+
   update(id: number, patch: WordUpdateInput, options?: WordUpdateOptions): WordRecord | undefined {
     const parsed = wordUpdateSchema.parse(patch);
     const assignments: string[] = [];
@@ -154,11 +273,16 @@ export class WordRepository {
       }
     }
 
-    if (options?.tagNames) {
+    if (options?.tagNames !== undefined) {
       this.replaceTags(id, options.tagNames);
     }
 
     return this.getById(id);
+  }
+
+  delete(id: number): boolean {
+    const result = this.db.prepare('DELETE FROM words WHERE id = ?').run(id);
+    return result.changes > 0;
   }
 
   replaceTags(wordId: number, tagNames: string[]): void {

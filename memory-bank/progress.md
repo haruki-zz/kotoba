@@ -13,3 +13,8 @@
   - 提供基于 difficulty 的便捷入口 `applyDifficultyReview` 和质量分 `applySm2Review`，输出可直接写回数据库字段（ef/interval_days/repetition/last_review_at/next_due_at）。
   - 新增单元测试 `src/shared/__tests__/sm2.test.ts` 覆盖失败重置、早期间隔、EF 驱动增长、最大间隔裁剪、难度映射，全部通过 `pnpm test`。
   - 更新 `memory-bank/architecture.md` 标注 plan_03 完成并补充文件作用说明。
+- 完成 plan_04：Fastify API 与服务层。
+  - 落地 `src/main/api` Fastify 服务器、健康/词条/标签/来源/统计路由，词条路由含 CRUD、SM-2 评分、复习队列、批量导入。
+  - 新增 `src/main/services/*` 业务封装，复用 shared schema，新增 `src/shared/schemas/api/*` 和类型导出。
+  - 新脚本 `pnpm dev:api` 启动本地 API；端到端测试 `src/main/api/__tests__/api.test.ts` 通过 `pnpm test`。
+- Lint 修复：解决 Fastify server 默认导入命名与 API schema 导入顺序问题，`pnpm lint` 重新通过。
