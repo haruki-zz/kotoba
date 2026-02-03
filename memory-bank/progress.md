@@ -8,3 +8,8 @@
   - CLI 脚本：`pnpm db:migrate` 迁移、`pnpm db:backup` 备份到 `data/backups/`。
   - 文档与架构更新：`docs/database-schema.md`、`memory-bank/architecture.md` 补充文件作用与 schema。
   - 新增数据库相关测试并通过 `pnpm test`，`pnpm typecheck` 亦通过。
+- 完成 plan_03：SM-2 调度核心。
+  - 在 `src/shared/sm2/` 实现纯函数调度核心（评分映射、EF 更新、间隔计算、日期推进）与可配置参数（最小/默认 EF、首两次间隔、失败间隔、可选最大间隔、自定义时钟）。
+  - 提供基于 difficulty 的便捷入口 `applyDifficultyReview` 和质量分 `applySm2Review`，输出可直接写回数据库字段（ef/interval_days/repetition/last_review_at/next_due_at）。
+  - 新增单元测试 `src/shared/__tests__/sm2.test.ts` 覆盖失败重置、早期间隔、EF 驱动增长、最大间隔裁剪、难度映射，全部通过 `pnpm test`。
+  - 更新 `memory-bank/architecture.md` 标注 plan_03 完成并补充文件作用说明。

@@ -1,4 +1,4 @@
-# 架构（更新：plan_02 数据库与数据模型）
+# 架构（更新：plan_03 SM-2 调度核心）
 
 ## 项目结构
 - 单一 package.json（禁止 workspace/monorepo），所有依赖安装在根级 `node_modules`。
@@ -37,7 +37,8 @@
 
 ## 里程碑衔接
 - plan_02：数据库与模型细化（迁移、Zod schema、数据访问层）——已完成。
-- 待办：plan_03 SM-2 业务服务；plan_04 Fastify API；plan_05 AI 接入；plan_06 Electron 壳；plan_07 渲染层体验。
+- plan_03：SM-2 调度核心（纯函数、配置化、测试覆盖）——已完成，输出 `src/shared/sm2/`。
+- 待办：plan_04 Fastify API；plan_05 AI 接入；plan_06 Electron 壳；plan_07 渲染层体验。
 
 ## 文件作用说明
 - `package.json`：单包定义，脚本 dev/build/test/lint/format/typecheck/db:migrate/db:backup；pnpm onlyBuiltDependencies。
@@ -56,7 +57,9 @@
 - `src/shared/constants.ts`：SM-2 默认值与间隔常量。
 - `src/shared/schemas/*`：words/tags/sources 的 Zod schema。
 - `src/shared/types.ts`：从 schema 导出类型与常量。
+- `src/shared/sm2/`：SM-2 调度纯函数、配置与难度评分映射；核心入口 `applySm2Review`（质量分→状态更新）与 `applyDifficultyReview`（难度→质量），支持可选 `maxIntervalDays`、自定义时钟、失败重置、首两次固定间隔、EF 下限。
 - `src/shared/__tests__/smoke.test.ts`：基础常量测试。
+- `src/shared/__tests__/sm2.test.ts`：覆盖失败重置、早期间隔、EF 驱动增长、最大间隔裁剪、难度→质量映射及时间推进。
 - `scripts/run-migrations.ts`：CLI 迁移入口。
 - `scripts/backup-db.ts`：备份当前 SQLite 到 `data/backups/`。
 - `docs/database-schema.md`：数据库字段/索引与备份流程说明。
