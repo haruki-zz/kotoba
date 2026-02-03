@@ -10,7 +10,7 @@
 - 反馈指标：关注连续天数（daily activity heat map）、掌握度分布（单词记忆程度标记为 easy/medium/hard）。
 - 词条最小字段：单词本身、假名读音、情景化解释、场景描述、例句、难度标记（easy/medium/hard）、SM-2 相关字段；暂不加入词性/标签/来源等其他信息。
 - SM-2 字段定义：EF（easiness factor，默认 2.5）、interval_days（当前间隔，天）、repetition（连续记忆成功次数）、last_review_at（上次复习时间，ISO 日期/时间）、next_due_at（下次到期时间，ISO 日期/时间）。
-- SM-2 更新逻辑（常用值）：质量映射 easy=5、medium=4、hard=3；q<3 视为失败且不使用；若 q<3 则 repetition=0，interval=1；否则 repetition+1，若 repetition=1 则 interval=1，repetition=2 则 interval=6，之后 interval=round(prev_interval*EF)；EF'=EF+(0.1-(5-q)*(0.08+(5-q)*0.02))，EF' 下限 1.3；next_due_at=last_review_at+interval_days。
+- SM-2 更新逻辑（常用值）：质量映射 easy=5、medium=4、hard=3；q<3 视为失败且不使用；若 q<3 则 repetition=0，interval=1；否则 repetition+1，若 repetition=1 则 interval=1，repetition=2 则 interval=6，之后 interval=round(prev_interval*EF)；EF'=EF+(0.1-(5-q)*(0.08+(5-q)\*0.02))，EF' 下限 1.3；next_due_at=last_review_at+interval_days。
 - 复习调度与流程：采用 SRS SM-2 算法；复习时先仅显示单词，用户回忆读音与解释；若直接跳过则后端自动标记为 easy 并进入下一词；若展开查看读音/解释/情景/例句后，用户可手动选择掌握程度（若不选则默认 medium）；队列支持左右箭头/快捷键双向切换，提供“回退上一条”按钮，每日复习次数不限；跳过后无额外提示，节奏不变；当日完成后直接结束，不提示“再练 5 个 hard”。
 - 数据展示：统计数据（连续天数热力图、掌握度分布等）在首页常驻展示。
 - 数量与队列：每日新增词汇不设上下限，完全由用户决定；每日复习队列默认 30 个词，可用户自定义调整。

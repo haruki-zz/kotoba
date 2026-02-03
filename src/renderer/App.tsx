@@ -5,7 +5,7 @@ const checkpoints = [
   '根级脚本：dev / build / test / lint / format / typecheck',
   'Vite + React 渲染层占位，后续可接入 Electron 壳',
   'TS/ESLint/Prettier 基线已配置',
-  '.env.example 与 data 目录就绪（已 gitignore）'
+  '.env.example 与 data 目录就绪（已 gitignore）',
 ];
 
 function App() {

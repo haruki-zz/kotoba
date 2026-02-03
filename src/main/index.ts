@@ -11,3 +11,5 @@ if (isDirectRun) {
   // eslint-disable-next-line no-console
   console.log('[kotoba] Base environment initialized');
 }
+
+export * from './db';
