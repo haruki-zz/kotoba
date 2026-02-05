@@ -12,6 +12,13 @@
 
 ---
 
+## Provider 設計要求（新增）
+- 默認提供三個 provider：Gemini、ChatGPT，以及用於開發/測試的 Mock。
+- Provider 列表保持可擴展：以可註冊/配置的方式新增 provider，避免修改核心邏輯即可掛載新實作。
+- 所有 provider 一律使用官方 SDK 或客戶端介面，不直接 etch 第三方 API。
+- 統一 provider 介面（初始化配置 + 請求參數），方便在主程式與 UI 間切換與擴展。
+
+
 ## 依赖关系
 
 ### 前置条件
