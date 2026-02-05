@@ -25,7 +25,9 @@ export class MockProvider implements AiProvider {
         reading: payload.readingHint ?? `${payload.word} kana`,
         contextExpl: payload.contextHint ?? 'Brief context explaining where the word fits.',
         sceneDesc:
-          payload.scene ?? `A short scene where "${payload.word}" appears in conversation.`,
+          payload.contextHint
+            ? `A short scene showing "${payload.word}" in context: ${payload.contextHint}.`
+            : `A short scene where "${payload.word}" appears in conversation.`,
         example: `${payload.word} is used naturally in a simple sentence.`,
         difficulty: pickDifficulty(payload.contextHint),
         tips: 'Keep sentences concise and concrete; prefer everyday scenarios.',
