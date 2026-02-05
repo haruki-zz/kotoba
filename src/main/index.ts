@@ -1,3 +1,5 @@
+import { pathToFileURL } from 'node:url';
+
 import { startServer } from './api/server';
 
 export async function bootstrapMain(options?: { dbPath?: string; port?: number; host?: string }) {
@@ -5,7 +7,7 @@ export async function bootstrapMain(options?: { dbPath?: string; port?: number; 
   return app;
 }
 
-const entryHref = process.argv[1] ? new URL(process.argv[1], 'file://').href : '';
+const entryHref = process.argv[1] ? pathToFileURL(process.argv[1]).href : '';
 const isDirectRun = import.meta.url === entryHref;
 
 if (isDirectRun) {

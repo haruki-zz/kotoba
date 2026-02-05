@@ -1,9 +1,11 @@
-﻿import Fastify from 'fastify';
+import cors from '@fastify/cors';
+import Fastify from 'fastify';
 import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
 import { ZodError } from 'zod';
 
 import { AppContext, createAppContext } from './context';
 import { BadRequestError, HttpError, toErrorResponse } from './errors';
+import { registerAiRoutes } from './routes/ai';
 import { registerHealthRoute } from './routes/health';
 import { registerSourceRoutes } from './routes/sources';
 import { registerStatsRoutes } from './routes/stats';
@@ -19,6 +21,11 @@ export const buildServer = (ctx: AppContext) => {
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
+  app.register(cors, {
+    origin:
+      process.env.CORS_ORIGIN?.split(',').map((item) => item.trim()).filter(Boolean) ??
+      ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  });
 
   app.addHook('onResponse', (request, reply, done) => {
     request.log.info(
@@ -34,6 +41,7 @@ export const buildServer = (ctx: AppContext) => {
   });
 
   registerHealthRoute(app);
+  registerAiRoutes(app, ctx);
   registerWordRoutes(app, ctx);
   registerTagRoutes(app, ctx);
   registerSourceRoutes(app, ctx);

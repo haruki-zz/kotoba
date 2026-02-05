@@ -12,6 +12,7 @@ SQLite 本地单库（默认 `data/kotoba.sqlite`，可用环境变量 `DATABASE
   - 关联：`source_id`（nullable，FK→sources）
   - 元数据：`created_at`、`updated_at`
 - `word_tags`：`word_id`（FK→words，级联删除）、`tag_id`（FK→tags，级联删除）、`created_at`；复合主键 `(word_id, tag_id)`
+- `ai_requests`：`id`（PK）、`trace_id`、`scenario`、`provider`、`word_id`（nullable，FK→words）、`input_json`、`output_json`、`status`（`success`/`error`）、`error_message`、`latency_ms`、`created_at`、`updated_at`
 - `app_meta`：`key`（PK）、`value`、`updated_at`（存储备份时间等元信息）
 
 ## 索引
@@ -19,6 +20,7 @@ SQLite 本地单库（默认 `data/kotoba.sqlite`，可用环境变量 `DATABASE
 - `idx_words_difficulty`（`difficulty`）
 - `idx_words_lookup`（`word`,`reading`）
 - `idx_word_tags_word`（`word_id`）、`idx_word_tags_tag`（`tag_id`）
+- `idx_ai_requests_word`（`word_id`）、`idx_ai_requests_created_at`（`created_at`）、`idx_ai_requests_trace`（`trace_id`）
 
 ## 数据访问抽象
 - 连接与迁移：`src/main/db/connection.ts`、`src/main/db/migrations`、`createDbContext`（`src/main/db/index.ts`）。

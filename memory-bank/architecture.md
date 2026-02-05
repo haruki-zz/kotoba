@@ -1,11 +1,11 @@
-# 架构（更新：plan_04 Fastify API 与数据访问层）
+# 架构（更新：plan_05 AI 辅助功能与提示工程）
 
 ## 项目结构
 - 单一 package.json（禁止 workspace/monorepo），所有依赖安装在根级 `node_modules`。
 - 目录：
-  - `src/main`：Electron 主进程 + Fastify API（已接入）。`src/main/db` 持久化层；`src/main/api` Fastify 服务器与路由；`src/main/services` 业务封装。
+  - `src/main`：Electron 主进程 + Fastify API（已接入）。`src/main/db` 持久化层；`src/main/api` Fastify 服务器与路由；`src/main/services` 业务封装；`src/main/ai` provider 抽象、限流/重试与客户端适配。
   - `src/renderer`：Vite + React 渲染层（当前占位页面）。
-  - `src/shared`：跨进程复用的类型与 Zod schema（`schemas/`、`constants.ts`，新增 `schemas/api` 描述 API 请求/响应）。
+  - `src/shared`：跨进程复用的类型与 Zod schema（`schemas/`、`constants.ts`，新增 `schemas/api` 描述 API 请求/响应）；`src/shared/ai` 提示模板、场景定义、provider 枚举。
   - `data/`：本地 SQLite（默认 `data/kotoba.sqlite`，gitignored）。
   - `scripts/`：自动化脚本（迁移、备份）。
   - `docs/`：设计与规格（新增数据库说明）。
@@ -33,14 +33,16 @@
     - 关联：`source_id` FK→sources NULLABLE
     - 元数据：`created_at`, `updated_at`
   - `word_tags`: `word_id` FK→words ON DELETE CASCADE, `tag_id` FK→tags ON DELETE CASCADE, `created_at`, PRIMARY KEY(word_id, tag_id)
+  - `ai_requests`: `id` PK, `trace_id`, `scenario`, `provider`, `word_id` FK→words NULLABLE, `input_json`, `output_json`, `status` CHECK in (success/error), `error_message`, `latency_ms`, `created_at`, `updated_at`
   - `app_meta`: `key` PK, `value`, `updated_at`
-- 索引：`idx_words_next_due_at`, `idx_words_difficulty`, `idx_words_lookup(word, reading)`, `idx_word_tags_word`, `idx_word_tags_tag`。
+- 索引：`idx_words_next_due_at`, `idx_words_difficulty`, `idx_words_lookup(word, reading)`, `idx_word_tags_word`, `idx_word_tags_tag`，`idx_ai_requests_word`，`idx_ai_requests_created_at`，`idx_ai_requests_trace`。
 
 ## 里程碑衔接
 - plan_02：数据库与模型细化（迁移、Zod schema、数据访问层）——已完成。
 - plan_03：SM-2 调度核心（纯函数、配置化、测试覆盖）——已完成，输出 `src/shared/sm2/`。
 - plan_04：Fastify API 与数据访问封装——已完成，本地 API 路由、校验、服务层与端到端测试可用。
-- 待办：plan_05 AI 接入；plan_06 Electron 壳；plan_07 渲染层体验。
+- plan_05：AI provider 抽象（ChatGPT/Gemini/Mock）、提示模板、限流/重试、调用日志表 `ai_requests`、AI 生成 API 与 renderer playground —— 已完成。
+- 待办：plan_06 Electron 壳；plan_07 渲染层体验。
 
 ## 文件作用说明
 - `package.json`：单包定义，脚本 dev/build/test/lint/format/typecheck/db:migrate/db:backup；pnpm onlyBuiltDependencies。
@@ -50,20 +52,23 @@
 - `.eslintrc.cjs`、`.prettierrc`、`.prettierignore`、`.gitignore`：规范与忽略配置；`.env.example` 提供必需环境变量模板。
 - `vite.config.ts`：Vite + React 配置，含别名与 Vitest 设置。
 - `vitest.setup.ts`：测试全局占位。
-- `index.html`：Vite 入口；`src/renderer/main.tsx` 启动 React；`src/renderer/App.tsx` / `styles.css` 占位 UI。
+- `index.html`：Vite 入口；`src/renderer/main.tsx` 启动 React；`src/renderer/App.tsx` / `styles.css` UI。
+- `src/renderer/components/AiPlayground.tsx`：AI 交互沙盘（触发调用、加载/错误提示、手动编辑回退）。
 - `src/main/index.ts`：主进程入口，直接运行时启动 Fastify API（默认 127.0.0.1:8787）；导出数据库上下文与 `startServer`。
-- `src/main/api/server.ts`：Fastify 构建与错误处理，挂载健康检查、词条、标签、来源、统计路由。
-- `src/main/api/context.ts`：数据库上下文组装业务服务，统一 close。
-- `src/main/api/routes/*`：`health`/`words`/`tags`/`sources`/`stats` 路由，词条路由覆盖 CRUD、review、bulk 导入、复习队列。
+- `src/main/api/server.ts`：Fastify 构建与错误处理，挂载健康、词条、标签、来源、统计、AI 路由，启用 CORS。
+- `src/main/api/context.ts`：数据库上下文组装业务服务与 provider registry，统一 close。
+- `src/main/api/routes/*`：`health`/`words`/`tags`/`sources`/`stats`/`ai` 路由，词条路由覆盖 CRUD、review、bulk 导入、复习队列。
 - `src/main/api/__tests__/api.test.ts`：Fastify 端到端测试（创建/查询、SM-2 评分、队列、统计）。
-- `src/main/services/*`：`WordService`（SM-2 应用、搜索、统计、批量导入）、`TagService`、`SourceService`。
+- `src/main/api/__tests__/ai.test.ts`：AI 路由端到端测试（成功 + provider 配置错误日志）。
+- `src/main/services/*`：`WordService`（SM-2 应用、搜索、统计、批量导入）、`TagService`、`SourceService`、`AiService`（提示渲染、调用、解析、持久化、日志）。
+- `src/main/ai/*`：provider 注册、限流（并发）、重试、超时包装，OpenAI/Gemini/Mock 客户端适配。
 - `src/main/db/connection.ts`：SQLite 打开/路径解析，启用 WAL 与外键。
 - `src/main/db/migrations/*`：迁移定义与执行器（事务应用并记录）。
-- `src/main/db/repositories/*`：`WordRepository`、`TagRepository`、`SourceRepository` 提供 typed CRUD、标签关联、来源 upsert、到期查询。
+- `src/main/db/repositories/*`：`WordRepository`、`TagRepository`、`SourceRepository`、`AiRequestRepository`（记录调用输入/输出、provider、耗时、错误）。
 - `src/main/db/mappers.ts` / `time.ts`：数据库行映射与时间工具。
 - `src/shared/constants.ts`：SM-2 默认值与间隔常量。
-- `src/shared/schemas/*`：words/tags/sources 的 Zod schema，`schemas/api` 描述 API 请求/响应、分页、复习队列、批量导入、统计；其中 `api/common.ts` 提供分页/ISO 时间共享校验，`api/word.ts` 定义词条 CRUD/搜索/复习/批量导入/队列契约，`api/stats.ts` 定义统计概览结构。
-- `src/shared/types.ts`：从 schema 导出类型与常量，新增 WordView/WordListQuery/StatsOverview 等。
+- `src/shared/schemas/*`：words/tags/sources 的 Zod schema，`schemas/api` 描述 API 请求/响应、分页、复习队列、批量导入、统计、AI 生成；其中 `api/common.ts` 提供分页/ISO 时间共享校验，`api/word.ts` 定义词条 CRUD/搜索/复习/批量导入/队列契约，`api/stats.ts` 定义统计概览结构，`api/ai.ts` 定义 AI 调用请求/响应。
+- `src/shared/types.ts`：从 schema 导出类型与常量，新增 WordView/WordListQuery/StatsOverview/AiGenerateRequest 等。
 - `src/shared/sm2/`：SM-2 调度纯函数、配置与难度评分映射；核心入口 `applySm2Review`（质量分→状态更新）与 `applyDifficultyReview`（难度→质量），支持可选 `maxIntervalDays`、自定义时钟、失败重置、首两次固定间隔、EF 下限。
 - `src/shared/__tests__/smoke.test.ts`：基础常量测试。
 - `src/shared/__tests__/sm2.test.ts`：覆盖失败重置、早期间隔、EF 驱动增长、最大间隔裁剪、难度→质量映射及时间推进。

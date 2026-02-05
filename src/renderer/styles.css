@@ -1,8 +1,8 @@
 :root {
-  color: #0f172a;
+  color: #0b1225;
   background: radial-gradient(circle at 20% 20%, #f1f5f9, #ffffff 50%);
-  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  line-height: 1.5;
+  font-family: 'Space Grotesk', 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
 }
 
 * {
@@ -12,24 +12,53 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: #f8fafc;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 35%, #fdfcfb 100%);
 }
 
 .app-shell {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: 48px 16px;
+  padding: 48px 16px 64px;
+}
+
+.layout-grid {
+  display: grid;
+  gap: 20px;
+  width: min(1080px, 100%);
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
 .card {
-  max-width: 780px;
-  width: min(100%, 780px);
   background: #ffffff;
-  border-radius: 20px;
-  padding: 32px;
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.08);
   border: 1px solid #e2e8f0;
+}
+
+.baseline-card {
+  background: linear-gradient(145deg, rgba(15, 118, 110, 0.06), rgba(79, 70, 229, 0.04), #ffffff);
+}
+
+.ai-card {
+  background: linear-gradient(165deg, rgba(59, 130, 246, 0.08), rgba(255, 255, 255, 0.95));
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.badge {
+  background: #0f172a;
+  color: #e0f2fe;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
 }
 
 .eyebrow {
@@ -37,18 +66,30 @@ body {
   letter-spacing: 0.08em;
   color: #64748b;
   font-size: 12px;
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 }
 
-h1 {
+h1,
+h2 {
   margin: 0 0 12px;
-  font-size: 28px;
   letter-spacing: -0.02em;
 }
 
+h1 {
+  font-size: 28px;
+}
+
+h2 {
+  font-size: 24px;
+}
+
 .lede {
-  margin: 0 0 20px;
+  margin: 0 0 16px;
   color: #334155;
+}
+
+.muted {
+  color: #64748b;
 }
 
 .checklist {
@@ -62,7 +103,113 @@ h1 {
 .checklist li {
   padding: 12px 14px;
   border-radius: 12px;
-  background: #f8fafc;
+  background: rgba(15, 23, 42, 0.04);
   border: 1px solid #e2e8f0;
   color: #0f172a;
+}
+
+.control-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid #d7e0ea;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+button {
+  border: none;
+  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  color: #ffffff;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.24);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.ghost {
+  background: transparent;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  box-shadow: none;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.result-column textarea {
+  min-height: 90px;
+}
+
+.error-box {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecdd3;
+  color: #b91c1c;
+}
+
+.meta {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.actions .action-left,
+.actions .action-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }

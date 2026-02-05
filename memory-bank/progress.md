@@ -18,3 +18,12 @@
   - 新增 `src/main/services/*` 业务封装，复用 shared schema，新增 `src/shared/schemas/api/*` 和类型导出。
   - 新脚本 `pnpm dev:api` 启动本地 API；端到端测试 `src/main/api/__tests__/api.test.ts` 通过 `pnpm test`。
 - Lint 修复：解决 Fastify server 默认导入命名与 API schema 导入顺序问题，`pnpm lint` 重新通过。
+
+## 2026-02-05
+
+- 完成 plan_05：AI 辅助功能与提示工程。
+  - 新增 shared AI 场景定义、提示模板（wordEnrich/exampleOnly）与 provider 枚举。
+  - 构建 provider 抽象（OpenAI/Gemini/Mock）、并发限流、超时与重试包装。
+  - 数据库新增 `ai_requests` 表与仓储，记录调用输入/输出、耗时、错误。
+  - 新建 `AiService` 编排提示渲染→provider 调用→解析→可选写回词条，新增 `/api/ai/providers`、`/api/ai/generate` 路由及端到端测试。
+  - 渲染层增加 AI Playground（调用触发、加载/错误反馈、手动编辑回退），`.env.example` 扩展 AI 配置与 CORS。
