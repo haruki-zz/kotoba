@@ -4,7 +4,10 @@
 - 单一 package.json（禁止 workspace/monorepo），所有依赖安装在根级 `node_modules`。
 - 目录：
   - `src/main`：Electron 主进程 + Fastify API（已接入）。`src/main/db` 持久化层；`src/main/api` Fastify 服务器与路由；`src/main/services` 业务封装；`src/main/ai` provider 抽象、限流/重试与客户端适配。
-  - `src/renderer`：Vite + React 渲染层（当前占位页面）。
+- `src/renderer`：Vite + React 渲染层（当前占位页面）。
+  - 渲染层现有路由：`/` Home 概览（统计 + 队列预览 + AI Playground），`/today` 列表（支持搜索/难度过滤/分页），`/review` SM-2 复习流程（快捷键 1/2/3 打分，空格展开，Cmd/Ctrl+Z 回退，进度条与空/错误态）。
+  - 状态与数据：`@tanstack/react-query` 负责 API 缓存与加载态，`zustand` 维护复习队列与回退历史；HTTP 通过本地 Fastify API，封装于 `src/renderer/api/*`。
+  - UI 结构：`AppLayout` 顶部导航 + HashRouter；组件分布在 `components/`（统计卡、复习卡、词条行、Skeleton、AI Playground）与 `pages/`（Home/Today/Review）。
   - `src/shared`：跨进程复用的类型与 Zod schema（`schemas/`、`constants.ts`，新增 `schemas/api` 描述 API 请求/响应）；`src/shared/ai` 提示模板、场景定义、provider 枚举。
   - `data/`：本地 SQLite（默认 `data/kotoba.sqlite`，gitignored）。
   - `scripts/`：自动化脚本（迁移、备份）。
@@ -42,7 +45,8 @@
 - plan_03：SM-2 调度核心（纯函数、配置化、测试覆盖）——已完成，输出 `src/shared/sm2/`。
 - plan_04：Fastify API 与数据访问封装——已完成，本地 API 路由、校验、服务层与端到端测试可用。
 - plan_05：AI provider 抽象（ChatGPT/Gemini/Mock）、提示模板、限流/重试、调用日志表 `ai_requests`、AI 生成 API 与 renderer playground —— 已完成。
-- 待办：plan_06 Electron 壳；plan_07 渲染层体验。
+- plan_07：渲染层体验（Home/Today/Review 路由、队列复习交互、空/错/加载态、快捷键）—— 已完成。
+- 待办：plan_06 Electron 壳；plan_08 Library；plan_09 设置。
 
 ## 文件作用说明
 - `package.json`：单包定义，脚本 dev/build/test/lint/format/typecheck/db:migrate/db:backup；pnpm onlyBuiltDependencies。

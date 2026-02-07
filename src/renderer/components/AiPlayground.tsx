@@ -158,12 +158,17 @@ function AiPlayground() {
 
       <div className="actions">
         <div className="action-left">
-          <button type="button" className="ghost" onClick={handleManualReset}>
+          <button type="button" className="btn ghost" onClick={handleManualReset}>
             Clear result
           </button>
         </div>
         <div className="action-right">
-          <button type="button" onClick={handleGenerate} disabled={loading || !payload.word.trim()}>
+          <button
+            type="button"
+            className="btn primary"
+            onClick={handleGenerate}
+            disabled={loading || !payload.word.trim()}
+          >
             {loading ? 'Generating...' : 'Generate'}
           </button>
         </div>
@@ -182,7 +187,7 @@ function AiPlayground() {
           <input
             value={editable.reading ?? ''}
             onChange={(e) => setEditable({ ...editable, reading: e.target.value })}
-            placeholder="‚©‚È or romaji"
+            placeholder="kana or romaji"
           />
         </div>
         <div className="result-column">
@@ -233,9 +238,7 @@ function AiPlayground() {
 
       {result ? (
         <div className="meta">
-          <p>
-            Provider: {result.provider} ? Trace ID: {result.traceId} ? {result.latencyMs ?? 0} ms
-          </p>
+          <p>Provider: {result.provider} Â· Trace ID: {result.traceId} Â· {result.latencyMs ?? 0} ms</p>
           <p className="muted">Results are editable before saving back to the word.</p>
         </div>
       ) : (
