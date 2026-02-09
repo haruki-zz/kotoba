@@ -1,13 +1,13 @@
-# 架构（更新：plan_05 AI 辅助功能与提示工程）
+# 架构（更新：plan_07 渲染层体验 Home/Today/Review）
 
 ## 项目结构
 - 单一 package.json（禁止 workspace/monorepo），所有依赖安装在根级 `node_modules`。
 - 目录：
   - `src/main`：Electron 主进程 + Fastify API（已接入）。`src/main/db` 持久化层；`src/main/api` Fastify 服务器与路由；`src/main/services` 业务封装；`src/main/ai` provider 抽象、限流/重试与客户端适配。
-- `src/renderer`：Vite + React 渲染层（当前占位页面）。
-  - 渲染层现有路由：`/` Home 概览（统计 + 队列预览 + AI Playground），`/today` 列表（支持搜索/难度过滤/分页），`/review` SM-2 复习流程（快捷键 1/2/3 打分，空格展开，Cmd/Ctrl+Z 回退，进度条与空/错误态）。
-  - 状态与数据：`@tanstack/react-query` 负责 API 缓存与加载态，`zustand` 维护复习队列与回退历史；HTTP 通过本地 Fastify API，封装于 `src/renderer/api/*`。
-  - UI 结构：`AppLayout` 顶部导航 + HashRouter；组件分布在 `components/`（统计卡、复习卡、词条行、Skeleton、AI Playground）与 `pages/`（Home/Today/Review）。
+  - `src/renderer`：Vite + React 渲染层。
+    - 路由：`/` Home 概览（统计 + 队列预览 + AI Playground），`/today` 列表（搜索/难度过滤/分页），`/review` SM-2 复习流程（快捷键 1/2/3 打分，空格展开，Cmd/Ctrl+Z 回退，进度条与空/错误态）。
+    - 状态与数据：`@tanstack/react-query` 负责 API 缓存与加载态；`zustand` 负责复习会话态（队列、历史、回退）。
+    - UI 结构：`AppLayout` 顶部导航 + HashRouter；页面在 `pages/`，可复用部件在 `components/`，领域调用在 `api/`。
   - `src/shared`：跨进程复用的类型与 Zod schema（`schemas/`、`constants.ts`，新增 `schemas/api` 描述 API 请求/响应）；`src/shared/ai` 提示模板、场景定义、provider 枚举。
   - `data/`：本地 SQLite（默认 `data/kotoba.sqlite`，gitignored）。
   - `scripts/`：自动化脚本（迁移、备份）。
@@ -55,9 +55,29 @@
 - `tsconfig.main.json` / `tsconfig.renderer.json` / `tsconfig.json`：分别针对主进程、渲染层、全局；均 noEmit。
 - `.eslintrc.cjs`、`.prettierrc`、`.prettierignore`、`.gitignore`：规范与忽略配置；`.env.example` 提供必需环境变量模板。
 - `vite.config.ts`：Vite + React 配置，含别名与 Vitest 设置。
-- `vitest.setup.ts`：测试全局占位。
-- `index.html`：Vite 入口；`src/renderer/main.tsx` 启动 React；`src/renderer/App.tsx` / `styles.css` UI。
+- `vitest.setup.ts`：Vitest 全局初始化（注入 `@testing-library/jest-dom` 匹配器）。
+- `index.html`：Vite 页面入口。
+- `src/renderer/main.tsx`：渲染层启动器，挂载 `QueryClientProvider` 与 `HashRouter`。
+- `src/renderer/App.tsx`：路由表与顶层布局装配（Home/Today/Review + fallback）。
+- `src/renderer/styles.css`：渲染层全局样式、页面布局、状态样式与基础动效。
+- `src/renderer/api/client.ts`：统一 HTTP 客户端与错误模型（`ApiError`），收敛 `fetch` 基础配置。
+- `src/renderer/api/stats.ts`：统计接口封装（`/api/stats/overview`）。
+- `src/renderer/api/review.ts`：复习接口封装（队列拉取、提交评分、回退恢复）。
+- `src/renderer/api/words.ts`：词条列表查询封装（分页、过滤、搜索参数拼装）。
+- `src/renderer/hooks/useKeyboardShortcuts.ts`：复习快捷键处理（评分/跳过/展开/回退）并屏蔽输入控件聚焦场景。
+- `src/renderer/stores/review-store.ts`：Review 会话状态（当前队列、初始总量、历史栈、回退辅助方法）。
+- `src/renderer/components/AppLayout.tsx`：统一导航壳层与页头提示。
+- `src/renderer/components/StatTiles.tsx`：统计卡与难度分布可视化。
+- `src/renderer/components/ReviewCard.tsx`：复习卡片展示（词面、详情区、进度）。
+- `src/renderer/components/WordListItem.tsx`：Today/Home 列表项渲染。
+- `src/renderer/components/Skeleton.tsx`：加载骨架占位。
 - `src/renderer/components/AiPlayground.tsx`：AI 交互沙盘（触发调用、加载/错误提示、手动编辑回退）。
+- `src/renderer/pages/HomePage.tsx`：首页概览，聚合 stats、队列预览与 AI Playground。
+- `src/renderer/pages/TodayPage.tsx`：今日词条列表页面，包含筛选、分页、重试状态。
+- `src/renderer/pages/ReviewPage.tsx`：SM-2 复习流程页面，处理评分提交、跳过、回退与进度反馈。
+- `src/renderer/test-utils.tsx`：渲染层测试工具，统一挂载 Router + React Query Provider。
+- `src/renderer/pages/__tests__/review.test.tsx`：复习流程行为测试（评分推进、回退恢复）。
+- `src/renderer/pages/__tests__/today.test.tsx`：Today 查询流程测试（参数构造与列表渲染）。
 - `src/main/index.ts`：主进程入口，直接运行时启动 Fastify API（默认 127.0.0.1:8787）；导出数据库上下文与 `startServer`。
 - `src/main/api/server.ts`：Fastify 构建与错误处理，挂载健康、词条、标签、来源、统计、AI 路由，启用 CORS。
 - `src/main/api/context.ts`：数据库上下文组装业务服务与 provider registry，统一 close。
