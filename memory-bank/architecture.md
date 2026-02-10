@@ -49,6 +49,13 @@
 - plan_08：Library 与内容管理（软删除恢复、标签 CRUD、批量操作、导入校验与导出、Library 页面）—— 已完成。
 - 待办：plan_06 Electron 壳；plan_09 设置。
 
+## plan_08 架构洞察
+- 软删除优先于硬删除：业务默认执行软删除（`deleted_at` 置值），恢复与审计更可控；硬删除只保留在显式确认场景，避免误删不可逆。
+- 查询一致性优先：搜索、统计、复习队列对“已删除词条”采用统一过滤语义，避免页面数据与统计口径不一致。
+- 批量操作采用单入口：通过 `wordBatchRequestSchema` 的 `action` 判别统一扩展，减少 API 面数量并维持前后端契约集中管理。
+- 导入采用三段式：前端解析 -> 后端校验 -> 最终写入，降低批量导入对数据库一致性的冲击。
+- Library 页面只做编排：将筛选栏、列表、批量动作、编辑弹层、导入导出拆分为独立模块，降低单文件复杂度并便于独立测试。
+
 ## 文件作用说明
 - `package.json`：单包定义，脚本 dev/build/test/lint/format/typecheck/db:migrate/db:backup；pnpm onlyBuiltDependencies。
 - `pnpm-lock.yaml`：依赖锁（根级 node_modules）。
@@ -78,7 +85,12 @@
 - `src/renderer/pages/TodayPage.tsx`：今日词条列表页面，包含筛选、分页、重试状态。
 - `src/renderer/pages/ReviewPage.tsx`：SM-2 复习流程页面，处理评分提交、跳过、回退与进度反馈。
 - `src/renderer/pages/LibraryPage.tsx`：词库页面，处理筛选查询、批量操作、导入导出、标签管理与详情编辑弹层。
-- `src/renderer/features/library/*`：Library 领域模块（筛选栏、批量动作栏、列表、编辑弹层、导入导出工具）。
+- `src/renderer/features/library/library-filters.tsx`：Library 筛选栏（关键词、难度、标签、时间、删除态）与筛选参数输入层。
+- `src/renderer/features/library/library-list.tsx`：词条表格与选中态视图（行选择、全选、行级操作按钮）。
+- `src/renderer/features/library/library-batch-actions.tsx`：批量动作面板（批量难度、批量删除/恢复、批量标签增删）。
+- `src/renderer/features/library/library-editor.tsx`：词条详情编辑弹层 + 标签管理 UI（创建、重命名、删除）。
+- `src/renderer/features/library/library-import-export.tsx`：导入导出操作面板（文件选择、导出触发、反馈信息）。
+- `src/renderer/features/library/import-export.ts`：导入导出纯工具（JSON 解析、字段规范化、下载导出文件）。
 - `src/renderer/test-utils.tsx`：渲染层测试工具，统一挂载 Router + React Query Provider。
 - `src/renderer/pages/__tests__/review.test.tsx`：复习页空队列状态测试。
 - `src/renderer/pages/__tests__/today.test.tsx`：Today 查询流程测试（参数构造与列表渲染）。
@@ -93,6 +105,7 @@
 - `src/main/ai/*`：provider 注册、限流（并发）、重试、超时包装，OpenAI/Gemini/Mock 客户端适配。
 - `src/main/db/connection.ts`：SQLite 打开/路径解析，启用 WAL 与外键。
 - `src/main/db/migrations/*`：迁移定义与执行器（事务应用并记录，`003_soft_delete_words` 新增 `words.deleted_at`）。
+- `src/main/db/migrations/003_soft_delete_words.ts`：plan_08 专用迁移，增加 `words.deleted_at` 字段与 `idx_words_deleted_at` 索引。
 - `src/main/db/repositories/*`：`WordRepository`、`TagRepository`、`SourceRepository`、`AiRequestRepository`（记录调用输入/输出、provider、耗时、错误）。
 - `src/main/db/mappers.ts` / `time.ts`：数据库行映射与时间工具。
 - `src/shared/constants.ts`：SM-2 默认值与间隔常量。

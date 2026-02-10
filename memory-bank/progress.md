@@ -40,4 +40,14 @@
   - 后端能力：新增 `003_soft_delete_words` 迁移（`words.deleted_at` + `idx_words_deleted_at`）；词条 API 增加软删除/恢复、批量操作（难度/标签/删除/恢复）、导入校验、导出端点；标签 API 增加更新与删除；`WordService`/`WordRepository` 支持时间过滤、软删除隔离、批量处理与导入校验反馈。
   - 前端能力：新增 `/library` 路由与页面 `src/renderer/pages/LibraryPage.tsx`，落地筛选分页、批量选中操作、详情编辑弹层、标签管理、JSON 导入校验与导出下载；新增 `src/renderer/features/library/*` 模块和 `src/renderer/api/tags.ts`。
   - 测试：扩展 `src/main/api/__tests__/api.test.ts` 覆盖软删除恢复、批量操作、导入校验、导出与标签生命周期；新增 `src/renderer/pages/__tests__/library.test.tsx`。`pnpm test` 已通过（11 files, 24 tests）。
+
+## 2026-02-10
+
+- plan_08 已由用户验证通过，当前实现可作为后续 plan_09/plan_10 的基线。
+- 交接摘要（供后续开发者）：
+  - 软删除策略：默认查询排除 `deleted_at IS NOT NULL`，仅在 `includeDeleted=true` 或 `onlyDeleted=true` 场景返回删除词条；复习队列与统计均排除已删除词条。
+  - 批量接口策略：统一走 `/api/words/batch` + `action` 判别，前端页面不直接拼接多组 endpoint，便于后续新增 action（如批量来源变更）。
+  - 导入策略：先本地 JSON 解析，再调用服务端 `/api/words/import/validate` 做结构校验，最后才调用 `/api/words/bulk` 执行写入，避免脏数据直接入库。
+  - 标签策略：标签增删改独立由 `tags` API 管理，词条仅保存标签名集合，后端仓储统一负责标签 upsert 与关联关系落表。
+  - 模块边界：Library UI 已拆分到 `src/renderer/features/library/`，页面层只做编排（query/mutation、状态连接），避免再次回到单文件巨石。
 - 已知环境限制（开发机网络）：`pnpm install` 访问 npm registry 失败（`ENOTFOUND registry.npmjs.org`），导致本地 `node_modules/.bin/vite` 缺失；`pnpm dev` 报 `vite: command not found`。需先恢复网络/镜像后再安装依赖并验证。
