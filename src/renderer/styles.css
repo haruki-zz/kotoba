@@ -501,12 +501,145 @@ textarea:focus {
   font-size: 13px;
 }
 
+.library-filters-row {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(3, minmax(120px, 1fr)) auto;
+  gap: 10px;
+}
+
+.checkbox-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.library-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.library-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.library-table th,
+.library-table td {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.library-table th {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+  background: #f8fafc;
+}
+
+.library-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.library-tag {
+  background: #dbeafe;
+  color: #1e3a8a;
+  font-size: 12px;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.badge.danger {
+  background: #991b1b;
+}
+
+.library-actions-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.library-batch {
+  display: grid;
+  gap: 10px;
+}
+
+.library-batch-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.library-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  z-index: 30;
+  padding: 16px;
+}
+
+.library-modal {
+  width: min(920px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.3);
+}
+
+.library-editor-grid {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.library-editor-grid textarea {
+  min-height: 72px;
+}
+
+.library-tag-manager {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.library-tag-list {
+  display: grid;
+  gap: 8px;
+}
+
+.library-tag-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
 @media (max-width: 860px) {
   .hero {
     grid-template-columns: 1fr;
   }
 
   .filters-row {
+    grid-template-columns: 1fr;
+  }
+
+  .library-filters-row {
     grid-template-columns: 1fr;
   }
 

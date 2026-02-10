@@ -1,6 +1,6 @@
 import BetterSqlite3 from 'better-sqlite3';
 
-import { TagCreateInput, TagRecord, tagCreateSchema } from '@shared/types';
+import { TagCreateInput, TagRecord, TagUpdateInput, tagCreateSchema, tagUpdateSchema } from '@shared/types';
 
 import { mapTagRow, TagRow } from '../mappers';
 import { nowIso } from '../time';
@@ -64,6 +64,39 @@ export class TagRepository {
       throw new Error(`Failed to upsert tag: ${parsed.name}`);
     }
     return stored;
+  }
+
+  update(id: number, patch: TagUpdateInput): TagRecord | undefined {
+    const existing = this.findById(id);
+    if (!existing) return undefined;
+
+    const parsed = tagUpdateSchema.parse(patch);
+    const name = parsed.name ?? existing.name;
+    const description = parsed.description ?? existing.description;
+    const updatedAt = parsed.updatedAt ?? nowIso();
+
+    const result = this.db
+      .prepare(
+        `UPDATE tags
+         SET name = @name,
+             description = @description,
+             updated_at = @updated_at
+         WHERE id = @id`
+      )
+      .run({
+        id,
+        name,
+        description,
+        updated_at: updatedAt,
+      });
+
+    if (result.changes === 0) return undefined;
+    return this.findById(id);
+  }
+
+  delete(id: number): boolean {
+    const result = this.db.prepare('DELETE FROM tags WHERE id = ?').run(id);
+    return result.changes > 0;
   }
 
   ensureNames(names: string[]): TagRecord[] {

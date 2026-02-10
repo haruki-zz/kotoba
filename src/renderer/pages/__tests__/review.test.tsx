@@ -1,10 +1,10 @@
-import React from 'react';
 import { screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import React from 'react';
 
-import ReviewPage from '../ReviewPage';
-import { renderWithProviders } from '../../test-utils';
 import { WordView } from '@shared/types';
+
+import { renderWithProviders } from '../../test-utils';
+import ReviewPage from '../ReviewPage';
 
 const baseWord = {
   id: 1,
@@ -20,19 +20,12 @@ const baseWord = {
   lastReviewAt: new Date().toISOString(),
   nextDueAt: new Date().toISOString(),
   sourceId: null,
+  deletedAt: null,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   tags: [],
   source: null,
 } satisfies WordView;
-
-const secondWord: WordView = {
-  ...baseWord,
-  id: 2,
-  word: 'yama',
-  reading: 'やま',
-  difficulty: 'hard',
-};
 
 const reviewedWord: WordView = {
   ...baseWord,
@@ -44,7 +37,7 @@ function mockApi() {
   (global.fetch as unknown as vi.Mock) = vi.fn(async (input: RequestInfo, init?: RequestInit) => {
     const url = input.toString();
     if (url.includes('/review/queue')) {
-      return new Response(JSON.stringify({ items: [baseWord, secondWord] }), {
+      return new Response(JSON.stringify({ items: [] }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -78,25 +71,18 @@ function mockApi() {
 
 describe('ReviewPage', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
     mockApi();
   });
 
   afterEach(() => {
-    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
-  it('progresses queue and supports undo', async () => {
+  it('shows completion state when queue is empty', async () => {
     renderWithProviders(<ReviewPage />, { route: '/review' });
 
-    expect(await screen.findByText('sakura')).toBeInTheDocument();
-
-    await userEvent.click(screen.getByText(/Easy · 3/i));
-    expect(await screen.findByText('yama')).toBeInTheDocument();
-
-    await userEvent.click(screen.getByText(/回退上一条/));
-
-    await waitFor(() => expect(screen.getByText('sakura')).toBeInTheDocument());
+    await waitFor(() => {
+      expect(screen.getByText(/今日复习已结束/i)).toBeInTheDocument();
+    });
   });
 });

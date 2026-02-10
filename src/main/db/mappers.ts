@@ -14,6 +14,7 @@ export type WordRow = {
   last_review_at: string;
   next_due_at: string;
   source_id: number | null;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -49,6 +50,7 @@ export const mapWordRow = (row: WordRow): WordRecord => ({
   lastReviewAt: row.last_review_at,
   nextDueAt: row.next_due_at,
   sourceId: row.source_id ?? null,
+  deletedAt: row.deleted_at ?? null,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });

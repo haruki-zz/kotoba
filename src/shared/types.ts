@@ -1,12 +1,17 @@
 import { z } from 'zod';
 
+import {
+  aiExampleResultSchema,
+  aiProviderEnum,
+  aiScenarioEnum,
+  aiWordEnrichResultSchema,
+} from './ai';
 import { DEFAULT_INTERVAL_DAYS, DEFAULT_REPETITION, SM2_DEFAULT_EF, SM2_MIN_EF } from './constants';
 import {
-  aiGenerateRequestSchema,
-  aiGenerateResponseSchema,
-} from './schemas/api/ai';
-import {
   bulkImportSchema,
+  importValidationIssueSchema,
+  importValidationRequestSchema,
+  importValidationResponseSchema,
   difficultyEnum,
   reviewQueueQuerySchema,
   reviewRequestSchema,
@@ -21,17 +26,20 @@ import {
   wordCreateWithMetaSchema,
   wordListQuerySchema,
   wordListResponseSchema,
+  wordDeleteQuerySchema,
+  wordExportQuerySchema,
+  wordExportResponseSchema,
   wordRecordSchema,
+  wordBatchRequestSchema,
+  wordBatchResponseSchema,
   wordUpdateSchema,
   wordUpdateWithMetaSchema,
   wordViewSchema,
 } from './schemas';
 import {
-  aiExampleResultSchema,
-  aiProviderEnum,
-  aiScenarioEnum,
-  aiWordEnrichResultSchema,
-} from './ai';
+  aiGenerateRequestSchema,
+  aiGenerateResponseSchema,
+} from './schemas/api/ai';
 
 export type Difficulty = z.infer<typeof difficultyEnum>;
 export type WordRecord = z.infer<typeof wordRecordSchema>;
@@ -42,9 +50,17 @@ export type WordUpdateWithMetaInput = z.input<typeof wordUpdateWithMetaSchema>;
 export type WordView = z.infer<typeof wordViewSchema>;
 export type WordListQuery = z.infer<typeof wordListQuerySchema>;
 export type WordListResponse = z.infer<typeof wordListResponseSchema>;
+export type WordDeleteQuery = z.infer<typeof wordDeleteQuerySchema>;
 export type ReviewRequestInput = z.input<typeof reviewRequestSchema>;
 export type ReviewQueueQuery = z.infer<typeof reviewQueueQuerySchema>;
 export type BulkImportInput = z.input<typeof bulkImportSchema>;
+export type WordExportQuery = z.infer<typeof wordExportQuerySchema>;
+export type WordExportResponse = z.infer<typeof wordExportResponseSchema>;
+export type ImportValidationRequest = z.input<typeof importValidationRequestSchema>;
+export type ImportValidationIssue = z.infer<typeof importValidationIssueSchema>;
+export type ImportValidationResponse = z.infer<typeof importValidationResponseSchema>;
+export type WordBatchRequest = z.input<typeof wordBatchRequestSchema>;
+export type WordBatchResponse = z.infer<typeof wordBatchResponseSchema>;
 export type StatsOverview = z.infer<typeof statsOverviewSchema>;
 
 export type TagRecord = z.infer<typeof tagRecordSchema>;
@@ -75,6 +91,7 @@ export {
   wordCreateWithMetaSchema,
   wordListQuerySchema,
   wordListResponseSchema,
+  wordDeleteQuerySchema,
   wordRecordSchema,
   wordUpdateSchema,
   wordUpdateWithMetaSchema,
@@ -82,6 +99,13 @@ export {
   reviewRequestSchema,
   reviewQueueQuerySchema,
   bulkImportSchema,
+  wordExportQuerySchema,
+  wordExportResponseSchema,
+  importValidationRequestSchema,
+  importValidationIssueSchema,
+  importValidationResponseSchema,
+  wordBatchRequestSchema,
+  wordBatchResponseSchema,
 };
 
 export {

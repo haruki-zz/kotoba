@@ -3,9 +3,16 @@ import { z } from 'zod';
 
 import {
   bulkImportSchema,
+  importValidationRequestSchema,
+  importValidationResponseSchema,
   reviewQueueQuerySchema,
   reviewRequestSchema,
+  wordBatchRequestSchema,
+  wordBatchResponseSchema,
   wordCreateWithMetaSchema,
+  wordDeleteQuerySchema,
+  wordExportQuerySchema,
+  wordExportResponseSchema,
   wordListQuerySchema,
   wordListResponseSchema,
   wordUpdateWithMetaSchema,
@@ -99,15 +106,36 @@ export const registerWordRoutes = (app: FastifyInstance, ctx: AppContext) => {
     {
       schema: {
         params: idParamsSchema,
+        querystring: wordDeleteQuerySchema,
         response: {
-          200: z.object({ deleted: z.boolean() }),
+          200: z.object({
+            deleted: z.boolean(),
+            mode: z.enum(['soft', 'hard']),
+          }),
         },
       },
     },
     async (request) => {
-      const removed = ctx.services.wordService.delete(request.params.id);
+      const removed = ctx.services.wordService.delete(request.params.id, request.query);
       if (!removed) throw new NotFoundError('Word not found');
-      return { deleted: true };
+      return { deleted: true, mode: request.query.hard ? 'hard' : 'soft' };
+    }
+  );
+
+  app.post(
+    '/api/words/:id/restore',
+    {
+      schema: {
+        params: idParamsSchema,
+        response: {
+          200: wordViewSchema,
+        },
+      },
+    },
+    async (request) => {
+      const restored = ctx.services.wordService.restore(request.params.id);
+      if (!restored) throw new NotFoundError('Word not found');
+      return restored;
     }
   );
 
@@ -144,6 +172,45 @@ export const registerWordRoutes = (app: FastifyInstance, ctx: AppContext) => {
       reply.code(201);
       return { items, count: items.length };
     }
+  );
+
+  app.post(
+    '/api/words/import/validate',
+    {
+      schema: {
+        body: importValidationRequestSchema,
+        response: {
+          200: importValidationResponseSchema,
+        },
+      },
+    },
+    async (request) => ctx.services.wordService.validateImport(request.body)
+  );
+
+  app.get(
+    '/api/words/export',
+    {
+      schema: {
+        querystring: wordExportQuerySchema,
+        response: {
+          200: wordExportResponseSchema,
+        },
+      },
+    },
+    async (request) => ctx.services.wordService.exportWords(request.query)
+  );
+
+  app.post(
+    '/api/words/batch',
+    {
+      schema: {
+        body: wordBatchRequestSchema,
+        response: {
+          200: wordBatchResponseSchema,
+        },
+      },
+    },
+    async (request) => ctx.services.wordService.batchOperate(request.body)
   );
 
   app.get(

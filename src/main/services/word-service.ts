@@ -1,13 +1,22 @@
 ﻿import { applyDifficultyReview } from '@shared/sm2';
 import {
   BulkImportInput,
+  ImportValidationIssue,
+  ImportValidationRequest,
+  ImportValidationResponse,
   ReviewQueueQuery,
   ReviewRequestInput,
   StatsOverview,
+  WordBatchRequest,
+  WordBatchResponse,
   WordCreateWithMetaInput,
+  WordDeleteQuery,
+  WordExportQuery,
+  WordExportResponse,
   WordListQuery,
   WordView,
   WordUpdateWithMetaInput,
+  wordCreateWithMetaSchema,
 } from '@shared/types';
 
 import { DatabaseClient } from '../db/connection';
@@ -70,6 +79,12 @@ export class WordService {
       tagNames: tagNames.length ? tagNames : undefined,
       sourceId: query.sourceId,
       dueBefore: query.dueBefore,
+      createdAfter: query.createdAfter,
+      createdBefore: query.createdBefore,
+      updatedAfter: query.updatedAfter,
+      updatedBefore: query.updatedBefore,
+      includeDeleted: query.includeDeleted,
+      onlyDeleted: query.onlyDeleted,
       limit: query.limit,
       offset: query.offset,
       orderBy: orderFieldMap[query.orderBy],
@@ -110,8 +125,14 @@ export class WordService {
     return this.attachRelations([updated])[0];
   }
 
-  delete(id: number): boolean {
-    return this.wordRepo.delete(id);
+  delete(id: number, query: WordDeleteQuery): boolean {
+    return query.hard ? this.wordRepo.hardDelete(id) : Boolean(this.wordRepo.softDelete(id));
+  }
+
+  restore(id: number): WordView | undefined {
+    const restored = this.wordRepo.restore(id);
+    if (!restored) return undefined;
+    return this.attachRelations([restored])[0];
   }
 
   getById(id: number): WordView | undefined {
@@ -180,6 +201,77 @@ export class WordService {
 
     const inserted = run(payload.items);
     return this.attachRelations(inserted);
+  }
+
+  validateImport(payload: ImportValidationRequest): ImportValidationResponse {
+    const errors: ImportValidationIssue[] = [];
+    const invalidIndices = new Set<number>();
+
+    payload.items.forEach((item, index) => {
+      const parsed = wordCreateWithMetaSchema.safeParse(item);
+      if (!parsed.success) {
+        invalidIndices.add(index);
+        parsed.error.issues.forEach((issue) => {
+          const field = issue.path.map(String).join('.');
+          errors.push({
+            index,
+            message: issue.message,
+            field: field || undefined,
+          });
+        });
+      }
+    });
+
+    const total = payload.items.length;
+    return {
+      total,
+      validCount: total - invalidIndices.size,
+      invalidCount: invalidIndices.size,
+      errors,
+    };
+  }
+
+  exportWords(query: WordExportQuery): WordExportResponse {
+    const result = this.list(query);
+    return {
+      exportedAt: nowIso(),
+      count: result.items.length,
+      items: result.items,
+    };
+  }
+
+  batchOperate(payload: WordBatchRequest): WordBatchResponse {
+    const includeDeleted = payload.action === 'restore';
+    const existingIds = this.wordRepo.findExistingIds(payload.wordIds, includeDeleted);
+    const existingSet = new Set(existingIds);
+    const missingIds = payload.wordIds.filter((id) => !existingSet.has(id));
+    let affected = 0;
+
+    if (existingIds.length > 0) {
+      switch (payload.action) {
+        case 'setDifficulty':
+          affected = this.wordRepo.batchSetDifficulty(existingIds, payload.difficulty);
+          break;
+        case 'softDelete':
+          affected = this.wordRepo.batchSoftDelete(existingIds);
+          break;
+        case 'restore':
+          affected = this.wordRepo.batchRestore(existingIds);
+          break;
+        case 'addTags':
+          affected = this.wordRepo.batchAddTags(existingIds, payload.tags);
+          break;
+        case 'removeTags':
+          affected = this.wordRepo.batchRemoveTags(existingIds, payload.tags);
+          break;
+      }
+    }
+
+    return {
+      action: payload.action,
+      affected,
+      missingIds,
+    };
   }
 
   stats(asOfIso = nowIso()): StatsOverview {

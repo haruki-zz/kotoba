@@ -2,6 +2,7 @@ import BetterSqlite3 from 'better-sqlite3';
 
 import { migration001 } from './001_init';
 import { migration002 } from './002_ai_requests';
+import { migration003 } from './003_soft_delete_words';
 import { Migration } from './types';
 
 const MIGRATIONS_TABLE = `
@@ -12,7 +13,7 @@ const MIGRATIONS_TABLE = `
   );
 `;
 
-const migrations: Migration[] = [migration001, migration002];
+const migrations: Migration[] = [migration001, migration002, migration003];
 
 type Db = BetterSqlite3.Database;
 

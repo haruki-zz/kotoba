@@ -132,4 +132,153 @@ describe('Fastify API', () => {
       stats.difficultyCounts.hard + stats.difficultyCounts.medium + stats.difficultyCounts.easy
     ).toBe(2);
   });
+
+  test('supports soft delete and restore in library flow', async () => {
+    const app = await setupServer();
+
+    const createdRes = await app.inject({
+      method: 'POST',
+      url: '/api/words',
+      payload: {
+        word: '海',
+        reading: 'うみ',
+        contextExpl: 'sea',
+        sceneDesc: '海边散步',
+        example: '夏に海へ行く。',
+        difficulty: 'medium',
+      },
+    });
+    const wordId = createdRes.json().id as number;
+
+    const softDeleteRes = await app.inject({
+      method: 'DELETE',
+      url: `/api/words/${wordId}`,
+    });
+    expect(softDeleteRes.statusCode).toBe(200);
+    expect(softDeleteRes.json().mode).toBe('soft');
+
+    const listActive = await app.inject({
+      method: 'GET',
+      url: '/api/words?limit=10',
+    });
+    expect(listActive.json().items).toHaveLength(0);
+
+    const listDeleted = await app.inject({
+      method: 'GET',
+      url: '/api/words?limit=10&includeDeleted=true',
+    });
+    expect(listDeleted.json().items).toHaveLength(1);
+    expect(listDeleted.json().items[0].deletedAt).toBeTruthy();
+
+    const restoreRes = await app.inject({
+      method: 'POST',
+      url: `/api/words/${wordId}/restore`,
+    });
+    expect(restoreRes.statusCode).toBe(200);
+    expect(restoreRes.json().deletedAt).toBeNull();
+  });
+
+  test('supports batch operations, import validation, export and tag lifecycle', async () => {
+    const app = await setupServer();
+
+    const firstRes = await app.inject({
+      method: 'POST',
+      url: '/api/words',
+      payload: {
+        word: '朝',
+        reading: 'あさ',
+        contextExpl: 'morning',
+        sceneDesc: '早晨出门上班',
+        example: '朝ごはんを食べる。',
+        difficulty: 'medium',
+      },
+    });
+    const secondRes = await app.inject({
+      method: 'POST',
+      url: '/api/words',
+      payload: {
+        word: '夜',
+        reading: 'よる',
+        contextExpl: 'night',
+        sceneDesc: '夜晚散步',
+        example: '夜に散歩する。',
+        difficulty: 'easy',
+      },
+    });
+    const firstId = firstRes.json().id as number;
+    const secondId = secondRes.json().id as number;
+
+    const tagCreateRes = await app.inject({
+      method: 'POST',
+      url: '/api/tags',
+      payload: { name: 'time' },
+    });
+    expect(tagCreateRes.statusCode).toBe(200);
+    const tagId = tagCreateRes.json().id as number;
+
+    const tagPatchRes = await app.inject({
+      method: 'PATCH',
+      url: `/api/tags/${tagId}`,
+      payload: { name: 'temporal' },
+    });
+    expect(tagPatchRes.statusCode).toBe(200);
+    expect(tagPatchRes.json().name).toBe('temporal');
+
+    const batchDifficultyRes = await app.inject({
+      method: 'POST',
+      url: '/api/words/batch',
+      payload: {
+        action: 'setDifficulty',
+        wordIds: [firstId, secondId],
+        difficulty: 'hard',
+      },
+    });
+    expect(batchDifficultyRes.statusCode).toBe(200);
+    expect(batchDifficultyRes.json().affected).toBe(2);
+
+    const batchTagRes = await app.inject({
+      method: 'POST',
+      url: '/api/words/batch',
+      payload: {
+        action: 'addTags',
+        wordIds: [firstId, secondId],
+        tags: ['temporal'],
+      },
+    });
+    expect(batchTagRes.statusCode).toBe(200);
+
+    const exportRes = await app.inject({
+      method: 'GET',
+      url: '/api/words/export?limit=10&tag=temporal',
+    });
+    expect(exportRes.statusCode).toBe(200);
+    expect(exportRes.json().count).toBe(2);
+
+    const validateRes = await app.inject({
+      method: 'POST',
+      url: '/api/words/import/validate',
+      payload: {
+        items: [
+          {
+            word: '空',
+            reading: 'そら',
+            contextExpl: 'sky',
+            sceneDesc: '抬头看天空',
+            example: '空が青い。',
+            difficulty: 'easy',
+          },
+          { word: 'invalid' },
+        ],
+      },
+    });
+    expect(validateRes.statusCode).toBe(200);
+    expect(validateRes.json().invalidCount).toBe(1);
+
+    const tagDeleteRes = await app.inject({
+      method: 'DELETE',
+      url: `/api/tags/${tagId}`,
+    });
+    expect(tagDeleteRes.statusCode).toBe(200);
+    expect(tagDeleteRes.json().deleted).toBe(true);
+  });
 });

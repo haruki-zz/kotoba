@@ -41,6 +41,12 @@ export type WordSearchParams = {
   tagNames?: string[];
   sourceId?: number;
   dueBefore?: string;
+  createdAfter?: string;
+  createdBefore?: string;
+  updatedAfter?: string;
+  updatedBefore?: string;
+  includeDeleted?: boolean;
+  onlyDeleted?: boolean;
   limit: number;
   offset: number;
   orderBy: OrderField;
@@ -73,8 +79,8 @@ export class WordRepository {
     const result = this.db
       .prepare(
         `INSERT INTO words
-         (word, reading, context_expl, scene_desc, example, difficulty, ef, interval_days, repetition, last_review_at, next_due_at, source_id, created_at, updated_at)
-         VALUES (@word, @reading, @context_expl, @scene_desc, @example, @difficulty, @ef, @interval_days, @repetition, @last_review_at, @next_due_at, @source_id, @created_at, @updated_at)`
+         (word, reading, context_expl, scene_desc, example, difficulty, ef, interval_days, repetition, last_review_at, next_due_at, source_id, deleted_at, created_at, updated_at)
+         VALUES (@word, @reading, @context_expl, @scene_desc, @example, @difficulty, @ef, @interval_days, @repetition, @last_review_at, @next_due_at, @source_id, @deleted_at, @created_at, @updated_at)`
       )
       .run({
         word: parsed.word,
@@ -89,6 +95,7 @@ export class WordRepository {
         last_review_at: lastReviewAt,
         next_due_at: nextDueAt,
         source_id: sourceId,
+        deleted_at: null,
         created_at: now,
         updated_at: now,
       });
@@ -107,7 +114,7 @@ export class WordRepository {
   getById(id: number): WordRecord | undefined {
     const row = this.db
       .prepare(
-        `SELECT id, word, reading, context_expl, scene_desc, example, difficulty, ef, interval_days, repetition, last_review_at, next_due_at, source_id, created_at, updated_at
+        `SELECT id, word, reading, context_expl, scene_desc, example, difficulty, ef, interval_days, repetition, last_review_at, next_due_at, source_id, deleted_at, created_at, updated_at
          FROM words WHERE id = ?`
       )
       .get(id) as WordRow | undefined;
@@ -117,9 +124,9 @@ export class WordRepository {
   listDue(limit: number, asOfIso = nowIso()): WordRecord[] {
     const rows = this.db
       .prepare(
-        `SELECT id, word, reading, context_expl, scene_desc, example, difficulty, ef, interval_days, repetition, last_review_at, next_due_at, source_id, created_at, updated_at
+        `SELECT id, word, reading, context_expl, scene_desc, example, difficulty, ef, interval_days, repetition, last_review_at, next_due_at, source_id, deleted_at, created_at, updated_at
          FROM words
-         WHERE next_due_at <= @asOf
+         WHERE next_due_at <= @asOf AND deleted_at IS NULL
          ORDER BY next_due_at ASC, id ASC
          LIMIT @limit`
       )
@@ -134,25 +141,51 @@ export class WordRepository {
     if (params.query) {
       const like = `%${params.query.toLowerCase()}%`;
       conditions.push(
-        `(lower(word) LIKE ? OR lower(reading) LIKE ? OR lower(context_expl) LIKE ? OR lower(scene_desc) LIKE ? OR lower(example) LIKE ?)`
+        `(lower(w.word) LIKE ? OR lower(w.reading) LIKE ? OR lower(w.context_expl) LIKE ? OR lower(w.scene_desc) LIKE ? OR lower(w.example) LIKE ?)`
       );
       args.push(like, like, like, like, like);
     }
 
     if (params.difficulties?.length) {
       const placeholders = params.difficulties.map(() => '?').join(', ');
-      conditions.push(`difficulty IN (${placeholders})`);
+      conditions.push(`w.difficulty IN (${placeholders})`);
       args.push(...params.difficulties);
     }
 
     if (params.sourceId) {
-      conditions.push('source_id = ?');
+      conditions.push('w.source_id = ?');
       args.push(params.sourceId);
     }
 
     if (params.dueBefore) {
-      conditions.push('next_due_at <= ?');
+      conditions.push('w.next_due_at <= ?');
       args.push(params.dueBefore);
+    }
+
+    if (params.createdAfter) {
+      conditions.push('w.created_at >= ?');
+      args.push(params.createdAfter);
+    }
+
+    if (params.createdBefore) {
+      conditions.push('w.created_at <= ?');
+      args.push(params.createdBefore);
+    }
+
+    if (params.updatedAfter) {
+      conditions.push('w.updated_at >= ?');
+      args.push(params.updatedAfter);
+    }
+
+    if (params.updatedBefore) {
+      conditions.push('w.updated_at <= ?');
+      args.push(params.updatedBefore);
+    }
+
+    if (params.onlyDeleted) {
+      conditions.push('w.deleted_at IS NOT NULL');
+    } else if (!params.includeDeleted) {
+      conditions.push('w.deleted_at IS NULL');
     }
 
     const tagNames = params.tagNames?.filter((tag) => tag.trim().length > 0) ?? [];
@@ -182,7 +215,7 @@ export class WordRepository {
     const orderField = orderMap[params.orderBy] ?? 'w.next_due_at';
     const orderDir = params.order === 'DESC' ? 'DESC' : 'ASC';
 
-    const selectSql = `SELECT w.id, w.word, w.reading, w.context_expl, w.scene_desc, w.example, w.difficulty, w.ef, w.interval_days, w.repetition, w.last_review_at, w.next_due_at, w.source_id, w.created_at, w.updated_at ${base} ORDER BY ${orderField} ${orderDir} LIMIT ? OFFSET ?`;
+    const selectSql = `SELECT w.id, w.word, w.reading, w.context_expl, w.scene_desc, w.example, w.difficulty, w.ef, w.interval_days, w.repetition, w.last_review_at, w.next_due_at, w.source_id, w.deleted_at, w.created_at, w.updated_at ${base} ORDER BY ${orderField} ${orderDir} LIMIT ? OFFSET ?`;
     const totalSql = `SELECT COUNT(*) as count ${base}`;
 
     const rows = this.db
@@ -198,13 +231,13 @@ export class WordRepository {
 
   countDue(asOfIso = nowIso()): number {
     const row = this.db
-      .prepare('SELECT COUNT(*) as count FROM words WHERE next_due_at <= ?')
+      .prepare('SELECT COUNT(*) as count FROM words WHERE next_due_at <= ? AND deleted_at IS NULL')
       .get(asOfIso) as { count: number } | undefined;
     return row?.count ?? 0;
   }
 
   countAll(): number {
-    const row = this.db.prepare('SELECT COUNT(*) as count FROM words').get() as
+    const row = this.db.prepare('SELECT COUNT(*) as count FROM words WHERE deleted_at IS NULL').get() as
       | { count: number }
       | undefined;
     return row?.count ?? 0;
@@ -212,7 +245,9 @@ export class WordRepository {
 
   countByDifficulty(): Record<Difficulty, number> {
     const rows = this.db
-      .prepare('SELECT difficulty, COUNT(*) as count FROM words GROUP BY difficulty')
+      .prepare(
+        'SELECT difficulty, COUNT(*) as count FROM words WHERE deleted_at IS NULL GROUP BY difficulty'
+      )
       .all() as { difficulty: Difficulty; count: number }[];
     return rows.reduce<Record<Difficulty, number>>(
       (acc, row) => {
@@ -225,7 +260,7 @@ export class WordRepository {
 
   countCreatedSince(sinceIso: string): number {
     const row = this.db
-      .prepare('SELECT COUNT(*) as count FROM words WHERE created_at >= ?')
+      .prepare('SELECT COUNT(*) as count FROM words WHERE created_at >= ? AND deleted_at IS NULL')
       .get(sinceIso) as { count: number } | undefined;
     return row?.count ?? 0;
   }
@@ -280,9 +315,111 @@ export class WordRepository {
     return this.getById(id);
   }
 
-  delete(id: number): boolean {
+  hardDelete(id: number): boolean {
     const result = this.db.prepare('DELETE FROM words WHERE id = ?').run(id);
     return result.changes > 0;
+  }
+
+  findExistingIds(wordIds: number[], includeDeleted = true): number[] {
+    if (wordIds.length === 0) return [];
+    const placeholders = wordIds.map(() => '?').join(', ');
+    const deletedClause = includeDeleted ? '' : ' AND deleted_at IS NULL';
+    const rows = this.db
+      .prepare(`SELECT id FROM words WHERE id IN (${placeholders})${deletedClause}`)
+      .all(...wordIds) as { id: number }[];
+    return rows.map((row) => row.id);
+  }
+
+  softDelete(id: number, deletedAt = nowIso()): WordRecord | undefined {
+    const result = this.db
+      .prepare('UPDATE words SET deleted_at = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL')
+      .run(deletedAt, deletedAt, id);
+    if (result.changes === 0) return undefined;
+    return this.getById(id);
+  }
+
+  restore(id: number, restoredAt = nowIso()): WordRecord | undefined {
+    const result = this.db
+      .prepare('UPDATE words SET deleted_at = NULL, updated_at = ? WHERE id = ? AND deleted_at IS NOT NULL')
+      .run(restoredAt, id);
+    if (result.changes === 0) return undefined;
+    return this.getById(id);
+  }
+
+  batchSetDifficulty(wordIds: number[], difficulty: Difficulty): number {
+    if (wordIds.length === 0) return 0;
+    const placeholders = wordIds.map(() => '?').join(', ');
+    const now = nowIso();
+    const result = this.db
+      .prepare(
+        `UPDATE words
+         SET difficulty = ?, updated_at = ?
+         WHERE id IN (${placeholders}) AND deleted_at IS NULL`
+      )
+      .run(difficulty, now, ...wordIds);
+    return result.changes;
+  }
+
+  batchSoftDelete(wordIds: number[]): number {
+    if (wordIds.length === 0) return 0;
+    const placeholders = wordIds.map(() => '?').join(', ');
+    const now = nowIso();
+    const result = this.db
+      .prepare(
+        `UPDATE words
+         SET deleted_at = ?, updated_at = ?
+         WHERE id IN (${placeholders}) AND deleted_at IS NULL`
+      )
+      .run(now, now, ...wordIds);
+    return result.changes;
+  }
+
+  batchRestore(wordIds: number[]): number {
+    if (wordIds.length === 0) return 0;
+    const placeholders = wordIds.map(() => '?').join(', ');
+    const now = nowIso();
+    const result = this.db
+      .prepare(
+        `UPDATE words
+         SET deleted_at = NULL, updated_at = ?
+         WHERE id IN (${placeholders}) AND deleted_at IS NOT NULL`
+      )
+      .run(now, ...wordIds);
+    return result.changes;
+  }
+
+  batchAddTags(wordIds: number[], tagNames: string[]): number {
+    if (wordIds.length === 0 || tagNames.length === 0) return 0;
+    const tags = this.tagRepo.ensureNames(tagNames);
+    const insert = this.db.prepare(
+      'INSERT OR IGNORE INTO word_tags (word_id, tag_id, created_at) VALUES (?, ?, ?)'
+    );
+    const timestamp = nowIso();
+    const run = this.db.transaction((ids: number[], tagIds: number[]) => {
+      ids.forEach((wordId) => {
+        tagIds.forEach((tagId) => {
+          insert.run(wordId, tagId, timestamp);
+        });
+      });
+    });
+    run(wordIds, tags.map((tag) => tag.id));
+    return wordIds.length;
+  }
+
+  batchRemoveTags(wordIds: number[], tagNames: string[]): number {
+    if (wordIds.length === 0 || tagNames.length === 0) return 0;
+    const tags = this.tagRepo.findByNames(tagNames);
+    if (tags.length === 0) return 0;
+    const wordPlaceholders = wordIds.map(() => '?').join(', ');
+    const tagPlaceholders = tags.map(() => '?').join(', ');
+    const result = this.db
+      .prepare(
+        `DELETE FROM word_tags
+         WHERE word_id IN (${wordPlaceholders})
+           AND tag_id IN (${tagPlaceholders})`
+      )
+      .run(...wordIds, ...tags.map((tag) => tag.id));
+    return result.changes;
   }
 
   replaceTags(wordId: number, tagNames: string[]): void {

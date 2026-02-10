@@ -11,6 +11,7 @@ const navItems: NavItem[] = [
   { to: '/', label: 'Home' },
   { to: '/today', label: 'Today' },
   { to: '/review', label: 'Review', badge: 'SM-2' },
+  { to: '/library', label: 'Library' },
 ];
 
 export function AppLayout({ children }: PropsWithChildren) {

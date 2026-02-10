@@ -25,6 +25,7 @@ export const wordRecordSchema = z.object({
   lastReviewAt: isoDateTime,
   nextDueAt: isoDateTime,
   sourceId: z.number().int().positive().nullable(),
+  deletedAt: isoDateTime.nullable(),
   createdAt: isoDateTime,
   updatedAt: isoDateTime,
 });
@@ -37,6 +38,7 @@ export const wordCreateSchema = wordRecordSchema
     lastReviewAt: true,
     nextDueAt: true,
     sourceId: true,
+    deletedAt: true,
   })
   .extend({
     ef: z.number().min(SM2_MIN_EF).default(SM2_DEFAULT_EF),

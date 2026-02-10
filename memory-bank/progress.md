@@ -36,4 +36,8 @@
   - Review 状态管理：`src/renderer/stores/review-store.ts` 维护队列快照与历史栈；`src/renderer/hooks/useKeyboardShortcuts.ts` 封装评分、展开、回退快捷键，解耦页面与键盘事件实现。
   - 页面与组件：`pages/HomePage.tsx`（统计 + 队列预览 + AI Playground）、`pages/TodayPage.tsx`（搜索/难度过滤/分页）、`pages/ReviewPage.tsx`（SM-2 评分、跳过、回退、进度）；新增 `ReviewCard`、`StatTiles`、`WordListItem`、`Skeleton` 组件，`styles.css` 更新为新布局与状态样式。
   - 测试：新增 `pages/__tests__/review.test.tsx`（评分推进与回退）与 `pages/__tests__/today.test.tsx`（查询参数与列表加载），`vitest.setup.ts` 引入 `@testing-library/jest-dom`，并提供 `test-utils.tsx` 统一测试 Provider。
+- 完成 plan_08：Library 与内容管理。
+  - 后端能力：新增 `003_soft_delete_words` 迁移（`words.deleted_at` + `idx_words_deleted_at`）；词条 API 增加软删除/恢复、批量操作（难度/标签/删除/恢复）、导入校验、导出端点；标签 API 增加更新与删除；`WordService`/`WordRepository` 支持时间过滤、软删除隔离、批量处理与导入校验反馈。
+  - 前端能力：新增 `/library` 路由与页面 `src/renderer/pages/LibraryPage.tsx`，落地筛选分页、批量选中操作、详情编辑弹层、标签管理、JSON 导入校验与导出下载；新增 `src/renderer/features/library/*` 模块和 `src/renderer/api/tags.ts`。
+  - 测试：扩展 `src/main/api/__tests__/api.test.ts` 覆盖软删除恢复、批量操作、导入校验、导出与标签生命周期；新增 `src/renderer/pages/__tests__/library.test.tsx`。`pnpm test` 已通过（11 files, 24 tests）。
 - 已知环境限制（开发机网络）：`pnpm install` 访问 npm registry 失败（`ENOTFOUND registry.npmjs.org`），导致本地 `node_modules/.bin/vite` 缺失；`pnpm dev` 报 `vite: command not found`。需先恢复网络/镜像后再安装依赖并验证。

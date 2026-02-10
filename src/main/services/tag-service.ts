@@ -1,4 +1,4 @@
-﻿import { TagCreateInput, TagRecord } from '@shared/types';
+import { TagCreateInput, TagRecord, TagUpdateInput } from '@shared/types';
 
 import { TagRepository } from '../db/repositories/tag-repository';
 
@@ -15,5 +15,13 @@ export class TagService {
 
   upsert(input: TagCreateInput): TagRecord {
     return this.tagRepo.upsert(input);
+  }
+
+  update(id: number, patch: TagUpdateInput): TagRecord | undefined {
+    return this.tagRepo.update(id, patch);
+  }
+
+  delete(id: number): boolean {
+    return this.tagRepo.delete(id);
   }
 }

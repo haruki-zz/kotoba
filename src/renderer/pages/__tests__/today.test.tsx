@@ -1,10 +1,10 @@
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 
-import TodayPage from '../TodayPage';
-import { renderWithProviders } from '../../test-utils';
 import { WordView } from '@shared/types';
+
+import { renderWithProviders } from '../../test-utils';
+import TodayPage from '../TodayPage';
 
 const sampleWord: WordView = {
   id: 3,
@@ -20,6 +20,7 @@ const sampleWord: WordView = {
   lastReviewAt: new Date().toISOString(),
   nextDueAt: new Date().toISOString(),
   sourceId: null,
+  deletedAt: null,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   tags: [],
@@ -64,11 +65,13 @@ describe('TodayPage', () => {
 
     expect(await screen.findByText('kumo')).toBeInTheDocument();
 
-    await userEvent.type(screen.getByPlaceholderText('搜索词或假名'), 'sakura');
-    await userEvent.click(screen.getByText('搜索'));
-
-    const calls = (global.fetch as unknown as vi.Mock).mock.calls.map((call) => call[0].toString());
-    const lastCall = calls[calls.length - 1];
-    expect(lastCall).toContain('q=sakura');
+    fireEvent.change(screen.getByPlaceholderText('搜索词或假名'), {
+      target: { value: 'sakura' },
+    });
+    await waitFor(() => {
+      const calls = (global.fetch as unknown as vi.Mock).mock.calls.map((call) => call[0].toString());
+      const hasQuery = calls.some((url) => url.includes('q=sakura'));
+      expect(hasQuery).toBe(true);
+    });
   });
 });
