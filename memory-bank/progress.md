@@ -51,3 +51,19 @@
   - 标签策略：标签增删改独立由 `tags` API 管理，词条仅保存标签名集合，后端仓储统一负责标签 upsert 与关联关系落表。
   - 模块边界：Library UI 已拆分到 `src/renderer/features/library/`，页面层只做编排（query/mutation、状态连接），避免再次回到单文件巨石。
 - 已知环境限制（开发机网络）：`pnpm install` 访问 npm registry 失败（`ENOTFOUND registry.npmjs.org`），导致本地 `node_modules/.bin/vite` 缺失；`pnpm dev` 报 `vite: command not found`。需先恢复网络/镜像后再安装依赖并验证。
+
+## 2026-02-12
+
+- 完成 plan_09：设置与偏好（跳过 plan_06，基于现有 Fastify + Renderer 架构实现）。
+  - shared：新增 `src/shared/schemas/settings.ts` 与 `src/shared/schemas/api/settings.ts`，统一定义设置模型（主题/语言/队列/内容风格/快捷键/隐私/通知）、patch、导入导出与备份响应契约；`src/shared/types.ts` 扩展 Settings 相关类型导出。
+  - 后端：新增 `AppMetaRepository` 与 `SettingsService`，实现配置三层合并（默认 -> 用户 patch -> 运行时 env override）、设置读写/重置、checksum 校验的导入导出、SQLite 备份；新增 `/api/settings` 路由族（GET/PATCH/reset/export/import/backup）。
+  - 行为联动：AI 生成路由在隐私 `allowNetwork=false` 时阻断非 mock provider；默认 provider 未显式传入时回退到 settings 的 `ai.defaultProvider`。
+  - 前端：新增 `/settings` 页面与 `src/renderer/api/settings.ts`；新增 `settings-store`（设置快照缓存 + 主题应用）；复习页改为读取 settings 的队列上限与快捷键绑定；全局导航提示和 Home 快捷键提示改为动态显示；AI Playground 默认 provider 与网络开关联动；新增 light/dark 主题变量与设置页样式。
+  - 测试：新增 `src/renderer/pages/__tests__/settings.test.tsx`，扩展 `src/main/api/__tests__/api.test.ts`（settings 流程）与 `src/main/api/__tests__/ai.test.ts`（隐私网络开关拦截）。`pnpm test` 通过（12 files, 27 tests）。
+- plan_09 用户验证结果：已通过。
+- 交接提示（供后续开发者）：
+  - 设置读写入口统一走 `SettingsService`，不要在其它 service 里直接读写 `app_meta` 的 settings key，避免绕过校验/checksum。
+  - 隐私网络开关的强制逻辑在 `src/main/api/routes/ai.ts`，若新增 AI 路由或 provider，需复用同一拦截策略。
+  - 渲染层快捷键匹配逻辑在 `src/renderer/features/settings/shortcut-utils.ts`，修改 binding 语法时需同步更新 `src/shared/schemas/settings.ts` 的规范化与冲突检测。
+  - 主题切换由 `settings-store` 负责写入 `data-theme`，页面组件不要自行设置根节点主题属性。
+  - 导入导出与备份是两个通道：设置 JSON 仅覆盖偏好，SQLite 备份覆盖全部学习数据，UI 文案与后续功能需保持这个边界。

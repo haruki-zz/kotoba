@@ -31,10 +31,10 @@ describe('AI routes', () => {
       url: '/api/words',
       payload: {
         word: 'sakura',
-        reading: '‚³‚­‚ç',
+        reading: 'ã•ãã‚‰',
         contextExpl: 'Spring cherry blossoms along the river.',
         sceneDesc: 'Two friends planning a hanami picnic.',
-        example: 'Œö‰€‚Å÷‚ðŒ©‚È‚ª‚ç‚¨•Ù“–‚ðH‚×‚éB',
+        example: 'å…¬åœ’ã§æ¡œã‚’è¦‹ãªãŒã‚‰å¼å½“ã‚’é£Ÿã¹ã‚‹ã€‚',
         difficulty: 'medium',
         lastReviewAt: '2024-01-01T00:00:00.000Z',
         nextDueAt: '2024-01-01T00:00:00.000Z',
@@ -89,5 +89,43 @@ describe('AI routes', () => {
     const log = traceId ? ctx.dbContext.aiRequestRepo.getLatestByTraceId(traceId) : undefined;
     expect(log?.status).toBe('error');
     expect(log?.provider).toBe('openai');
+  });
+
+  test('blocks network providers when privacy setting disables network', async () => {
+    const { app } = await setupServer();
+
+    const settingsRes = await app.inject({
+      method: 'PATCH',
+      url: '/api/settings',
+      payload: {
+        patch: {
+          privacy: { allowNetwork: false },
+        },
+        confirmSensitive: true,
+      },
+    });
+    expect(settingsRes.statusCode).toBe(200);
+
+    const blockedRes = await app.inject({
+      method: 'POST',
+      url: '/api/ai/generate',
+      payload: {
+        scenario: 'exampleOnly',
+        provider: 'openai',
+        payload: { word: 'å±±' },
+      },
+    });
+    expect(blockedRes.statusCode).toBe(400);
+
+    const allowedRes = await app.inject({
+      method: 'POST',
+      url: '/api/ai/generate',
+      payload: {
+        scenario: 'exampleOnly',
+        payload: { word: 'å±±' },
+      },
+    });
+    expect(allowedRes.statusCode).toBe(200);
+    expect(allowedRes.json().provider).toBe('mock');
   });
 });

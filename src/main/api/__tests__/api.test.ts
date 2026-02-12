@@ -281,4 +281,84 @@ describe('Fastify API', () => {
     expect(tagDeleteRes.statusCode).toBe(200);
     expect(tagDeleteRes.json().deleted).toBe(true);
   });
+
+  test('supports settings read, update, import/export and reset flow', async () => {
+    const app = await setupServer();
+
+    const initialRes = await app.inject({ method: 'GET', url: '/api/settings' });
+    expect(initialRes.statusCode).toBe(200);
+    expect(initialRes.json().settings.review.queueLimit).toBe(30);
+
+    const updateRes = await app.inject({
+      method: 'PATCH',
+      url: '/api/settings',
+      payload: {
+        patch: {
+          review: { queueLimit: 45 },
+          shortcuts: { scoreHard: 'h' },
+        },
+      },
+    });
+    expect(updateRes.statusCode).toBe(200);
+    expect(updateRes.json().settings.review.queueLimit).toBe(45);
+    expect(updateRes.json().settings.shortcuts.scoreHard).toBe('h');
+
+    const sensitiveWithoutConfirm = await app.inject({
+      method: 'PATCH',
+      url: '/api/settings',
+      payload: {
+        patch: {
+          privacy: { allowNetwork: false },
+        },
+      },
+    });
+    expect(sensitiveWithoutConfirm.statusCode).toBe(400);
+
+    const sensitiveWithConfirm = await app.inject({
+      method: 'PATCH',
+      url: '/api/settings',
+      payload: {
+        patch: {
+          privacy: { allowNetwork: false },
+        },
+        confirmSensitive: true,
+      },
+    });
+    expect(sensitiveWithConfirm.statusCode).toBe(200);
+    expect(sensitiveWithConfirm.json().settings.privacy.allowNetwork).toBe(false);
+
+    const exportRes = await app.inject({
+      method: 'GET',
+      url: '/api/settings/export',
+    });
+    expect(exportRes.statusCode).toBe(200);
+    expect(exportRes.json().checksum.length).toBeGreaterThan(10);
+
+    const importFailRes = await app.inject({
+      method: 'POST',
+      url: '/api/settings/import',
+      payload: {
+        backup: {
+          ...exportRes.json(),
+          checksum: 'broken',
+        },
+        confirmOverwrite: true,
+      },
+    });
+    expect(importFailRes.statusCode).toBe(400);
+
+    const resetRes = await app.inject({
+      method: 'POST',
+      url: '/api/settings/reset',
+      payload: { confirm: true },
+    });
+    expect(resetRes.statusCode).toBe(200);
+    expect(resetRes.json().settings.review.queueLimit).toBe(30);
+
+    const backupRes = await app.inject({
+      method: 'POST',
+      url: '/api/settings/backup',
+    });
+    expect(backupRes.statusCode).toBe(400);
+  });
 });

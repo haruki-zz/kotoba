@@ -4,6 +4,7 @@ import { MockProvider } from '../ai/providers/mock-provider';
 import { OpenAiProvider } from '../ai/providers/openai-provider';
 import { createDbContext } from '../db';
 import { AiService } from '../services/ai-service';
+import { SettingsService } from '../services/settings-service';
 import { SourceService } from '../services/source-service';
 import { TagService } from '../services/tag-service';
 import { WordService } from '../services/word-service';
@@ -18,6 +19,11 @@ export const createAppContext = (dbPath?: string) => {
   );
   const tagService = new TagService(dbContext.tagRepo);
   const sourceService = new SourceService(dbContext.sourceRepo);
+  const settingsService = new SettingsService(
+    dbContext.db,
+    dbContext.appMetaRepo,
+    dbContext.databasePath
+  );
 
   const aiRegistry = new ProviderRegistry(
     {
@@ -37,6 +43,7 @@ export const createAppContext = (dbPath?: string) => {
       tagService,
       sourceService,
       aiService,
+      settingsService,
     },
     providers: {
       aiRegistry,

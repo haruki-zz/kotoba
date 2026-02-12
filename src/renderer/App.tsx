@@ -5,6 +5,7 @@ import { AppLayout } from './components/AppLayout';
 import HomePage from './pages/HomePage';
 import LibraryPage from './pages/LibraryPage';
 import ReviewPage from './pages/ReviewPage';
+import SettingsPage from './pages/SettingsPage';
 import TodayPage from './pages/TodayPage';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/today" element={<TodayPage />} />
         <Route path="/review" element={<ReviewPage />} />
         <Route path="/library" element={<LibraryPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<HomePage />} />
       </Routes>
     </AppLayout>

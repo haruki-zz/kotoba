@@ -1,14 +1,17 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import React from 'react';
 import { Link } from 'react-router-dom';
 
+import { fetchReviewQueue } from '../api/review';
+import { fetchStatsOverview } from '../api/stats';
 import AiPlayground from '../components/AiPlayground';
 import { StatTiles } from '../components/StatTiles';
 import { WordListItem } from '../components/WordListItem';
-import { fetchReviewQueue } from '../api/review';
-import { fetchStatsOverview } from '../api/stats';
+import { formatShortcutLabel } from '../features/settings/shortcut-utils';
+import { useSettingsStore } from '../stores/settings-store';
 
 function HomePage() {
+  const settings = useSettingsStore((state) => state.settings);
   const {
     data: stats,
     isLoading: statsLoading,
@@ -48,7 +51,13 @@ function HomePage() {
           </div>
         </div>
         <div className="hero-note">
-          <p className="muted">快捷键：1/2/3 打分 · 空格展开 · ⌘Z 回退</p>
+          <p className="muted">
+            快捷键：{formatShortcutLabel(settings.shortcuts.scoreHard)}/
+            {formatShortcutLabel(settings.shortcuts.scoreMedium)}/
+            {formatShortcutLabel(settings.shortcuts.scoreEasy)} 打分 ·{' '}
+            {formatShortcutLabel(settings.shortcuts.toggleDetails)} 展开 ·{' '}
+            {formatShortcutLabel(settings.shortcuts.undoReview)} 回退
+          </p>
           <button type="button" className="link-btn" onClick={() => refetchQueue()}>
             刷新队列预览
           </button>

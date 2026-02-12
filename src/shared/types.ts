@@ -8,17 +8,33 @@ import {
 } from './ai';
 import { DEFAULT_INTERVAL_DAYS, DEFAULT_REPETITION, SM2_DEFAULT_EF, SM2_MIN_EF } from './constants';
 import {
+  APP_SETTINGS_VERSION,
+  appSettingsPatchSchema,
+  appSettingsSchema,
   bulkImportSchema,
+  defaultAppSettings,
+  findShortcutConflicts,
   importValidationIssueSchema,
   importValidationRequestSchema,
   importValidationResponseSchema,
   difficultyEnum,
   reviewQueueQuerySchema,
   reviewRequestSchema,
+  normalizeShortcutBinding,
+  settingsBackupFileSchema,
+  settingsDatabaseBackupResponseSchema,
+  settingsExportResponseSchema,
+  settingsImportRequestSchema,
+  settingsMetaSchema,
+  settingsResetRequestSchema,
+  settingsSnapshotSchema,
+  settingsUpdateRequestSchema,
   sourceCreateSchema,
   sourceRecordSchema,
   sourceUpdateSchema,
   statsOverviewSchema,
+  shortcutBindingsSchema,
+  shortcutConflictSchema,
   tagCreateSchema,
   tagRecordSchema,
   tagUpdateSchema,
@@ -62,6 +78,18 @@ export type ImportValidationResponse = z.infer<typeof importValidationResponseSc
 export type WordBatchRequest = z.input<typeof wordBatchRequestSchema>;
 export type WordBatchResponse = z.infer<typeof wordBatchResponseSchema>;
 export type StatsOverview = z.infer<typeof statsOverviewSchema>;
+export type AppSettings = z.infer<typeof appSettingsSchema>;
+export type AppSettingsPatchInput = z.input<typeof appSettingsPatchSchema>;
+export type ShortcutBindings = z.infer<typeof shortcutBindingsSchema>;
+export type ShortcutConflict = z.infer<typeof shortcutConflictSchema>;
+export type SettingsBackupFile = z.infer<typeof settingsBackupFileSchema>;
+export type SettingsSnapshot = z.infer<typeof settingsSnapshotSchema>;
+export type SettingsMeta = z.infer<typeof settingsMetaSchema>;
+export type SettingsUpdateRequestInput = z.input<typeof settingsUpdateRequestSchema>;
+export type SettingsResetRequestInput = z.input<typeof settingsResetRequestSchema>;
+export type SettingsImportRequestInput = z.input<typeof settingsImportRequestSchema>;
+export type SettingsDatabaseBackupResponse = z.infer<typeof settingsDatabaseBackupResponseSchema>;
+export type SettingsExportResponse = z.infer<typeof settingsExportResponseSchema>;
 
 export type TagRecord = z.infer<typeof tagRecordSchema>;
 export type TagCreateInput = z.input<typeof tagCreateSchema>;
@@ -99,6 +127,18 @@ export {
   reviewRequestSchema,
   reviewQueueQuerySchema,
   bulkImportSchema,
+  appSettingsSchema,
+  appSettingsPatchSchema,
+  shortcutBindingsSchema,
+  shortcutConflictSchema,
+  settingsBackupFileSchema,
+  settingsSnapshotSchema,
+  settingsMetaSchema,
+  settingsUpdateRequestSchema,
+  settingsResetRequestSchema,
+  settingsImportRequestSchema,
+  settingsDatabaseBackupResponseSchema,
+  settingsExportResponseSchema,
   wordExportQuerySchema,
   wordExportResponseSchema,
   importValidationRequestSchema,
@@ -118,3 +158,5 @@ export {
 };
 
 export { SM2_DEFAULT_EF, SM2_MIN_EF, DEFAULT_INTERVAL_DAYS, DEFAULT_REPETITION };
+export { defaultAppSettings };
+export { APP_SETTINGS_VERSION, normalizeShortcutBinding, findShortcutConflicts };

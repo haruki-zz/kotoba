@@ -7,6 +7,7 @@ import { AppContext, createAppContext } from './context';
 import { BadRequestError, HttpError, toErrorResponse } from './errors';
 import { registerAiRoutes } from './routes/ai';
 import { registerHealthRoute } from './routes/health';
+import { registerSettingsRoutes } from './routes/settings';
 import { registerSourceRoutes } from './routes/sources';
 import { registerStatsRoutes } from './routes/stats';
 import { registerTagRoutes } from './routes/tags';
@@ -46,6 +47,7 @@ export const buildServer = (ctx: AppContext) => {
   registerTagRoutes(app, ctx);
   registerSourceRoutes(app, ctx);
   registerStatsRoutes(app, ctx);
+  registerSettingsRoutes(app, ctx);
 
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof HttpError) {

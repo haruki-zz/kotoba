@@ -1,24 +1,28 @@
-import React, { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useEffect, useMemo, useState } from 'react';
+
+import { StatsOverview } from '@shared/types';
 
 import { fetchReviewQueue, submitReview, undoReviewToSnapshot } from '../api/review';
-import { StatTiles } from '../components/StatTiles';
 import { ReviewCard } from '../components/ReviewCard';
 import { Skeleton } from '../components/Skeleton';
+import { StatTiles } from '../components/StatTiles';
+import { formatShortcutLabel } from '../features/settings/shortcut-utils';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { useReviewStore } from '../stores/review-store';
-import { StatsOverview } from '@shared/types';
+import { useSettingsStore } from '../stores/settings-store';
 
 function ReviewPage() {
   const [showDetails, setShowDetails] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const settings = useSettingsStore((state) => state.settings);
   const { queue, initialCount, setQueue, completeCurrent, lastHistory, dropLastHistory, pushFront, reset } =
     useReviewStore();
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ['review', 'queue'],
-    queryFn: () => fetchReviewQueue(),
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['review', 'queue', settings.review.queueLimit],
+    queryFn: () => fetchReviewQueue(settings.review.queueLimit),
     refetchOnWindowFocus: false,
     onSuccess: (payload) => {
       setQueue(payload.items);
@@ -86,14 +90,28 @@ function ReviewPage() {
     onToggleDetail: () => setShowDetails((v) => !v),
     onUndo: handleUndo,
     enabled: Boolean(current),
+    bindings: settings.shortcuts,
   });
 
   const helperText = useMemo(() => {
     if (!current) return '当前无待复习卡片';
     if (reviewMutation.isPending) return '提交中...';
     if (undoMutation.isPending) return '回退中...';
-    return '按 1/2/3 打分；空格展开释义；⌘Z 回退上一条';
-  }, [current, reviewMutation.isPending, undoMutation.isPending]);
+    return `按 ${formatShortcutLabel(settings.shortcuts.scoreHard)}/${formatShortcutLabel(
+      settings.shortcuts.scoreMedium
+    )}/${formatShortcutLabel(settings.shortcuts.scoreEasy)} 打分；${formatShortcutLabel(
+      settings.shortcuts.toggleDetails
+    )} 展开释义；${formatShortcutLabel(settings.shortcuts.undoReview)} 回退上一条`;
+  }, [
+    current,
+    reviewMutation.isPending,
+    settings.shortcuts.scoreEasy,
+    settings.shortcuts.scoreHard,
+    settings.shortcuts.scoreMedium,
+    settings.shortcuts.toggleDetails,
+    settings.shortcuts.undoReview,
+    undoMutation.isPending,
+  ]);
 
   const cachedStats = queryClient.getQueryData<StatsOverview>(['stats', 'overview']);
 
@@ -139,7 +157,7 @@ function ReviewPage() {
                 onClick={() => handleScore('hard')}
                 disabled={reviewMutation.isPending}
               >
-                Hard · 1
+                Hard · {formatShortcutLabel(settings.shortcuts.scoreHard)}
               </button>
               <button
                 type="button"
@@ -147,7 +165,7 @@ function ReviewPage() {
                 onClick={() => handleScore('medium')}
                 disabled={reviewMutation.isPending}
               >
-                Medium · 2
+                Medium · {formatShortcutLabel(settings.shortcuts.scoreMedium)}
               </button>
               <button
                 type="button"
@@ -155,7 +173,7 @@ function ReviewPage() {
                 onClick={() => handleScore('easy')}
                 disabled={reviewMutation.isPending}
               >
-                Easy · 3
+                Easy · {formatShortcutLabel(settings.shortcuts.scoreEasy)}
               </button>
             </div>
           </div>

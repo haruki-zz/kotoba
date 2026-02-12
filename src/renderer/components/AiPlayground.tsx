@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { AiGenerateResponse, AiProviderName, AiScenario } from '@shared/types';
 
+import { useSettingsStore } from '../stores/settings-store';
+
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8787/api';
 const defaultPayload = {
   word: 'sakura',
@@ -39,14 +41,19 @@ type EditableResult = {
 };
 
 function AiPlayground() {
+  const settings = useSettingsStore((state) => state.settings);
   const [scenario, setScenario] = useState<AiScenario>('wordEnrich');
-  const [provider, setProvider] = useState<AiProviderName>('mock');
+  const [provider, setProvider] = useState<AiProviderName>(settings.ai.defaultProvider);
   const [providers, setProviders] = useState<AiProviderName[]>(['mock', 'openai', 'gemini']);
   const [payload, setPayload] = useState(defaultPayload);
   const [result, setResult] = useState<AiGenerateResponse | null>(null);
   const [editable, setEditable] = useState<EditableResult>(fallbackResult);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setProvider(settings.ai.defaultProvider);
+  }, [settings.ai.defaultProvider]);
 
   useEffect(() => {
     const fetchProviders = async () => {
@@ -64,6 +71,12 @@ function AiPlayground() {
     };
     fetchProviders();
   }, [provider]);
+
+  useEffect(() => {
+    if (!settings.privacy.allowNetwork && provider !== 'mock') {
+      setProvider('mock');
+    }
+  }, [provider, settings.privacy.allowNetwork]);
 
   const scenarioHint = useMemo(() => {
     return scenario === 'wordEnrich'
@@ -132,11 +145,18 @@ function AiPlayground() {
           <label className="label">Provider</label>
           <select value={provider} onChange={(e) => setProvider(e.target.value as AiProviderName)}>
             {providers.map((value) => (
-              <option key={value} value={value}>
+              <option
+                key={value}
+                value={value}
+                disabled={!settings.privacy.allowNetwork && value !== 'mock'}
+              >
                 {providerLabels[value] ?? value}
               </option>
             ))}
           </select>
+          {!settings.privacy.allowNetwork ? (
+            <p className="muted">网络访问已关闭，仅可使用 Mock provider。</p>
+          ) : null}
         </div>
         <div>
           <label className="label">Word</label>
