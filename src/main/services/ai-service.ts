@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
+import { renderPrompt } from '@shared/ai';
 import {
   AiGenerateRequest,
   AiGenerateResponse,
@@ -8,14 +9,13 @@ import {
   aiGenerateRequestSchema,
   aiWordEnrichResultSchema,
 } from '@shared/types';
-import { renderPrompt } from '@shared/ai';
 
 import { ProviderRegistry } from '../ai/provider-registry';
 import { withRetry } from '../ai/retry';
 import { withTimeout } from '../ai/timeout';
+import { HttpError, NotFoundError } from '../api/errors';
 import { AiRequestRepository } from '../db/repositories/ai-request-repository';
 import { WordRepository } from '../db/repositories/word-repository';
-import { NotFoundError, HttpError } from '../api/errors';
 
 type ParsedResult =
   | ReturnType<typeof aiWordEnrichResultSchema.parse>

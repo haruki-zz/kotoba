@@ -67,3 +67,18 @@
   - 渲染层快捷键匹配逻辑在 `src/renderer/features/settings/shortcut-utils.ts`，修改 binding 语法时需同步更新 `src/shared/schemas/settings.ts` 的规范化与冲突检测。
   - 主题切换由 `settings-store` 负责写入 `data-theme`，页面组件不要自行设置根节点主题属性。
   - 导入导出与备份是两个通道：设置 JSON 仅覆盖偏好，SQLite 备份覆盖全部学习数据，UI 文案与后续功能需保持这个边界。
+
+## 2026-02-14
+
+- 完成 plan_10：测试质量与发布流程（按用户要求跳过 plan_06 依赖）。
+  - 测试分层与文档：新增 `docs/testing-strategy.md`，明确 unit/integration/ui/perf/smoke 分层、门禁阈值与报告路径。
+  - 高价值测试补齐：
+    - `src/main/services/__tests__/settings-service.test.ts`：覆盖设置运行时覆盖优先级、快捷键冲突检测、checksum 导入失败、reset 回退。
+    - `src/renderer/features/settings/__tests__/settings-form.test.ts`：覆盖 patch diff 与敏感变更识别。
+    - `src/renderer/pages/__tests__/home.test.tsx`：覆盖 Home 队列预览渲染与刷新行为。
+  - 性能与稳定性：新增 `scripts/perf-baseline.ts`、`scripts/stability-smoke.ts`，输出 `reports/perf-baseline.json` 与 `reports/stability-smoke.json`。
+  - 质量门禁：新增 `scripts/quality-gate.ts`，聚合 junit/perf/smoke 结果并生成 `reports/quality-gate.md`。
+  - CI/CD：新增 `.github/workflows/ci.yml` 与 `.github/workflows/release.yml`；新增 `test:ci`、`ci:verify`、`release:prepare` 等脚本，支持可复现质量检查与发布工件上传。
+  - 发布元数据：新增 `scripts/create-release-manifest.ts` 生成 `dist/release/manifest-v<version>.json`（含文件 sha256）。
+  - 发布文档：新增 `docs/release-runbook.md`，明确当前构建产物边界、发布步骤、回滚策略与签名后续计划。
+  - 运行验证：`pnpm ci:verify` 已通过（33 tests、renderer build、perf baseline、stability smoke、quality gate 全通过）。

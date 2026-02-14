@@ -1,11 +1,10 @@
-import { stripIndents } from './utils';
 import {
-  AiScenario,
-  aiToneEnum,
-  aiScenarioEnum,
-  wordEnrichPayloadSchema,
   exampleOnlyPayloadSchema,
+  aiScenarioEnum,
+  AiScenario,
+  wordEnrichPayloadSchema,
 } from './scenarios';
+import { stripIndents } from './utils';
 
 export type RenderedPrompt = {
   system: string;

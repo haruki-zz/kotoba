@@ -29,8 +29,13 @@ export const buildServer = (ctx: AppContext) => {
   });
 
   app.addHook('onResponse', (request, reply, done) => {
+    const responseTime =
+      typeof (reply as { elapsedTime?: number }).elapsedTime === 'number'
+        ? (reply as { elapsedTime: number }).elapsedTime
+        : undefined;
+
     request.log.info(
-      { statusCode: reply.statusCode, responseTime: reply.getResponseTime() },
+      { statusCode: reply.statusCode, responseTime },
       `${request.method} ${request.url}`
     );
     done();

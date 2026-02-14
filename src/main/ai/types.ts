@@ -1,5 +1,5 @@
-import { AiProviderName, AiScenario } from '@shared/types';
 import { RenderedPrompt } from '@shared/ai';
+import { AiProviderName, AiScenario } from '@shared/types';
 
 export type ProviderGenerateParams = {
   prompt: RenderedPrompt;

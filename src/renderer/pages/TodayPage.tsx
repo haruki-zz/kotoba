@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
 
 import { fetchWords } from '../api/words';
-import { WordListItem } from '../components/WordListItem';
 import { Skeleton } from '../components/Skeleton';
+import { WordListItem } from '../components/WordListItem';
 
 const PAGE_SIZE = 12;
 

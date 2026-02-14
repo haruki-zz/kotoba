@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'codex/**'
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test (JUnit)
+        run: pnpm test:ci
+
+      - name: Build
+        run: pnpm build:renderer
+
+      - name: Performance baseline
+        run: pnpm perf:baseline
+
+      - name: Stability smoke
+        run: pnpm smoke:stability
+
+      - name: Quality gate
+        run: pnpm quality:gate
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-reports
+          path: |
+            reports/**
+            dist/release/**
+            dist/renderer/**
+          if-no-files-found: warn

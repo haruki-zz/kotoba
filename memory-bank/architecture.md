@@ -1,4 +1,4 @@
-# 架构（更新：plan_09 设置与偏好）
+# 架构（更新：plan_10 测试质量与发布流程）
 
 ## 项目结构
 - 单一 package.json（禁止 workspace/monorepo），所有依赖安装在根级 `node_modules`。
@@ -48,6 +48,7 @@
 - plan_07：渲染层体验（Home/Today/Review 路由、队列复习交互、空/错/加载态、快捷键）—— 已完成。
 - plan_08：Library 与内容管理（软删除恢复、标签 CRUD、批量操作、导入校验与导出、Library 页面）—— 已完成。
 - plan_09：设置与偏好（设置分层、持久化、Settings 页面、快捷键冲突提示、隐私开关确认、设置导入导出与数据库备份入口）—— 已完成。
+- plan_10：测试质量与发布流程（分层测试、性能/稳定性烟测、质量门禁、CI 与 release manifest）—— 已完成。
 - 待办：plan_06 Electron 壳。
 
 ## plan_08 架构洞察
@@ -77,8 +78,27 @@
 - `src/renderer/pages/SettingsPage.tsx`：设置页编排层；组织查询/更新 mutation、冲突提示、隐私确认、导入导出与数据库备份入口。
 - `src/renderer/pages/__tests__/settings.test.tsx`：设置页回归测试；覆盖“加载 -> 修改 -> 提交 patch”主路径，防止回归为全量覆盖提交。
 
+## plan_10 架构洞察
+- 质量门禁采用“报告驱动”：`junit + perf + smoke` 统一聚合到 `quality-gate.md`，避免只看单一命令退出码导致信息分散。
+- 性能与稳定性解耦：性能脚本聚焦数据层吞吐基线，稳定性脚本聚焦 API 闭环与内存增量，降低单个测试职责过载。
+- 发布元数据先行：在 Electron 打包前先落地 `manifest + sha256`，先建立可追踪工件链路，再扩展到签名与多平台安装包。
+- CI 与本地命令同构：`ci:verify` 复用 workflow 步骤，减少“本地过、CI 挂”的环境偏差。
+
+## plan_10 新增文件职责（逐文件）
+- `src/main/services/__tests__/settings-service.test.ts`：SettingsService 核心行为测试（runtime override、冲突检测、checksum、reset）。
+- `src/renderer/features/settings/__tests__/settings-form.test.ts`：设置表单纯函数测试（diff patch、敏感项识别）。
+- `src/renderer/pages/__tests__/home.test.tsx`：Home 页面关键流程测试（队列预览渲染与刷新）。
+- `scripts/perf-baseline.ts`：性能基线脚本，生成 `reports/perf-baseline.json`。
+- `scripts/stability-smoke.ts`：稳定性烟测脚本，生成 `reports/stability-smoke.json`。
+- `scripts/quality-gate.ts`：汇总 junit/perf/smoke 报告并产出 `reports/quality-gate.md`。
+- `scripts/create-release-manifest.ts`：扫描 `dist/renderer` 输出版本化 manifest（含 sha256）。
+- `docs/testing-strategy.md`：测试分层、门禁阈值与报告路径说明。
+- `docs/release-runbook.md`：发布、回滚、签名后续方案说明。
+- `.github/workflows/ci.yml`：CI 门禁流水线（lint/test/build/perf/smoke/quality gate + artifacts）。
+- `.github/workflows/release.yml`：发布流水线（`ci:verify` + `release:prepare` + 工件上传/发布）。
+
 ## 文件作用说明
-- `package.json`：单包定义，脚本 dev/build/test/lint/format/typecheck/db:migrate/db:backup；pnpm onlyBuiltDependencies。
+- `package.json`：单包定义；含开发/构建/测试/质量门禁/发布脚本（`test:ci`、`perf:baseline`、`smoke:stability`、`quality:gate`、`ci:verify`、`release:prepare`）；pnpm onlyBuiltDependencies。
 - `pnpm-lock.yaml`：依赖锁（根级 node_modules）。
 - `tsconfig.base.json`：通用 TS 选项与路径别名 @shared/@main/@renderer。
 - `tsconfig.main.json` / `tsconfig.renderer.json` / `tsconfig.json`：分别针对主进程、渲染层、全局；均 noEmit。
@@ -122,12 +142,15 @@
 - `src/renderer/pages/__tests__/today.test.tsx`：Today 查询流程测试（参数构造与列表渲染）。
 - `src/renderer/pages/__tests__/library.test.tsx`：Library 列表与批量操作触发测试。
 - `src/renderer/pages/__tests__/settings.test.tsx`：Settings 读取与更新 patch 提交测试。
+- `src/renderer/pages/__tests__/home.test.tsx`：Home 队列预览渲染与刷新行为测试。
+- `src/renderer/features/settings/__tests__/settings-form.test.ts`：Settings 表单 diff 与敏感项识别测试。
 - `src/main/index.ts`：主进程入口，直接运行时启动 Fastify API（默认 127.0.0.1:8787）；导出数据库上下文与 `startServer`。
 - `src/main/api/server.ts`：Fastify 构建与错误处理，挂载健康、词条、标签、来源、统计、AI、设置路由，启用 CORS。
 - `src/main/api/context.ts`：数据库上下文组装业务服务与 provider registry，统一 close。
 - `src/main/api/routes/*`：`health`/`words`/`tags`/`sources`/`stats`/`ai`/`settings` 路由；settings 路由覆盖读取/更新/重置/导入导出/备份；AI 路由读取隐私设置强制网络开关。
 - `src/main/api/__tests__/api.test.ts`：Fastify 端到端测试（创建/查询、SM-2 评分、软删除恢复、批量与导入导出、统计、settings 流程）。
 - `src/main/api/__tests__/ai.test.ts`：AI 路由端到端测试（成功、provider 配置错误日志、隐私网络开关拦截）。
+- `src/main/services/__tests__/settings-service.test.ts`：SettingsService 的 runtime override/checksum/reset 回归测试。
 - `src/main/services/*`：`WordService`（SM-2 应用、搜索、统计、软删除恢复、批量操作、导入校验、导出）、`TagService`（增删改查）、`SourceService`、`AiService`（提示渲染、调用、解析、持久化、日志）、`SettingsService`（配置分层、持久化、checksum 导入导出、数据库备份）。
 - `src/main/ai/*`：provider 注册、限流（并发）、重试、超时包装，OpenAI/Gemini/Mock 客户端适配。
 - `src/main/db/connection.ts`：SQLite 打开/路径解析，启用 WAL 与外键。
@@ -143,6 +166,15 @@
 - `src/shared/__tests__/sm2.test.ts`：覆盖失败重置、早期间隔、EF 驱动增长、最大间隔裁剪、难度→质量映射及时间推进。
 - `scripts/run-migrations.ts`：CLI 迁移入口。
 - `scripts/backup-db.ts`：备份当前 SQLite 到 `data/backups/`。
+- `scripts/perf-baseline.ts`：性能基线检查与报告输出。
+- `scripts/stability-smoke.ts`：API 稳定性烟测与内存增量检查。
+- `scripts/quality-gate.ts`：聚合测试/性能/稳定性报告并输出门禁结论。
+- `scripts/create-release-manifest.ts`：构建产物 SHA-256 manifest 生成器。
 - `docs/database-schema.md`：数据库字段/索引与备份流程说明。
+- `docs/testing-strategy.md`：测试分层、命令与门禁策略。
+- `docs/release-runbook.md`：发布流程、回滚策略与签名后续计划。
+- `.github/workflows/ci.yml`：CI 质量流水线。
+- `.github/workflows/release.yml`：发布流水线。
 - `data/.gitkeep`、`scripts/.gitkeep`、`docs/.gitkeep`：目录占位。
+- `reports/.gitkeep`：质量报告目录占位（运行时生成 junit/perf/smoke/quality 报告）。
 - `README.md`：快速开始与目录约定。
