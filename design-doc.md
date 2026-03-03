@@ -4,8 +4,8 @@
 - 文档名称：`design-doc.md`
 - 项目代号：Kotoba
 - 目标平台：Windows、macOS
-- 文档版本：v0.2
-- 日期：2026-03-02
+- 文档版本：v0.3
+- 日期：2026-03-03
 
 ## 2. 背景与目标
 ### 2.1 背景
@@ -53,8 +53,10 @@
   - 失败时提供可重试提示（网络/额度/解析失败）
 
 ### 4.2 词库管理
-- 保存词条（去重策略：同一单词可提示重复）
+- 保存词条（去重主键为 `word`，忽略 `reading_kana` 差异）
+- 判重规则：对 `word` 执行 `trim + Unicode NFKC` 后比较，相同则提示重复
 - 列表浏览、搜索（按单词/读音/解释）
+- 搜索规则：默认包含匹配；查询词与索引值统一执行 `trim + Unicode NFKC`，拉丁字母转小写；假名搜索对平假名/片假名不敏感
 - 编辑词条内容
 - 删除词条（含二次确认）
 
@@ -68,13 +70,17 @@
 - 复习评分（0-5）
 - 评分后即时更新下一次计划
 - 提供“今日待复习”队列
+- “今日待复习”判定：`next_review_at <= now` 的词条全部入队（含逾期词条）
+- 时间基准：使用系统本地时区；“今日已完成”按本地自然日（00:00-23:59）统计
 
 ### 4.4 设置与 Provider 管理
 - 默认 provider：Gemini
 - 可配置项：
   - API Key
-  - 模型名
-  - 超时/重试次数
+  - 模型名（默认：`gemini-2.5-flash`）
+  - 超时（默认：15 秒）
+  - 重试次数（默认：2 次）
+- 重试策略：指数退避 `500ms -> 1500ms`（带抖动）；仅对网络错误、超时、429、5xx、JSON 解析失败、非日语输出触发重试
 - 预留 provider 抽象，后续可扩展 OpenAI/Anthropic 等
 
 ### 4.5 语言规范
@@ -87,7 +93,8 @@
   - 单次 AI 生成请求 UI 不阻塞
 - 可用性：
   - AI 失败时不丢失用户输入
-  - 自动保存草稿（可选）
+  - 自动保存草稿（默认开启）
+  - 草稿触发：输入后 800ms 防抖保存；页面切换或窗口关闭前强制保存；词条成功保存后清理对应草稿
 - 安全性：
   - API Key 本地加密存储（系统密钥链优先）
   - 默认不上传词库到第三方
@@ -97,8 +104,8 @@
 
 ## 6. 技术方案（建议）
 ### 6.1 框架选型
-建议采用 `Tauri + React + TypeScript + JSON File Store`：
-- Tauri：跨平台安装包小、资源占用低，适合工具型桌面应用
+建议采用 `Electron + React + TypeScript + JSON File Store`：
+- Electron：生态成熟、跨平台稳定、文档完整，MVP 落地成本更低
 - React + TypeScript：UI 迭代快，类型约束强
 - JSON 文件：实现成本低，便于直接备份与导入导出
 
@@ -164,7 +171,7 @@ interface AIProvider {
 }
 ```
 
-### 7.4 `review_logs` 元素结构（可选）
+### 7.4 `review_logs` 元素结构（MVP 必选）
 ```json
 {
   "id": "uuid",
@@ -180,6 +187,12 @@ interface AIProvider {
 - 采用临时文件 + 覆盖重命名（原子写入）避免中途崩溃导致文件损坏。
 - 串行化写入请求，避免并发写冲突。
 - 每日首次写入前自动备份一次。
+- `review_logs` 从 M1 起记录，默认保留最近 50000 条，超出后按时间淘汰最旧记录。
+
+### 7.6 `schema_version` 迁移策略
+- 启动时先做 schema 校验；若版本落后则执行顺序迁移（`vN -> vN+1`）。
+- 每次迁移前先创建备份；迁移失败自动恢复最近备份并提示用户。
+- 迁移成功后更新 `schema_version` 与 `updated_at`。
 
 ## 8. SM-2 规则（落地版）
 ### 8.1 初始化
@@ -198,7 +211,7 @@ interface AIProvider {
   - `repetition += 1`
   - 若 `repetition == 1`，`interval_days = 1`
   - 若 `repetition == 2`，`interval_days = 6`
-  - 否则 `interval_days = round(interval_days * easiness_factor)`
+  - 否则 `interval_days = max(1, round(previous_interval_days * updated_easiness_factor))`
 
 ### 8.3 EF 更新
 - `easiness_factor = easiness_factor + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))`
@@ -207,6 +220,13 @@ interface AIProvider {
 ### 8.4 下次复习时间
 - `next_review_at = now + interval_days`
 - `last_review_at = now`
+- `last_grade = q`
+
+### 8.5 计算顺序（固定）
+1. 读取当前状态与评分 `q`。
+2. 先计算 `updated_easiness_factor`（含下限 1.3）。
+3. 再计算 `repetition` 与 `interval_days`（第三次及以后使用 `updated_easiness_factor`）。
+4. 最后写入 `last_review_at`、`next_review_at`、`last_grade` 并持久化。
 
 ## 9. AI 生成策略
 ### 9.1 Prompt 约束
@@ -225,7 +245,11 @@ interface AIProvider {
 ### 9.2 质量控制
 - 前后端双重 JSON 校验
 - 字段为空时提示用户重试或手动编辑
-- 对输出长度设上限，避免冗长内容影响复习效率
+- 输出长度上限（字符数）：
+  - `reading_kana`: 1-32
+  - `meaning_ja`: 8-120
+  - `context_scene_ja`: 12-160
+  - `example_sentence_ja`: 8-80（单句）
 - 如检测到非日语输出，自动触发一次重试
 
 ## 10. UI 信息架构（MVP）
@@ -244,7 +268,7 @@ interface AIProvider {
 - 网络错误：提示重试，不清空已输入内容
 - API Key 无效：明确提示并引导到设置页
 - 模型超时：可取消并重试
-- 重复单词：保存时弹出“已存在，是否仍保存”
+- 重复单词：按标准化后的 `word` 判重（忽略 `reading_kana` 差异），保存时弹出“已存在，是否仍保存”
 - 无待复习词条：展示“今日已完成”状态
 - JSON 文件损坏：自动回退最近备份并提示用户
 
@@ -254,10 +278,11 @@ interface AIProvider {
 - 新增词条 + Gemini 生成 + JSON 本地保存
 - 词库列表与编辑
 - 基础 SM-2 复习流程
+- review_logs 基础记录
 
 ### M2：稳定性增强（1 周）
 - 错误重试、日志、备份/恢复
-- review_logs 与统计（复习次数、正确率）
+- 基于 review_logs 的统计（复习次数、正确率）
 - JSON 迁移（`schema_version` 升级流程）
 
 ### M3：体验优化（1 周）

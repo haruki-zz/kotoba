@@ -6,6 +6,7 @@
 - 文件存储优先：严格采用 JSON 文件持久化（符合 `design-doc.md`）。
 - 安全默认开启：桌面容器安全选项、API Key 系统级安全存储。
 - 依赖最小化：只引入“直接解决需求”的库，避免过度工程。
+- 默认值集中管理：本文件仅保留“实现所需默认值”，业务语义细则以 `design-doc.md` v0.3 为准。
 
 ## 2. 最终技术栈
 | 层级 | 技术 | 选择理由 |
@@ -41,7 +42,33 @@
   - 非日语内容自动重试一次
   - 请求超时、重试、错误分级提示
 
-## 4. 推荐版本基线（MVP）
+## 4. 默认值快照（与 `design-doc.md` v0.3 同步）
+- Provider 默认值：
+  - model: `gemini-2.5-flash`
+  - timeout: `15s`
+  - retries: `2`
+  - backoff: `500ms -> 1500ms`（jitter）
+  - retry-on: 网络错误、超时、`429`、`5xx`、JSON 解析失败、非日语输出
+- 词条判重与搜索：
+  - 去重主键：`word`（忽略 `reading_kana` 差异）
+  - 标准化：`trim + Unicode NFKC`
+  - 搜索：包含匹配；拉丁字母小写化；平假名/片假名不敏感
+- 复习调度：
+  - 待复习队列：`next_review_at <= now`
+  - 时区：系统本地时区；“今日”按本地自然日（00:00-23:59）
+  - SM-2 计算顺序：先 EF，后 repetition/interval，最后写入时间与成绩
+- 数据持久化：
+  - `review_logs`：MVP 必选；保留最近 `50000` 条
+  - `schema_version` 迁移：`vN -> vN+1` 顺序迁移，迁移前备份，失败自动回滚
+- 草稿与输出约束：
+  - 自动草稿：默认开启；输入 `800ms` 防抖保存；切页/关窗前强制保存
+  - AI 输出长度上限：
+  - `reading_kana`: `1-32`
+  - `meaning_ja`: `8-120`
+  - `context_scene_ja`: `12-160`
+  - `example_sentence_ja`: `8-80`（单句）
+
+## 5. 推荐版本基线（MVP）
 - Node.js: 22 LTS（开发环境）
 - Electron: 40.x（锁定同一 major）
 - TypeScript: 5.x
@@ -50,10 +77,10 @@
 
 说明：MVP 阶段建议“锁 major、跟 patch”，避免频繁升级引发不必要风险。
 
-## 5. 为什么不选更复杂方案
+## 6. 为什么不选更复杂方案
 - 不选数据库（SQLite/Postgres）：与你当前设计目标冲突，也增加迁移与维护复杂度。
 - 不选 Tauri（当前阶段）：Tauri 很优秀，但会引入 Rust 维护面；对“最简单”目标不如 Electron 直接。
 - 不引入重型状态管理（Redux 等）：当前业务规模下，React hooks + 小型 store 足够且更易维护。
 
-## 6. 一句话结论
+## 7. 一句话结论
 本项目最合适的技术栈是：**Electron + React + TypeScript + JSON（原子写入与 schema 校验）+ Gemini 官方 SDK**，在保证实现最简单的同时，能稳定覆盖跨平台、数据安全、可维护性和后续扩展需求。
