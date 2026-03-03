@@ -76,11 +76,3 @@
 - Vite: 7.x
 
 说明：MVP 阶段建议“锁 major、跟 patch”，避免频繁升级引发不必要风险。
-
-## 6. 为什么不选更复杂方案
-- 不选数据库（SQLite/Postgres）：与你当前设计目标冲突，也增加迁移与维护复杂度。
-- 不选 Tauri（当前阶段）：Tauri 很优秀，但会引入 Rust 维护面；对“最简单”目标不如 Electron 直接。
-- 不引入重型状态管理（Redux 等）：当前业务规模下，React hooks + 小型 store 足够且更易维护。
-
-## 7. 一句话结论
-本项目最合适的技术栈是：**Electron + React + TypeScript + JSON（原子写入与 schema 校验）+ Gemini 官方 SDK**，在保证实现最简单的同时，能稳定覆盖跨平台、数据安全、可维护性和后续扩展需求。
