@@ -21,7 +21,11 @@
     "build:main": "esbuild src/main/main.ts --bundle --platform=node --format=cjs --external:electron --outfile=dist-electron/main/main.cjs",
     "build:preload": "esbuild src/preload/preload.ts --bundle --platform=node --format=cjs --external:electron --outfile=dist-electron/preload/preload.cjs",
     "lint": "eslint . --ext .ts,.tsx",
-    "typecheck": "tsc --noEmit"
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "verify": "pnpm lint && pnpm format:check && pnpm typecheck",
+    "prepare": "husky"
   },
   "dependencies": {
     "react": "^19.0.0",
@@ -36,13 +40,25 @@
     "@vitejs/plugin-react": "^5.0.0",
     "concurrently": "^9.0.0",
     "cross-env": "^10.0.0",
+    "electron": "^40.0.0",
     "esbuild": "^0.25.0",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.0",
-    "electron": "^40.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.2",
+    "prettier": "^3.8.1",
     "typescript": "^5.0.0",
     "vite": "^7.0.0",
     "wait-on": "^8.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{js,cjs,mjs,json,css,html}": [
+      "prettier --write"
+    ]
   }
 }

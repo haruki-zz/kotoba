@@ -1,7 +1,7 @@
 export const IPC_BRIDGE_CHANNEL = 'kotoba:invoke' as const
 
 export const IPC_CHANNELS = {
-  APP_PING: 'app:ping'
+  APP_PING: 'app:ping',
 } as const
 
 export type IpcAllowedChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS]
@@ -45,15 +45,15 @@ export const ALLOWED_CHANNEL_SET = new Set<string>(Object.values(IPC_CHANNELS))
 
 export const create_success_response = <T>(data: T): IpcSuccess<T> => ({
   ok: true,
-  data
+  data,
 })
 
 export const create_failure_response = (code: IpcErrorCode, message: string): IpcFailure => ({
   ok: false,
   error: {
     code,
-    message
-  }
+    message,
+  },
 })
 
 export const is_ipc_envelope = (value: unknown): value is IpcEnvelope => {

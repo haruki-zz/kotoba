@@ -1,0 +1,8 @@
+node_modules
+dist
+dist-electron
+pnpm-lock.yaml
+memory-bank
+prompts
+plan.md
+AGENTS.md

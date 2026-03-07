@@ -1,8 +1,9 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 2，仓库进入“可运行壳工程”阶段。
+- 当前已完成实施计划步骤 3，仓库进入“可运行壳工程 + 基础质量门禁”阶段。
 - 已具备主进程、预加载、渲染层与共享类型的最小闭环，并落地 Electron 安全基线与 IPC 白名单机制。
+- 已具备提交前质量门禁链路：`ESLint + Prettier + Husky + lint-staged + verify`。
 
 ## 2. 顶层文件结构与职责
 - `AGENTS.md`
@@ -11,13 +12,22 @@
   - 实施计划主文档（步骤目标、验收命令、通过指标）。
 - `package.json`
   - 依赖声明与工程脚本入口。
-  - 当前包含 `dev`、`lint`、`typecheck`、`build` 相关脚本。
+  - 当前包含 `dev`、`lint`、`format:check`、`typecheck`、`verify`、`build` 相关脚本。
+  - 内置 `lint-staged` 规则（暂存文件提交前校验/格式化）。
 - `pnpm-lock.yaml`
   - 锁定依赖 patch 版本，保证可复现安装结果。
 - `.nvmrc`
   - 目标 Node 主版本声明（`22`）。
 - `.eslintrc.cjs`
   - ESLint 规则配置（TypeScript + React Hooks）。
+- `.prettierrc.json`
+  - Prettier 风格配置。
+- `.prettierignore`
+  - Prettier 忽略规则（避免非代码文档与产物进入格式检查）。
+- `.husky/pre-commit`
+  - Git 提交前钩子，执行 `pnpm lint-staged`。
+- `.husky/_/`
+  - Husky 初始化生成的内部脚本目录（由 Husky 维护）。
 - `tsconfig.json`
   - TypeScript 编译与类型检查配置（strict/noEmit）。
 - `vite.config.ts`
@@ -65,7 +75,14 @@
   - 命中白名单：执行 handler 并返回 `ok: true`
   - 未命中白名单或参数非法：返回 `ok: false` + 错误码，并记录拒绝日志
 
-## 5. memory-bank 文档职责
+## 5. 当前质量门禁流程（步骤 3 落地）
+1. 开发者执行 `pnpm verify`，串行运行：`lint -> format:check -> typecheck`。
+2. Git `commit` 时，`husky pre-commit` 自动触发 `pnpm lint-staged`。
+3. `lint-staged` 只处理暂存文件：
+  - `*.{ts,tsx}`：`eslint --fix` + `prettier --write`
+  - `*.{js,cjs,mjs,json,css,html}`：`prettier --write`
+
+## 6. memory-bank 文档职责
 - `memory-bank/design-doc.md`
   - 需求与行为规则的 source of truth。
 - `memory-bank/tech-stack.md`
@@ -75,7 +92,7 @@
 - `memory-bank/architecture.md`
   - 当前文件结构、模块职责与运行流程（本文档）。
 
-## 6. 信息流更新规则
+## 7. 信息流更新规则
 - 需求或行为变更：先更新 `memory-bank/design-doc.md`，再同步 `memory-bank/tech-stack.md`。
 - 每完成一个实施步骤：更新 `memory-bank/progress.md`。
 - 文件结构或职责变化：同步更新 `memory-bank/architecture.md`。

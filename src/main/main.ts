@@ -10,8 +10,8 @@ const create_main_window = (): void => {
       preload: path.join(__dirname, '../preload/preload.cjs'),
       contextIsolation: true,
       sandbox: true,
-      nodeIntegration: false
-    }
+      nodeIntegration: false,
+    },
   })
 
   const renderer_url = process.env.VITE_DEV_SERVER_URL

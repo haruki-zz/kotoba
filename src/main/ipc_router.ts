@@ -9,7 +9,7 @@ import {
   is_ping_payload,
   type IpcAllowedChannel,
   type IpcResponse,
-  type PingResult
+  type PingResult,
 } from '../shared/ipc'
 
 type ChannelHandler = (payload: unknown) => IpcResponse | Promise<IpcResponse>
@@ -22,14 +22,14 @@ const app_ping_handler: ChannelHandler = (payload: unknown) => {
 
   const result: PingResult = {
     echoed_message: payload.message,
-    received_at: new Date().toISOString()
+    received_at: new Date().toISOString(),
   }
 
   return create_success_response(result)
 }
 
 const channel_handler_map: Record<IpcAllowedChannel, ChannelHandler> = {
-  [IPC_CHANNELS.APP_PING]: app_ping_handler
+  [IPC_CHANNELS.APP_PING]: app_ping_handler,
 }
 
 export const register_ipc_router = (): void => {

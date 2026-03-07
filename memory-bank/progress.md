@@ -2,7 +2,7 @@
 
 ## 1. 当前状态
 - 记录日期：`2026-03-07`
-- 当前阶段：实施计划 `步骤 1` 与 `步骤 2` 已完成，并均已通过用户验证。
+- 当前阶段：实施计划 `步骤 1`、`步骤 2`、`步骤 3` 已完成，并均已通过用户验证。
 - 项目形态：已从纯文档阶段进入“可运行壳工程”阶段（Electron + React + TypeScript + Vite）。
 
 ## 2. 已完成事项
@@ -39,6 +39,21 @@
   - `pnpm lint`
   - `pnpm typecheck`
 
+### 2.3 对应 plan.md 步骤 3（工程质量门禁）
+- 已补齐质量工具链：
+  - `prettier`
+  - `husky`
+  - `lint-staged`
+- 已新增/更新质量门禁配置：
+  - `package.json` 新增 `format`、`format:check`、`verify`、`prepare`
+  - `package.json` 新增 `lint-staged` 规则
+  - 新增 `.prettierrc.json` 与 `.prettierignore`
+  - 新增 `.husky/pre-commit`（执行 `pnpm lint-staged`）
+- 已完成“门禁有效性”验证：
+  - 常规校验命令可通过
+  - 人工制造 lint 错误时 `pnpm verify` 能按预期失败
+  - 清理临时错误后 `pnpm verify` 恢复通过
+
 ## 3. 步骤 2 验证结果快照
 - 执行命令：
   - `pnpm dev`
@@ -50,6 +65,16 @@
   - `pnpm typecheck`：通过（退出码 `0`）
   - 备注：本机仍为 `node v25.2.1`，会触发 `engines` 警告（目标仍是 `v22.x`）
 
-## 4. 下一步入口
-- 下一执行目标：`plan.md` 的 `步骤 3（工程质量门禁）`。
-- 开始步骤 3 前建议先切换到 Node `22.x`，以消除 `engines` 警告并对齐后续 CI 基线。
+## 4. 步骤 3 验证结果快照
+- 执行命令：
+  - `pnpm lint`
+  - `pnpm format:check`
+  - `pnpm verify`
+- 结果：
+  - 三条命令均通过（退出码 `0`）
+  - 人工注入 lint 错误后 `pnpm verify` 按预期失败（退出码 `1`），证明门禁生效
+  - 删除临时错误文件后，`pnpm verify` 再次通过（退出码 `0`）
+
+## 5. 下一步入口
+- 下一执行目标：`plan.md` 的 `步骤 4（领域模型与 Schema 固化）`。
+- 开始步骤 4 前建议先切换到 Node `22.x`，以消除 `engines` 警告并对齐后续 CI 基线。

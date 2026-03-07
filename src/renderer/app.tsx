@@ -11,7 +11,7 @@ export const App = () => {
 
   const handle_ping_click = async (): Promise<void> => {
     const response = await window.kotoba.invoke('app:ping', {
-      message: 'こんにちは'
+      message: 'こんにちは',
     })
 
     set_last_response(format_response(response as IpcResponse<PingResult>))
@@ -19,7 +19,7 @@ export const App = () => {
 
   const handle_blocked_click = async (): Promise<void> => {
     const response = await window.kotoba.invoke('app:not-allowed', {
-      message: 'blocked'
+      message: 'blocked',
     })
 
     set_last_response(format_response(response))
