@@ -1,11 +1,12 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 4，且已通过用户验证。
-- 仓库处于“可运行壳工程 + 领域模型固化”阶段，下一阶段是步骤 5（JSON 存储与原子写入）。
+- 当前已完成实施计划步骤 5，且已通过用户验证。
+- 仓库处于“可运行壳工程 + 领域模型固化 + 本地 JSON 仓储能力”阶段。
 - 已具备主进程、预加载、渲染层与共享类型的最小闭环，并落地 Electron 安全基线与 IPC 白名单机制。
 - 已具备提交前质量门禁链路：`ESLint + Prettier + Husky + lint-staged + verify`。
 - 已具备领域数据结构与 `zod` schema 校验能力（含 `schema_version=1` 固化）。
+- 已具备步骤 5 目标能力：原子写入、串行写队列、每日备份、启动损坏回退。
 
 ## 2. 顶层文件结构与职责
 - `AGENTS.md`
@@ -27,7 +28,7 @@
 - `.prettierignore`
   - Prettier 忽略规则（避免非代码文档与产物进入格式检查）。
 - `.husky/pre-commit`
-  - Git 提交前钩子，执行 `pnpm lint-staged`。
+  - Git 提交前钩子，执行 `pnpm lint-staged`（仅保留执行命令，兼容 Husky v10）。
 - `.husky/_/`
   - Husky 初始化生成的内部脚本目录（由 Husky 维护）。
 - `tsconfig.json`
@@ -55,6 +56,10 @@
   - IPC 统一处理入口。
   - 校验 envelope 格式、校验频道是否在白名单、分发到具体 handler。
   - 对异常与拒绝场景输出标准化错误码与日志。
+- `src/main/library_repository.ts`
+  - JSON 仓储核心实现。
+  - 对外提供：启动初始化/校验恢复、读取、串行写入、串行更新。
+  - 内部实现：临时文件写入 + 原子替换、每日首次写入备份、最近有效备份回退。
 - `src/preload/preload.ts`
   - 通过 `contextBridge` 暴露受限 API（`window.kotoba.invoke`）给渲染层。
   - 隔离渲染层与 Node/Electron 原生能力。
@@ -68,6 +73,12 @@
 - `src/shared/domain_schema.test.ts`
   - 领域 schema 单元测试。
   - 验证合法输入通过、非法输入（缺字段/超长/类型错）拒绝与 `schema_version` 错误定位。
+- `src/main/library_repository.repository.test.ts`
+  - 验证并发更新场景的串行化写入与结果完整性（无字段丢失）。
+- `src/main/library_repository.backup.test.ts`
+  - 验证“每日首次写入备份一次”的触发规则。
+- `src/main/library_repository.recovery.test.ts`
+  - 验证启动时主文件损坏恢复路径与“无可用备份”失败路径。
 - `src/renderer/main.tsx`
   - React 渲染入口，挂载 `App`。
 - `src/renderer/app.tsx`
@@ -86,13 +97,14 @@
   - 命中白名单：执行 handler 并返回 `ok: true`
   - 未命中白名单或参数非法：返回 `ok: false` + 错误码，并记录拒绝日志
 
-## 5. 当前质量门禁流程（步骤 3 + 步骤 4）
+## 5. 当前质量门禁流程（步骤 3 + 步骤 4 + 步骤 5）
 1. 开发者执行 `pnpm verify`，串行运行：`lint -> format:check -> typecheck`。
 2. Git `commit` 时，`husky pre-commit` 自动触发 `pnpm lint-staged`。
 3. `lint-staged` 只处理暂存文件：
   - `*.{ts,tsx}`：`eslint --fix` + `prettier --write`
   - `*.{js,cjs,mjs,json,css,html}`：`prettier --write`
 4. 执行领域 schema 验证时使用：`pnpm test:unit -- schema`。
+5. 执行仓储验证时使用：`pnpm test:unit -- repository|backup|recovery`。
 
 ## 6. 当前关键文件清单（供后续 AI 快速定位）
 - 基础工程与配置：
@@ -104,11 +116,16 @@
 - 主进程与 IPC：
   - `src/main/main.ts`
   - `src/main/ipc_router.ts`
+  - `src/main/library_repository.ts`
   - `src/preload/preload.ts`
   - `src/shared/ipc.ts`
 - 领域模型与测试：
   - `src/shared/domain_schema.ts`
   - `src/shared/domain_schema.test.ts`
+- 仓储与恢复测试：
+  - `src/main/library_repository.repository.test.ts`
+  - `src/main/library_repository.backup.test.ts`
+  - `src/main/library_repository.recovery.test.ts`
 - 渲染层：
   - `src/renderer/main.tsx`
   - `src/renderer/app.tsx`
