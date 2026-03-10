@@ -88,6 +88,12 @@ export const library_root_schema = z.object({
   review_logs: z.array(review_log_schema),
 })
 
+export const library_root_v0_schema = z.object({
+  schema_version: z.literal(0),
+  updated_at: utc_iso_datetime_schema,
+  words: z.array(word_schema),
+})
+
 export const settings_schema = z.object({
   provider: z.literal('gemini'),
   model: z.string().trim().min(1).max(128),
