@@ -2,7 +2,7 @@
 
 ## 1. 当前状态
 - 记录日期：`2026-03-10`
-- 当前阶段：实施计划 `步骤 1`、`步骤 2`、`步骤 3`、`步骤 4`、`步骤 5`、`步骤 6` 已完成，且 `步骤 6` 已通过用户验证。
+- 当前阶段：实施计划 `步骤 1`、`步骤 2`、`步骤 3`、`步骤 4`、`步骤 5`、`步骤 6`、`步骤 7` 已完成，且 `步骤 7` 已通过用户验证。
 - 项目形态：已从纯文档阶段进入“可运行壳工程”阶段（Electron + React + TypeScript + Vite）。
 
 ## 2. 已完成事项
@@ -103,6 +103,26 @@
 - 用户验证结论：
   - 第 6 步已确认通过，可作为步骤 7 设置模块实现基线
 
+### 2.7 对应 plan.md 步骤 7（设置模块与密钥管理）
+- 已新增设置仓储：
+  - `src/main/settings_repository.ts`
+  - 覆盖能力：首次读取自动回填默认设置（`gemini-2.5-flash`、`15s`、`retries=2`）、设置文件原子写入、串行更新
+- 已新增 keytar 密钥适配层：
+  - `src/main/keytar_secret_store.ts`
+  - 覆盖能力：API Key 通过 keytar 的 `set/get/delete` 管理，不写入 JSON 配置文件
+- 已新增设置服务：
+  - `src/main/settings_service.ts`
+  - 覆盖能力：加载运行时配置时若 API Key 缺失，抛出 `SETTINGS_API_KEY_MISSING` 并提示用户前往设置页
+- 已新增步骤 7 单测文件：
+  - `src/main/settings_repository.test.ts`
+  - `src/main/keytar_secret_store.test.ts`
+- 单测覆盖点：
+  - 首次启动自动生效默认设置并落盘
+  - API Key 缺失时返回可引导到设置页的错误
+  - API Key 存在 keytar 适配层后，`settings/library` JSON 均不包含明文 API Key
+- 用户验证结论：
+  - 第 7 步已确认通过，可作为步骤 8 AI Provider 接入实现基线
+
 ## 3. 步骤 2 验证结果快照
 - 执行命令：
   - `pnpm dev`
@@ -153,5 +173,15 @@
   - 额外校验：`pnpm typecheck` 通过（退出码 `0`）
   - 备注：本机仍为 `node v25.2.1`，会触发 `engines` 警告（目标仍是 `v22.x`）
 
-## 8. 下一步入口
-- 下一执行目标：`plan.md` 的 `步骤 7（设置模块与密钥管理）`。
+## 8. 步骤 7 验证结果快照
+- 执行命令：
+  - `pnpm test:unit -- settings`
+  - `pnpm test:unit -- keytar`
+- 结果：
+  - 两条命令均通过（退出码 `0`）
+  - 当前测试总计 19 条（含 schema/仓储/迁移/设置/keytar），全部通过
+  - 额外校验：`pnpm lint`、`pnpm typecheck` 均通过（退出码 `0`）
+  - 备注：本机仍为 `node v25.2.1`，会触发 `engines` 警告（目标仍是 `v22.x`）
+
+## 9. 下一步入口
+- 下一执行目标：`plan.md` 的 `步骤 8（AI Provider 抽象与 Gemini 接入）`。
