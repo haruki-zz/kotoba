@@ -30,6 +30,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@google/genai": "^1.44.0",
     "keytar": "^7.9.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

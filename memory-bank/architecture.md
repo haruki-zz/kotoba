@@ -1,13 +1,13 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 7，且步骤 7 已通过用户验证。
+- 当前已完成实施计划步骤 8，且步骤 8 已通过用户验证。
 - 仓库处于“可运行壳工程 + 领域模型固化 + 本地 JSON 仓储能力”阶段。
 - 已具备主进程、预加载、渲染层与共享类型的最小闭环，并落地 Electron 安全基线与 IPC 白名单机制。
 - 已具备提交前质量门禁链路：`ESLint + Prettier + Husky + lint-staged + verify`。
 - 已具备领域数据结构与 `zod` schema 校验能力（含 `schema_version=1` 固化）。
-- 已具备步骤 5+6+7 目标能力：原子写入、串行写队列、每日备份、启动损坏回退、`schema_version` 顺序迁移、迁移失败回滚、设置默认值自动生效、API Key keytar 存储。
-- 文档状态：本文件已按步骤 7 验证后的实际文件结构与职责同步，可直接作为后续 AI 开发交接基线。
+- 已具备步骤 5+6+7+8 目标能力：原子写入、串行写队列、每日备份、启动损坏回退、`schema_version` 顺序迁移、迁移失败回滚、设置默认值自动生效、API Key keytar 存储、AI Provider 抽象与 Gemini 重试链路。
+- 文档状态：本文件已按步骤 8 验证后的实际文件结构与职责同步，可直接作为后续 AI 开发交接基线。
 
 ## 2. 顶层文件结构与职责
 - `AGENTS.md`
@@ -71,6 +71,12 @@
 - `src/main/settings_service.ts`
   - 设置服务层。
   - 提供加载 AI 运行时配置能力；当 API Key 缺失时抛出 `SETTINGS_API_KEY_MISSING` 并引导前往设置页。
+- `src/main/ai_provider.ts`
+  - AI Provider 统一抽象与输出校验模块。
+  - 提供 `AiProvider` 接口、四字段输出 schema、JSON 双层校验与非日语输出判定。
+- `src/main/gemini_provider.ts`
+  - Gemini Provider 默认实现。
+  - 提供 Gemini SDK 调用、超时中断、错误分级、指数退避重试（`500ms -> 1500ms` + jitter）。
 - `src/preload/preload.ts`
   - 通过 `contextBridge` 暴露受限 API（`window.kotoba.invoke`）给渲染层。
   - 隔离渲染层与 Node/Electron 原生能力。
@@ -98,6 +104,10 @@
   - 验证默认设置首次生效、设置更新持久化、缺失 API Key 的引导错误。
 - `src/main/keytar_secret_store.test.ts`
   - 验证 keytar 适配层的 API Key 存取删行为，以及 API Key 不进入 `settings/library` JSON。
+- `src/main/gemini_provider_ai_provider.test.ts`
+  - 验证 Gemini Provider 正常路径能返回四字段 JSON 且请求参数符合预期。
+- `src/main/gemini_provider_ai_retry.test.ts`
+  - 验证 `429/5xx` 重试退避与非日语输出自动重试行为。
 - `src/renderer/main.tsx`
   - React 渲染入口，挂载 `App`。
 - `src/renderer/app.tsx`
@@ -116,7 +126,7 @@
   - 命中白名单：执行 handler 并返回 `ok: true`
   - 未命中白名单或参数非法：返回 `ok: false` + 错误码，并记录拒绝日志
 
-## 5. 当前质量门禁流程（步骤 3 + 步骤 4 + 步骤 5 + 步骤 6 + 步骤 7）
+## 5. 当前质量门禁流程（步骤 3 + 步骤 4 + 步骤 5 + 步骤 6 + 步骤 7 + 步骤 8）
 1. 开发者执行 `pnpm verify`，串行运行：`lint -> format:check -> typecheck`。
 2. Git `commit` 时，`husky pre-commit` 自动触发 `pnpm lint-staged`。
 3. `lint-staged` 只处理暂存文件：
@@ -126,6 +136,7 @@
 5. 执行仓储验证时使用：`pnpm test:unit -- repository|backup|recovery`。
 6. 执行迁移验证时使用：`pnpm test:unit -- migration|rollback`。
 7. 执行设置与密钥验证时使用：`pnpm test:unit -- settings|keytar`。
+8. 执行 AI Provider 验证时使用：`pnpm test:unit -- ai-provider|ai-retry`。
 
 ## 6. 当前关键文件清单（供后续 AI 快速定位）
 - 基础工程与配置：
@@ -138,6 +149,11 @@
   - `src/main/main.ts`
   - `src/main/ipc_router.ts`
   - `src/main/library_repository.ts`
+  - `src/main/settings_repository.ts`
+  - `src/main/keytar_secret_store.ts`
+  - `src/main/settings_service.ts`
+  - `src/main/ai_provider.ts`
+  - `src/main/gemini_provider.ts`
   - `src/preload/preload.ts`
   - `src/shared/ipc.ts`
 - 领域模型与测试：
@@ -152,6 +168,9 @@
 - 设置与密钥测试：
   - `src/main/settings_repository.test.ts`
   - `src/main/keytar_secret_store.test.ts`
+- AI Provider 测试：
+  - `src/main/gemini_provider_ai_provider.test.ts`
+  - `src/main/gemini_provider_ai_retry.test.ts`
 - 渲染层：
   - `src/renderer/main.tsx`
   - `src/renderer/app.tsx`

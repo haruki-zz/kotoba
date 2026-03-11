@@ -1,8 +1,8 @@
 ﻿# Kotoba 开发进度记录
 
 ## 1. 当前状态
-- 记录日期：`2026-03-10`
-- 当前阶段：实施计划 `步骤 1`、`步骤 2`、`步骤 3`、`步骤 4`、`步骤 5`、`步骤 6`、`步骤 7` 已完成，且 `步骤 7` 已通过用户验证。
+- 记录日期：`2026-03-11`
+- 当前阶段：实施计划 `步骤 1`、`步骤 2`、`步骤 3`、`步骤 4`、`步骤 5`、`步骤 6`、`步骤 7`、`步骤 8` 已完成，且 `步骤 8` 已通过用户验证。
 - 项目形态：已从纯文档阶段进入“可运行壳工程”阶段（Electron + React + TypeScript + Vite）。
 
 ## 2. 已完成事项
@@ -123,6 +123,25 @@
 - 用户验证结论：
   - 第 7 步已确认通过，可作为步骤 8 AI Provider 接入实现基线
 
+### 2.8 对应 plan.md 步骤 8（AI Provider 抽象与 Gemini 接入）
+- 已新增 Provider 抽象与错误模型：
+  - `src/main/ai_provider.ts`
+  - 覆盖能力：统一 `AiProvider` 接口、四字段输出 schema、双层 JSON 校验（解析 + schema）、非日语输出校验、可重试错误码标准化
+- 已新增 Gemini Provider 实现：
+  - `src/main/gemini_provider.ts`
+  - 覆盖能力：Gemini SDK 调用、`timeout`（AbortSignal）、错误分级、可重试错误退避重试（`500ms -> 1500ms` + jitter）、非日语输出自动重试（计入 `retries`）
+- 已新增步骤 8 单测文件：
+  - `src/main/gemini_provider_ai_provider.test.ts`
+  - `src/main/gemini_provider_ai_retry.test.ts`
+- 单测覆盖点：
+  - 正常请求返回四字段完整 JSON
+  - `429`/`5xx` 可重试错误按 `500ms -> 1500ms` 退避并最终成功
+  - 首次非日语输出会自动触发至少一次重试并在后续日语输出时成功
+- 依赖变更：
+  - `package.json` 新增 `@google/genai`
+- 用户验证结论：
+  - 第 8 步已确认通过，可作为步骤 9 单词新增页与草稿机制实现基线
+
 ## 3. 步骤 2 验证结果快照
 - 执行命令：
   - `pnpm dev`
@@ -183,5 +202,15 @@
   - 额外校验：`pnpm lint`、`pnpm typecheck` 均通过（退出码 `0`）
   - 备注：本机仍为 `node v25.2.1`，会触发 `engines` 警告（目标仍是 `v22.x`）
 
-## 9. 下一步入口
-- 下一执行目标：`plan.md` 的 `步骤 8（AI Provider 抽象与 Gemini 接入）`。
+## 9. 步骤 8 验证结果快照
+- 执行命令：
+  - `pnpm test:unit -- ai-provider`
+  - `pnpm test:unit -- ai-retry`
+- 结果：
+  - 两条命令均通过（退出码 `0`）
+  - 当前测试总计 22 条（含 schema/仓储/设置/keytar/ai-provider/ai-retry），全部通过
+  - 额外校验：`pnpm lint`、`pnpm typecheck` 均通过（退出码 `0`）
+  - 备注：本机仍为 `node v25.2.1`，会触发 `engines` 警告（目标仍是 `v22.x`）
+
+## 10. 下一步入口
+- 下一执行目标：`plan.md` 的 `步骤 9（单词新增页与草稿机制）`。
