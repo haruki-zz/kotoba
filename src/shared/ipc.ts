@@ -2,6 +2,11 @@ export const IPC_BRIDGE_CHANNEL = 'kotoba:invoke' as const
 
 export const IPC_CHANNELS = {
   APP_PING: 'app:ping',
+  WORD_ADD_GENERATE: 'word-add:generate',
+  WORD_ADD_SAVE: 'word-add:save',
+  WORD_ADD_DRAFT_LOAD: 'word-add:draft:load',
+  WORD_ADD_DRAFT_SAVE: 'word-add:draft:save',
+  WORD_ADD_DRAFT_CLEAR: 'word-add:draft:clear',
 } as const
 
 export type IpcAllowedChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS]
@@ -11,6 +16,10 @@ export type IpcErrorCode =
   | 'IPC_CHANNEL_NOT_ALLOWED'
   | 'IPC_PAYLOAD_INVALID'
   | 'IPC_INTERNAL_ERROR'
+  | 'APP_API_KEY_MISSING'
+  | 'APP_VALIDATION_ERROR'
+  | 'APP_GENERATION_FAILED'
+  | 'APP_STORAGE_ERROR'
 
 export interface IpcEnvelope {
   channel: string
@@ -24,6 +33,43 @@ export interface PingPayload {
 export interface PingResult {
   echoed_message: string
   received_at: string
+}
+
+export interface WordAddGeneratePayload {
+  word: string
+}
+
+export interface WordAddGenerateResult {
+  reading_kana: string
+  meaning_ja: string
+  context_scene_ja: string
+  example_sentence_ja: string
+}
+
+export interface WordAddSavePayload {
+  word: string
+  reading_kana: string
+  meaning_ja: string
+  context_scene_ja: string
+  example_sentence_ja: string
+}
+
+export interface WordAddSaveResult {
+  saved_word_id: string
+  updated_existing: boolean
+  message_ja: string
+}
+
+export interface WordAddDraftPayload {
+  word: string
+  reading_kana: string
+  meaning_ja: string
+  context_scene_ja: string
+  example_sentence_ja: string
+}
+
+export interface WordAddDraftLoadResult {
+  draft: WordAddDraftPayload | null
 }
 
 export interface IpcSuccess<T = unknown> {
@@ -72,4 +118,48 @@ export const is_ping_payload = (value: unknown): value is PingPayload => {
 
   const maybe_payload = value as Partial<PingPayload>
   return typeof maybe_payload.message === 'string' && maybe_payload.message.trim().length > 0
+}
+
+export const is_word_add_generate_payload = (value: unknown): value is WordAddGeneratePayload => {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const maybe_payload = value as Partial<WordAddGeneratePayload>
+  return typeof maybe_payload.word === 'string' && maybe_payload.word.trim().length > 0
+}
+
+export const is_word_add_save_payload = (value: unknown): value is WordAddSavePayload => {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const maybe_payload = value as Partial<WordAddSavePayload>
+  return (
+    typeof maybe_payload.word === 'string' &&
+    maybe_payload.word.trim().length > 0 &&
+    typeof maybe_payload.reading_kana === 'string' &&
+    maybe_payload.reading_kana.trim().length > 0 &&
+    typeof maybe_payload.meaning_ja === 'string' &&
+    maybe_payload.meaning_ja.trim().length > 0 &&
+    typeof maybe_payload.context_scene_ja === 'string' &&
+    maybe_payload.context_scene_ja.trim().length > 0 &&
+    typeof maybe_payload.example_sentence_ja === 'string' &&
+    maybe_payload.example_sentence_ja.trim().length > 0
+  )
+}
+
+export const is_word_add_draft_payload = (value: unknown): value is WordAddDraftPayload => {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const maybe_payload = value as Partial<WordAddDraftPayload>
+  return (
+    typeof maybe_payload.word === 'string' &&
+    typeof maybe_payload.reading_kana === 'string' &&
+    typeof maybe_payload.meaning_ja === 'string' &&
+    typeof maybe_payload.context_scene_ja === 'string' &&
+    typeof maybe_payload.example_sentence_ja === 'string'
+  )
 }

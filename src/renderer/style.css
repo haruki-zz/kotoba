@@ -1,6 +1,6 @@
 :root {
-  color: #111827;
-  background-color: #f8fafc;
+  color: #0f172a;
+  background-color: #f1f5f9;
   font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
 }
 
@@ -13,33 +13,101 @@ body {
 }
 
 .container {
+  max-width: 860px;
+  margin: 0 auto;
   padding: 24px;
+}
+
+.header h1 {
+  margin: 0;
+}
+
+.header p {
+  margin: 8px 0 20px;
+  color: #334155;
+}
+
+.nav_tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tab {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #334155;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.tab.active {
+  border-color: #0f766e;
+  background: #ccfbf1;
+  color: #134e4a;
+}
+
+.panel {
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  padding: 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.field input,
+.field textarea {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px;
+  font: inherit;
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: 2px solid #5eead4;
+  border-color: #0f766e;
 }
 
 .button_row {
   display: flex;
-  gap: 12px;
-  margin: 16px 0;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
 button {
   border: 0;
   border-radius: 10px;
-  background-color: #2563eb;
+  background-color: #0f766e;
   color: #ffffff;
   padding: 10px 14px;
   cursor: pointer;
+  font: inherit;
 }
 
 button:hover {
-  background-color: #1d4ed8;
+  background-color: #115e59;
 }
 
-pre {
-  margin: 0;
-  padding: 12px;
-  border-radius: 8px;
-  background-color: #e2e8f0;
-  white-space: pre-wrap;
-  word-break: break-word;
+button:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.status_message {
+  margin: 8px 0 0;
+  color: #065f46;
+}
+
+.error_message {
+  margin: 8px 0 0;
+  color: #b91c1c;
 }
