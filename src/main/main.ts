@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
 import { LibraryRepository } from './library_repository'
+import { LibraryService } from './library_service'
 import { create_default_keytar_secret_store } from './keytar_secret_store'
 import { register_ipc_router } from './ipc_router'
 import { SettingsRepository } from './settings_repository'
@@ -57,10 +58,14 @@ app.whenReady().then(() => {
         settings_repository,
         api_key_secret_store: create_default_keytar_secret_store(),
       })
+      const library_service = new LibraryService({
+        library_repository,
+      })
 
       register_ipc_router({
         word_entry_service,
         word_add_draft_repository,
+        library_service,
       })
 
       create_main_window()

@@ -2,8 +2,8 @@
 
 ## 1. 当前状态
 - 记录日期：`2026-03-12`
-- 当前阶段：实施计划 `步骤 1` 到 `步骤 9` 已完成，且 `步骤 9` 已通过用户验证。
-- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + E2E 可回归”阶段。
+- 当前阶段：实施计划 `步骤 1` 到 `步骤 10` 已完成，等待用户对 `步骤 10` 的验证结论。
+- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + E2E 可回归”阶段。
 
 ## 2. 已完成事项
 ### 2.1 对应 plan.md 步骤 1（环境与版本基线冻结）
@@ -140,6 +140,33 @@
   - `src/main/word_entry_service.ts` 支持 `KOTOBA_FAKE_GENERATE_CARD_JSON`（E2E 固定生成桩）
   - 新增 `vitest.config.ts`，确保 `pnpm test` 只跑 `src` 下单测，不误跑 `e2e`
 
+### 2.11 对应 plan.md 步骤 10（词库管理页：列表/搜索/编辑/删除）
+- 已新增主进程词库服务：
+  - `src/main/library_service.ts`
+  - 能力：
+    - 列表与搜索（`word / reading_kana / meaning_ja`）
+    - 搜索标准化：`trim + Unicode NFKC + 拉丁小写 + 假名不敏感`
+    - 词条编辑（含字段校验、日语校验、重复单词冲突校验）
+    - 词条删除（按 `word_id`）
+- 已扩展 IPC 契约与路由：
+  - `src/shared/ipc.ts`
+  - `src/main/ipc_router.ts`
+  - 新增频道：`library:list`、`library:update`、`library:delete`
+  - 新增错误码：`APP_NOT_FOUND`
+- 已完成主进程 wiring：
+  - `src/main/main.ts` 注入 `LibraryService`
+- 已完成渲染层 `単語帳` 页面：
+  - `src/renderer/app.tsx`
+  - `src/renderer/style.css`
+  - 交互：列表展示、关键词搜索、行内编辑、删除确认
+- 已补齐步骤 10 验收脚本：
+  - `scripts/make_seed_10k.mjs`
+  - `scripts/bench_search.mjs`
+  - `package.json` 新增脚本：`make:seed-10k`、`bench:search`
+- 已新增步骤 10 测试：
+  - 单测：`src/main/library_service.test.ts`
+  - E2E：`e2e/word_add.spec.ts` 新增 `library-crud` 用例
+
 ## 3. 验证结果快照
 ### 3.1 步骤 8 验证（历史）
 - 执行命令：
@@ -160,10 +187,24 @@
 - 用户结论：
   - 第 9 步已验证通过，可进入步骤 10
 
+### 3.3 步骤 10 验证（待用户验证）
+- 执行命令：
+  - `pnpm make:seed-10k`
+  - `pnpm bench:search`
+  - `pnpm test:e2e --grep "library-crud"`
+- 结果：
+  - 三条命令均通过（退出码 `0`）
+  - `bench:search` 输出：`dataset_words=10000`，`p95_ms=0.317`（阈值 `150ms`）
+- 额外校验：
+  - `pnpm lint` 通过
+  - `pnpm typecheck` 通过
+  - `pnpm test` 通过
+
 ## 4. 当前行为备注（与后续开发相关）
 - 当前重复词保存策略为“直接覆盖并提示”，未实现确认弹窗。
 - 当前尚无 UI 设置页；API Key 需通过 keytar 写入（已具备底层能力）。
-- `単語帳` 页面当前为占位，列表/搜索/编辑/删除将在步骤 10 实现。
+- `単語帳` 页面已支持列表/搜索/编辑/删除；删除使用确认弹窗。
+- 词条编辑遵循“日语字段校验 + 重复单词冲突校验”。
 
 ## 5. 下一步入口
-- 下一执行目标：`plan.md` 的 `步骤 10（词库管理页：列表/搜索/编辑/删除）`。
+- 下一执行目标：待用户确认步骤 10 后，进入 `plan.md` 的 `步骤 11（SM-2 复习引擎与复习页）`。

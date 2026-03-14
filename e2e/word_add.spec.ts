@@ -208,3 +208,74 @@ test('duplicate-word: overwrite existing word by normalized word key', async () 
   expect(library.words[0]?.word).toBe('カタカナ')
   expect(library.words[0]?.meaning_ja).toBe('二回目の保存で既存単語を上書きした後の内容です。')
 })
+
+test('library-crud: list search edit delete words in library page', async () => {
+  const user_data_dir = await create_temp_user_data_dir('kotoba-e2e-library-crud')
+  const launched = await launch_app(user_data_dir)
+
+  try {
+    await create_word_by_generate_then_save(
+      launched.page,
+      'かたかな',
+      '文字体系について説明する最初の意味です。'
+    )
+    await expect(launched.page.getByRole('status')).toHaveText('単語を保存しました')
+
+    await create_word_by_generate_then_save(
+      launched.page,
+      'AI',
+      '人工知能の技術分野を指す単語です。'
+    )
+    await expect(launched.page.getByRole('status')).toHaveText('単語を保存しました')
+
+    await launched.page.getByRole('button', { name: '単語帳' }).click()
+    await expect(launched.page.locator('.library_item')).toHaveCount(2)
+
+    await launched.page.getByLabel('単語帳検索').fill(' ｶﾀｶﾅ ')
+    await expect(launched.page.locator('.library_item')).toHaveCount(1)
+    await expect(launched.page.locator('.library_item')).toContainText('かたかな')
+
+    await launched.page.getByLabel('単語帳検索').fill('ai')
+    await expect(launched.page.locator('.library_item')).toHaveCount(1)
+    await expect(launched.page.locator('.library_item')).toContainText('AI')
+
+    await launched.page.getByLabel('単語帳検索').fill('')
+    await expect(launched.page.locator('.library_item')).toHaveCount(2)
+
+    const ai_item = launched.page.locator('.library_item').filter({ hasText: 'AI' })
+    await ai_item.getByRole('button', { name: '編集' }).click()
+    await launched.page
+      .getByLabel('編集意味')
+      .fill('更新後の意味です。人工知能の応用領域全体を示す語です。')
+    await launched.page.getByRole('button', { name: '更新' }).click()
+    await expect(launched.page.getByRole('status')).toHaveText('単語を更新しました')
+    await expect(launched.page.locator('.library_item').filter({ hasText: 'AI' })).toContainText(
+      '更新後の意味です。人工知能の応用領域全体を示す語です。'
+    )
+
+    const dialog_handled = new Promise<void>((resolve) => {
+      launched.page.once('dialog', (dialog) => {
+        void dialog.accept().then(() => resolve())
+      })
+    })
+    await launched.page
+      .locator('.library_item')
+      .filter({ hasText: 'かたかな' })
+      .getByRole('button', { name: '削除' })
+      .click()
+    await dialog_handled
+
+    await expect(launched.page.getByRole('status')).toHaveText('単語を削除しました')
+    await expect(launched.page.locator('.library_item')).toHaveCount(1)
+    await expect(launched.page.locator('.library_item')).toContainText('AI')
+  } finally {
+    await close_app(launched.electron_app)
+  }
+
+  const library = await read_library_file(user_data_dir)
+  expect(library.words).toHaveLength(1)
+  expect(library.words[0]?.word).toBe('AI')
+  expect(library.words[0]?.meaning_ja).toBe(
+    '更新後の意味です。人工知能の応用領域全体を示す語です。'
+  )
+})

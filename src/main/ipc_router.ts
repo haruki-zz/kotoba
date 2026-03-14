@@ -5,6 +5,9 @@ import {
   IPC_CHANNELS,
   create_failure_response,
   create_success_response,
+  is_library_delete_payload,
+  is_library_list_payload,
+  is_library_update_payload,
   is_ipc_envelope,
   is_ping_payload,
   is_word_add_draft_payload,
@@ -12,11 +15,19 @@ import {
   is_word_add_save_payload,
   type IpcAllowedChannel,
   type IpcResponse,
+  type LibraryDeleteResult,
+  type LibraryListResult,
+  type LibraryUpdateResult,
   type PingResult,
   type WordAddDraftLoadResult,
   type WordAddGenerateResult,
   type WordAddSaveResult,
 } from '../shared/ipc'
+import {
+  LibraryValidationError,
+  LibraryWordNotFoundError,
+  type LibraryService,
+} from './library_service'
 import { type WordAddDraftRepository } from './word_add_draft_repository'
 import {
   SettingsApiKeyMissingError,
@@ -30,6 +41,7 @@ type ChannelHandler = (payload: unknown) => IpcResponse | Promise<IpcResponse>
 interface IpcRouterDeps {
   word_entry_service: WordEntryService
   word_add_draft_repository: WordAddDraftRepository
+  library_service: LibraryService
 }
 
 const app_ping_handler: ChannelHandler = (payload: unknown) => {
@@ -139,6 +151,63 @@ const create_word_add_draft_clear_handler =
     }
   }
 
+const create_library_list_handler =
+  (deps: IpcRouterDeps): ChannelHandler =>
+  async (payload: unknown) => {
+    if (!is_library_list_payload(payload)) {
+      return create_failure_response('IPC_PAYLOAD_INVALID', '単語帳一覧の入力が不正です。')
+    }
+
+    try {
+      const result: LibraryListResult = await deps.library_service.list_words(payload)
+      return create_success_response(result)
+    } catch {
+      return create_failure_response('APP_STORAGE_ERROR', '単語帳の読み込みに失敗しました。')
+    }
+  }
+
+const create_library_update_handler =
+  (deps: IpcRouterDeps): ChannelHandler =>
+  async (payload: unknown) => {
+    if (!is_library_update_payload(payload)) {
+      return create_failure_response('IPC_PAYLOAD_INVALID', '単語帳更新の入力が不正です。')
+    }
+
+    try {
+      const result: LibraryUpdateResult = await deps.library_service.update_word(payload)
+      return create_success_response(result)
+    } catch (error) {
+      if (error instanceof LibraryValidationError) {
+        return create_failure_response('APP_VALIDATION_ERROR', error.message)
+      }
+      if (error instanceof LibraryWordNotFoundError) {
+        return create_failure_response('APP_NOT_FOUND', error.message)
+      }
+      return create_failure_response('APP_STORAGE_ERROR', '単語帳の更新に失敗しました。')
+    }
+  }
+
+const create_library_delete_handler =
+  (deps: IpcRouterDeps): ChannelHandler =>
+  async (payload: unknown) => {
+    if (!is_library_delete_payload(payload)) {
+      return create_failure_response('IPC_PAYLOAD_INVALID', '単語帳削除の入力が不正です。')
+    }
+
+    try {
+      const result: LibraryDeleteResult = await deps.library_service.delete_word(payload)
+      return create_success_response(result)
+    } catch (error) {
+      if (error instanceof LibraryValidationError) {
+        return create_failure_response('APP_VALIDATION_ERROR', error.message)
+      }
+      if (error instanceof LibraryWordNotFoundError) {
+        return create_failure_response('APP_NOT_FOUND', error.message)
+      }
+      return create_failure_response('APP_STORAGE_ERROR', '単語帳の削除に失敗しました。')
+    }
+  }
+
 export const register_ipc_router = (deps: IpcRouterDeps): void => {
   const channel_handler_map: Record<IpcAllowedChannel, ChannelHandler> = {
     [IPC_CHANNELS.APP_PING]: app_ping_handler,
@@ -147,6 +216,9 @@ export const register_ipc_router = (deps: IpcRouterDeps): void => {
     [IPC_CHANNELS.WORD_ADD_DRAFT_LOAD]: create_word_add_draft_load_handler(deps),
     [IPC_CHANNELS.WORD_ADD_DRAFT_SAVE]: create_word_add_draft_save_handler(deps),
     [IPC_CHANNELS.WORD_ADD_DRAFT_CLEAR]: create_word_add_draft_clear_handler(deps),
+    [IPC_CHANNELS.LIBRARY_LIST]: create_library_list_handler(deps),
+    [IPC_CHANNELS.LIBRARY_UPDATE]: create_library_update_handler(deps),
+    [IPC_CHANNELS.LIBRARY_DELETE]: create_library_delete_handler(deps),
   }
 
   ipcMain.handle(IPC_BRIDGE_CHANNEL, async (_event, envelope: unknown): Promise<IpcResponse> => {

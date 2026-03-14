@@ -28,7 +28,9 @@
     "test": "pnpm test:unit",
     "typecheck": "tsc --noEmit",
     "verify": "pnpm lint && pnpm format:check && pnpm typecheck",
-    "prepare": "husky"
+    "prepare": "husky",
+    "make:seed-10k": "node scripts/make_seed_10k.mjs",
+    "bench:search": "node scripts/bench_search.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.44.0",

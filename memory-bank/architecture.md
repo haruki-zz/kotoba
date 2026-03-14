@@ -1,10 +1,10 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 9，且步骤 9 已通过用户验证。
-- 仓库处于“新增单词闭环可用 + 草稿机制可用 + E2E 回归已接入”阶段。
+- 当前已完成实施计划步骤 10，等待用户对步骤 10 的验证结论。
+- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + E2E 回归已接入”阶段。
 - 已具备主进程、预加载、渲染层、共享契约、单测与 E2E 的最小闭环。
-- 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路。
+- 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路。
 
 ## 2. 顶层文件结构与职责
 - `AGENTS.md`
@@ -13,8 +13,11 @@
   - 实施计划主文档（步骤目标、验收命令、通过指标）。
 - `package.json`
   - 依赖与脚本入口。
-  - 关键脚本：`dev`、`build`、`lint`、`typecheck`、`test:unit`、`test:e2e`、`test`、`verify`。
+  - 关键脚本：`dev`、`build`、`lint`、`typecheck`、`test:unit`、`test:e2e`、`test`、`verify`、`make:seed-10k`、`bench:search`。
   - `dev:main` 与 `build:main` 使用 `--external:keytar` 以避免原生模块打包错误。
+- `scripts/`
+  - `make_seed_10k.mjs`：生成 1 万词条基准数据。
+  - `bench_search.mjs`：执行搜索性能基准并输出 `P50/P95`。
 - `pnpm-lock.yaml`
   - 锁定依赖 patch 版本，保证可复现安装结果。
 - `tsconfig.json`
@@ -44,7 +47,7 @@
   - Electron 主进程入口。
   - 创建窗口并加载渲染页面。
   - 设置安全基线：`contextIsolation: true`、`sandbox: true`、`nodeIntegration: false`。
-  - 启动时初始化 `LibraryRepository`、`SettingsRepository`、`WordAddDraftRepository`、`WordEntryService` 并注册 IPC。
+  - 启动时初始化 `LibraryRepository`、`SettingsRepository`、`WordAddDraftRepository`、`WordEntryService`、`LibraryService` 并注册 IPC。
   - 支持 `KOTOBA_USER_DATA_DIR` 覆盖 `userData` 目录（用于测试隔离）。
 - `ipc_router.ts`
   - IPC 统一路由与错误映射。
@@ -55,7 +58,14 @@
     - `word-add:draft:load`
     - `word-add:draft:save`
     - `word-add:draft:clear`
-  - 将业务错误映射为 `APP_API_KEY_MISSING`、`APP_VALIDATION_ERROR`、`APP_GENERATION_FAILED`、`APP_STORAGE_ERROR`。
+    - `library:list`
+    - `library:update`
+    - `library:delete`
+  - 将业务错误映射为 `APP_API_KEY_MISSING`、`APP_VALIDATION_ERROR`、`APP_GENERATION_FAILED`、`APP_STORAGE_ERROR`、`APP_NOT_FOUND`。
+- `library_service.ts`
+  - 第 10 步核心服务：词库列表/搜索/编辑/删除。
+  - 搜索规则：`trim + NFKC + 拉丁小写 + 假名不敏感`，字段范围 `word/reading_kana/meaning_ja`。
+  - 编辑规则：字段约束校验 + 日语校验 + 重复单词冲突校验。
 - `library_repository.ts`
   - 词库 JSON 仓储。
   - 能力：原子写入、串行写、每日备份、启动恢复、`schema_version` 顺序迁移、失败回滚。
@@ -102,10 +112,11 @@
 - `app.tsx`
   - 当前 UI 主页面。
   - 已实现：
-    - 顶部标签页：`単語追加`、`単語帳`（后者仍为占位）
+    - 顶部标签页：`単語追加`、`単語帳`
     - `単語追加` 输入/生成/编辑/保存流程
     - 草稿机制：`800ms` 防抖自动保存、切页强制保存、`beforeunload` 强制保存、保存成功后清理
-    - 生成/保存状态与错误提示（日语）
+    - `単語帳` 列表、搜索、行内编辑、删除确认
+    - 生成/保存/编辑/删除状态与错误提示（日语）
 - `style.css`
   - 页面样式（表单、标签、状态提示样式）。
 - `window.d.ts`
@@ -133,6 +144,8 @@
   - Gemini 正常输出路径测试。
 - `src/main/gemini_provider_ai_retry.test.ts`
   - Gemini 重试/退避与非日语自动重试测试。
+- `src/main/library_service.test.ts`
+  - 搜索标准化与词库编辑/删除行为测试。
 
 ### 4.2 端到端测试（Playwright + Electron）
 - `e2e/word_add.spec.ts`
@@ -141,12 +154,13 @@
     - `draft`：输入后防抖自动保存可恢复
     - `draft`：切页前强制保存可恢复
     - `duplicate-word`：`trim + NFKC` 判重覆盖
+    - `library-crud`：词库列表/搜索/编辑/删除
   - 使用临时 `userData` 目录，避免污染本地真实数据。
 
-## 5. 当前运行流程（步骤 9 快照）
+## 5. 当前运行流程（步骤 10 快照）
 1. `pnpm dev` 启动 Vite、main/preload watch、Electron。
 2. 渲染层通过 `window.kotoba.invoke` 调用 IPC。
-3. 主进程 `ipc_router` 校验 channel/payload 后分发到 `WordEntryService` 与 `WordAddDraftRepository`。
+3. 主进程 `ipc_router` 校验 channel/payload 后分发到 `WordEntryService`、`WordAddDraftRepository`、`LibraryService`。
 4. 生成流程：
   - 若未配置 API Key，返回 `APP_API_KEY_MISSING`。
   - 若配置有效，调用 Gemini 生成并回填四字段。
@@ -154,11 +168,15 @@
   - 执行字段校验与日语校验。
   - 按 `word(trim + NFKC)` 判重，命中则覆盖，否则新增。
   - 成功后清理草稿文件。
+6. 词库管理流程：
+  - `library:list`：返回按 `updated_at` 倒序的词条列表，并按规范执行搜索标准化匹配。
+  - `library:update`：更新词条字段并保留 `review_state`，发生冲突返回可定位错误。
+  - `library:delete`：按 `word_id` 删除词条并更新 `updated_at`。
 
 ## 6. 当前质量门禁流程
 1. 代码质量：`pnpm lint`、`pnpm format:check`、`pnpm typecheck`。
 2. 单元测试：`pnpm test`（实际执行 `pnpm test:unit`，仅覆盖 `src`）。
-3. E2E 测试：`pnpm test:e2e --grep "word-create|draft|duplicate-word"`。
+3. E2E 测试：`pnpm test:e2e --grep "word-create|draft|duplicate-word|library-crud"`。
 4. 提交门禁：`husky pre-commit -> pnpm lint-staged`。
 
 ## 7. memory-bank 文档职责

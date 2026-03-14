@@ -7,6 +7,9 @@ export const IPC_CHANNELS = {
   WORD_ADD_DRAFT_LOAD: 'word-add:draft:load',
   WORD_ADD_DRAFT_SAVE: 'word-add:draft:save',
   WORD_ADD_DRAFT_CLEAR: 'word-add:draft:clear',
+  LIBRARY_LIST: 'library:list',
+  LIBRARY_UPDATE: 'library:update',
+  LIBRARY_DELETE: 'library:delete',
 } as const
 
 export type IpcAllowedChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS]
@@ -20,6 +23,7 @@ export type IpcErrorCode =
   | 'APP_VALIDATION_ERROR'
   | 'APP_GENERATION_FAILED'
   | 'APP_STORAGE_ERROR'
+  | 'APP_NOT_FOUND'
 
 export interface IpcEnvelope {
   channel: string
@@ -70,6 +74,51 @@ export interface WordAddDraftPayload {
 
 export interface WordAddDraftLoadResult {
   draft: WordAddDraftPayload | null
+}
+
+export interface LibraryListPayload {
+  query?: string
+}
+
+export interface LibraryWordItem {
+  id: string
+  word: string
+  reading_kana: string
+  meaning_ja: string
+  context_scene_ja: string
+  example_sentence_ja: string
+  created_at: string
+  updated_at: string
+}
+
+export interface LibraryListResult {
+  query: string
+  total_count: number
+  matched_count: number
+  words: LibraryWordItem[]
+}
+
+export interface LibraryUpdatePayload {
+  word_id: string
+  word: string
+  reading_kana: string
+  meaning_ja: string
+  context_scene_ja: string
+  example_sentence_ja: string
+}
+
+export interface LibraryUpdateResult {
+  updated_word_id: string
+  message_ja: string
+}
+
+export interface LibraryDeletePayload {
+  word_id: string
+}
+
+export interface LibraryDeleteResult {
+  deleted_word_id: string
+  message_ja: string
 }
 
 export interface IpcSuccess<T = unknown> {
@@ -162,4 +211,48 @@ export const is_word_add_draft_payload = (value: unknown): value is WordAddDraft
     typeof maybe_payload.context_scene_ja === 'string' &&
     typeof maybe_payload.example_sentence_ja === 'string'
   )
+}
+
+export const is_library_list_payload = (value: unknown): value is LibraryListPayload => {
+  if (value === undefined) {
+    return true
+  }
+
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const maybe_payload = value as Partial<LibraryListPayload>
+  return maybe_payload.query === undefined || typeof maybe_payload.query === 'string'
+}
+
+export const is_library_update_payload = (value: unknown): value is LibraryUpdatePayload => {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const maybe_payload = value as Partial<LibraryUpdatePayload>
+  return (
+    typeof maybe_payload.word_id === 'string' &&
+    maybe_payload.word_id.trim().length > 0 &&
+    typeof maybe_payload.word === 'string' &&
+    maybe_payload.word.trim().length > 0 &&
+    typeof maybe_payload.reading_kana === 'string' &&
+    maybe_payload.reading_kana.trim().length > 0 &&
+    typeof maybe_payload.meaning_ja === 'string' &&
+    maybe_payload.meaning_ja.trim().length > 0 &&
+    typeof maybe_payload.context_scene_ja === 'string' &&
+    maybe_payload.context_scene_ja.trim().length > 0 &&
+    typeof maybe_payload.example_sentence_ja === 'string' &&
+    maybe_payload.example_sentence_ja.trim().length > 0
+  )
+}
+
+export const is_library_delete_payload = (value: unknown): value is LibraryDeletePayload => {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const maybe_payload = value as Partial<LibraryDeletePayload>
+  return typeof maybe_payload.word_id === 'string' && maybe_payload.word_id.trim().length > 0
 }
