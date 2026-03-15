@@ -1,10 +1,11 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 10，等待用户对步骤 10 的验证结论。
+- 当前已完成实施计划步骤 10，且步骤 10 已通过用户验证。
 - 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + E2E 回归已接入”阶段。
 - 已具备主进程、预加载、渲染层、共享契约、单测与 E2E 的最小闭环。
 - 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路。
+- 后续开发入口是 `plan.md` 的 `步骤 11（SM-2 复习引擎与复习页）`。
 
 ## 2. 顶层文件结构与职责
 - `AGENTS.md`
@@ -38,6 +39,8 @@
   - 开发原则约束文档。
 - `memory-bank/`
   - 长期记忆文档目录（需求、技术栈、进度、架构）。
+  - `progress.md` 记录步骤完成度与验证证据。
+  - `architecture.md` 记录文件职责与运行快照。
 - `e2e/`
   - Electron 端到端测试目录。
 
@@ -173,13 +176,18 @@
   - `library:update`：更新词条字段并保留 `review_state`，发生冲突返回可定位错误。
   - `library:delete`：按 `word_id` 删除词条并更新 `updated_at`。
 
-## 6. 当前质量门禁流程
+## 6. 当前交接重点
+- 已通过用户验证的最后一步是步骤 10，因此后续开发默认从步骤 11 开始。
+- 若后续修改 `単語帳`、IPC 契约、词库存储或搜索规则，必须同步更新对应单测、E2E 与 `memory-bank` 文档。
+- 当前 `単語帳` 已不是占位页，任何后续 AI 开发者都应将其视为已稳定实现的基础能力。
+
+## 7. 当前质量门禁流程
 1. 代码质量：`pnpm lint`、`pnpm format:check`、`pnpm typecheck`。
 2. 单元测试：`pnpm test`（实际执行 `pnpm test:unit`，仅覆盖 `src`）。
 3. E2E 测试：`pnpm test:e2e --grep "word-create|draft|duplicate-word|library-crud"`。
 4. 提交门禁：`husky pre-commit -> pnpm lint-staged`。
 
-## 7. memory-bank 文档职责
+## 8. memory-bank 文档职责
 - `memory-bank/design-doc.md`
   - 需求与行为规则的 source of truth。
 - `memory-bank/tech-stack.md`
@@ -189,7 +197,7 @@
 - `memory-bank/architecture.md`
   - 文件结构、模块职责与运行流程（本文档）。
 
-## 8. 信息流更新规则
+## 9. 信息流更新规则
 - 需求或行为变更：先更新 `design-doc.md`，再同步 `tech-stack.md`。
 - 每完成一个实施步骤：更新 `progress.md`。
 - 文件结构或职责变化：同步更新 `architecture.md`。
