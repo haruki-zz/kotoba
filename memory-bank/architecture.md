@@ -1,11 +1,11 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 11，其中步骤 10 已通过用户验证，步骤 11 等待用户验证。
+- 当前已完成实施计划步骤 11，且步骤 11 已通过用户验证。
 - 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + E2E 回归已接入”阶段。
 - 已具备主进程、预加载、渲染层、共享契约、单测与 E2E 的最小闭环。
 - 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路。
-- 后续开发入口在用户验证步骤 11 后切换到 `plan.md` 的 `步骤 12（review_logs 与统计基础）`。
+- 后续开发入口是 `plan.md` 的 `步骤 12（review_logs 与统计基础）`。
 
 ## 2. 顶层文件结构与职责
 - `AGENTS.md`
@@ -50,7 +50,7 @@
   - Electron 主进程入口。
   - 创建窗口并加载渲染页面。
   - 设置安全基线：`contextIsolation: true`、`sandbox: true`、`nodeIntegration: false`。
-  - 启动时初始化 `LibraryRepository`、`SettingsRepository`、`WordAddDraftRepository`、`WordEntryService`、`LibraryService` 并注册 IPC。
+  - 启动时初始化 `LibraryRepository`、`SettingsRepository`、`WordAddDraftRepository`、`WordEntryService`、`LibraryService`、`ReviewService` 并注册 IPC。
   - 支持 `KOTOBA_USER_DATA_DIR` 覆盖 `userData` 目录（用于测试隔离）。
 - `ipc_router.ts`
   - IPC 统一路由与错误映射。
@@ -123,8 +123,7 @@
 - `app.tsx`
   - 当前 UI 主页面。
   - 已实现：
-    - 顶部标签页：`単語追加`、`単語帳`
-    - 顶部标签页：`復習`
+    - 顶部标签页：`単語追加`、`単語帳`、`復習`
     - `単語追加` 输入/生成/编辑/保存流程
     - 草稿机制：`800ms` 防抖自动保存、切页强制保存、`beforeunload` 强制保存、保存成功后清理
     - `単語帳` 列表、搜索、行内编辑、删除确认
@@ -195,10 +194,10 @@
   - `review:grade`：按 SM-2 纯函数计算新 `review_state`，立即持久化到词库。
 
 ## 6. 当前交接重点
-- 已通过用户验证的最后一步是步骤 10；步骤 11 已实现并等待验证。
+- 已通过用户验证的最后一步是步骤 11，因此后续开发默认从步骤 12 开始。
 - 若后续修改 `単語帳`、IPC 契约、词库存储或搜索规则，必须同步更新对应单测、E2E 与 `memory-bank` 文档。
 - 当前 `単語帳` 已不是占位页，任何后续 AI 开发者都应将其视为已稳定实现的基础能力。
-- 当前 `復習` 页面也已具备最小闭环；在步骤 11 验证通过前，不应开始步骤 12 的 `review_logs` 改造。
+- 当前 `復習` 页面也已具备已验证的最小闭环；后续实现 `review_logs` 时不应破坏现有评分与队列行为。
 
 ## 7. 当前质量门禁流程
 1. 代码质量：`pnpm lint`、`pnpm format:check`、`pnpm typecheck`。
