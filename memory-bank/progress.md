@@ -1,9 +1,9 @@
 ﻿# Kotoba 开发进度记录
 
 ## 1. 当前状态
-- 记录日期：`2026-03-14`
-- 当前阶段：实施计划 `步骤 1` 到 `步骤 10` 已完成，且 `步骤 10` 已通过用户验证。
-- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + E2E 可回归”阶段。
+- 记录日期：`2026-03-15`
+- 当前阶段：实施计划 `步骤 1` 到 `步骤 11` 已完成，其中 `步骤 10` 已通过用户验证，`步骤 11` 等待用户验证结论。
+- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + E2E 可回归”阶段。
 
 ## 2. 已完成事项
 ### 2.1 对应 plan.md 步骤 1（环境与版本基线冻结）
@@ -167,6 +167,36 @@
   - 单测：`src/main/library_service.test.ts`
   - E2E：`e2e/word_add.spec.ts` 新增 `library-crud` 用例
 
+### 2.12 对应 plan.md 步骤 11（SM-2 复习引擎与复习页）
+- 已新增纯函数算法模块：
+  - `src/main/sm2.ts`
+  - 能力：
+    - 固定计算顺序：先 EF，再 repetition/interval，最后写入时间字段
+    - 覆盖评分 `0-5`
+    - 第三次及以后按 `round(previous_interval_days * updated_easiness_factor)` 计算
+    - EF 下限保护 `1.3`
+- 已新增复习服务：
+  - `src/main/review_service.ts`
+  - 能力：
+    - 待复习队列：`next_review_at <= now`
+    - 逾期词条与当下到期词条全部入队
+    - 本地时区“今日已完成”统计
+    - 评分后即时更新 `review_state` 并持久化
+- 已扩展 IPC 契约与路由：
+  - `src/shared/ipc.ts`
+  - `src/main/ipc_router.ts`
+  - 新增频道：`review:queue`、`review:grade`
+- 已完成主进程 wiring：
+  - `src/main/main.ts` 注入 `ReviewService`
+- 已完成渲染层 `復習` 页面：
+  - `src/renderer/app.tsx`
+  - `src/renderer/style.css`
+  - 交互：待复习卡片展示、评分按钮 `0-5`、剩余数量、今日完成数量、完成态提示
+- 已新增步骤 11 测试：
+  - 单测：`src/main/sm2.test.ts`
+  - 单测：`src/main/review_queue.test.ts`
+  - E2E：`e2e/word_add.spec.ts` 新增 `review-flow` 用例
+
 ## 3. 验证结果快照
 ### 3.1 步骤 8 验证（历史）
 - 执行命令：
@@ -202,12 +232,26 @@
 - 用户结论：
   - 第 10 步已验证通过，可进入步骤 11
 
+### 3.4 步骤 11 验证（待用户验证）
+- 执行命令：
+  - `pnpm test:unit -- sm2`
+  - `pnpm test:unit -- review-queue`
+  - `pnpm test:e2e --grep "review-flow"`
+- 结果：
+  - 三条命令均通过（退出码 `0`）
+- 额外校验：
+  - `pnpm format:check` 通过
+  - `pnpm lint` 通过
+  - `pnpm typecheck` 通过
+  - `pnpm test` 通过
+
 ## 4. 当前行为备注（与后续开发相关）
 - 当前重复词保存策略为“直接覆盖并提示”，未实现确认弹窗。
 - 当前尚无 UI 设置页；API Key 需通过 keytar 写入（已具备底层能力）。
 - `単語帳` 页面已支持列表/搜索/编辑/删除；删除使用确认弹窗。
 - 词条编辑遵循“日语字段校验 + 重复单词冲突校验”。
-- 第 10 步已完成且已验证；后续实现应从 `步骤 11（SM-2 复习引擎与复习页）` 开始，不应回退已通过的词库管理链路。
+- `復習` 页面已支持到期队列、评分 `0-5`、即时持久化和“今日完了”统计。
+- 第 11 步已实现但尚未得到用户验证；在验证通过前不应开始步骤 12。
 
 ## 5. 下一步入口
-- 下一执行目标：`plan.md` 的 `步骤 11（SM-2 复习引擎与复习页）`。
+- 下一执行目标：等待用户验证步骤 11；验证通过后进入 `plan.md` 的 `步骤 12（review_logs 与统计基础）`。

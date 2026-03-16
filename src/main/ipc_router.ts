@@ -10,6 +10,7 @@ import {
   is_library_update_payload,
   is_ipc_envelope,
   is_ping_payload,
+  is_review_grade_payload,
   is_word_add_draft_payload,
   is_word_add_generate_payload,
   is_word_add_save_payload,
@@ -19,6 +20,8 @@ import {
   type LibraryListResult,
   type LibraryUpdateResult,
   type PingResult,
+  type ReviewGradeResult,
+  type ReviewQueueResult,
   type WordAddDraftLoadResult,
   type WordAddGenerateResult,
   type WordAddSaveResult,
@@ -28,6 +31,11 @@ import {
   LibraryWordNotFoundError,
   type LibraryService,
 } from './library_service'
+import {
+  ReviewValidationError,
+  ReviewWordNotFoundError,
+  type ReviewService,
+} from './review_service'
 import { type WordAddDraftRepository } from './word_add_draft_repository'
 import {
   SettingsApiKeyMissingError,
@@ -42,6 +50,7 @@ interface IpcRouterDeps {
   word_entry_service: WordEntryService
   word_add_draft_repository: WordAddDraftRepository
   library_service: LibraryService
+  review_service: ReviewService
 }
 
 const app_ping_handler: ChannelHandler = (payload: unknown) => {
@@ -208,6 +217,38 @@ const create_library_delete_handler =
     }
   }
 
+const create_review_queue_handler =
+  (deps: IpcRouterDeps): ChannelHandler =>
+  async () => {
+    try {
+      const result: ReviewQueueResult = await deps.review_service.get_review_queue()
+      return create_success_response(result)
+    } catch {
+      return create_failure_response('APP_STORAGE_ERROR', '復習キューの読み込みに失敗しました。')
+    }
+  }
+
+const create_review_grade_handler =
+  (deps: IpcRouterDeps): ChannelHandler =>
+  async (payload: unknown) => {
+    if (!is_review_grade_payload(payload)) {
+      return create_failure_response('IPC_PAYLOAD_INVALID', '復習評価の入力が不正です。')
+    }
+
+    try {
+      const result: ReviewGradeResult = await deps.review_service.grade_review(payload)
+      return create_success_response(result)
+    } catch (error) {
+      if (error instanceof ReviewValidationError) {
+        return create_failure_response('APP_VALIDATION_ERROR', error.message)
+      }
+      if (error instanceof ReviewWordNotFoundError) {
+        return create_failure_response('APP_NOT_FOUND', error.message)
+      }
+      return create_failure_response('APP_STORAGE_ERROR', '復習結果の保存に失敗しました。')
+    }
+  }
+
 export const register_ipc_router = (deps: IpcRouterDeps): void => {
   const channel_handler_map: Record<IpcAllowedChannel, ChannelHandler> = {
     [IPC_CHANNELS.APP_PING]: app_ping_handler,
@@ -219,6 +260,8 @@ export const register_ipc_router = (deps: IpcRouterDeps): void => {
     [IPC_CHANNELS.LIBRARY_LIST]: create_library_list_handler(deps),
     [IPC_CHANNELS.LIBRARY_UPDATE]: create_library_update_handler(deps),
     [IPC_CHANNELS.LIBRARY_DELETE]: create_library_delete_handler(deps),
+    [IPC_CHANNELS.REVIEW_QUEUE]: create_review_queue_handler(deps),
+    [IPC_CHANNELS.REVIEW_GRADE]: create_review_grade_handler(deps),
   }
 
   ipcMain.handle(IPC_BRIDGE_CHANNEL, async (_event, envelope: unknown): Promise<IpcResponse> => {

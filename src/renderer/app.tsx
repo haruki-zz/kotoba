@@ -8,13 +8,16 @@ import {
   type LibraryListResult,
   type LibraryUpdateResult,
   type LibraryWordItem,
+  type ReviewGradeResult,
+  type ReviewQueueResult,
+  type ReviewQueueWordItem,
   type WordAddDraftLoadResult,
   type WordAddDraftPayload,
   type WordAddGenerateResult,
   type WordAddSaveResult,
 } from '../shared/ipc'
 
-type AppPage = 'word-add' | 'library'
+type AppPage = 'word-add' | 'library' | 'review'
 
 type LibraryEditForm = {
   word: string
@@ -39,6 +42,8 @@ const EMPTY_LIBRARY_EDIT_FORM: LibraryEditForm = {
   context_scene_ja: '',
   example_sentence_ja: '',
 }
+
+const REVIEW_GRADES = [0, 1, 2, 3, 4, 5] as const
 
 const is_failure = (response: IpcResponse): response is IpcFailure => response.ok === false
 
@@ -79,6 +84,14 @@ export const App = () => {
   const [library_updating, set_library_updating] = useState<boolean>(false)
   const [library_deleting_word_id, set_library_deleting_word_id] = useState<string | null>(null)
 
+  const [review_due_words, set_review_due_words] = useState<ReviewQueueWordItem[]>([])
+  const [review_due_count, set_review_due_count] = useState<number>(0)
+  const [review_completed_today_count, set_review_completed_today_count] = useState<number>(0)
+  const [review_status_message, set_review_status_message] = useState<string>('')
+  const [review_error_message, set_review_error_message] = useState<string>('')
+  const [review_loading, set_review_loading] = useState<boolean>(false)
+  const [review_grading_word_id, set_review_grading_word_id] = useState<string | null>(null)
+
   const set_field = useCallback((field: keyof WordAddDraftPayload, value: string): void => {
     set_draft((current) => ({
       ...current,
@@ -94,27 +107,43 @@ export const App = () => {
     await window.kotoba.invoke(IPC_CHANNELS.WORD_ADD_DRAFT_SAVE, draft)
   }, [draft, draft_ready])
 
-  const load_library_words = useCallback(
-    async (query: string): Promise<void> => {
-      set_library_loading(true)
+  const load_library_words = useCallback(async (query: string): Promise<void> => {
+    set_library_loading(true)
 
-      const response = (await window.kotoba.invoke(IPC_CHANNELS.LIBRARY_LIST, {
-        query,
-      })) as IpcResponse<LibraryListResult>
+    const response = (await window.kotoba.invoke(IPC_CHANNELS.LIBRARY_LIST, {
+      query,
+    })) as IpcResponse<LibraryListResult>
 
-      set_library_loading(false)
-      if (is_failure(response)) {
-        set_library_error_message(response.error.message)
-        return
-      }
+    set_library_loading(false)
+    if (is_failure(response)) {
+      set_library_error_message(response.error.message)
+      return
+    }
 
-      set_library_words(response.data.words)
-      set_library_total_count(response.data.total_count)
-      set_library_matched_count(response.data.matched_count)
-      set_library_error_message('')
-    },
-    [set_library_words]
-  )
+    set_library_words(response.data.words)
+    set_library_total_count(response.data.total_count)
+    set_library_matched_count(response.data.matched_count)
+    set_library_error_message('')
+  }, [])
+
+  const load_review_queue = useCallback(async (): Promise<void> => {
+    set_review_loading(true)
+
+    const response = (await window.kotoba.invoke(
+      IPC_CHANNELS.REVIEW_QUEUE
+    )) as IpcResponse<ReviewQueueResult>
+
+    set_review_loading(false)
+    if (is_failure(response)) {
+      set_review_error_message(response.error.message)
+      return
+    }
+
+    set_review_due_words(response.data.due_words)
+    set_review_due_count(response.data.due_count)
+    set_review_completed_today_count(response.data.completed_today_count)
+    set_review_error_message('')
+  }, [])
 
   useEffect(() => {
     let mounted = true
@@ -180,6 +209,14 @@ export const App = () => {
     }
   }, [active_page, library_query, load_library_words])
 
+  useEffect(() => {
+    if (active_page !== 'review') {
+      return
+    }
+
+    void load_review_queue()
+  }, [active_page, load_review_queue])
+
   const handle_generate_click = async (): Promise<void> => {
     if (draft.word.trim().length === 0) {
       set_error_message('単語を入力してください。')
@@ -240,6 +277,11 @@ export const App = () => {
     if (next_page === 'library') {
       set_library_status_message('')
       set_library_error_message('')
+    }
+
+    if (next_page === 'review') {
+      set_review_status_message('')
+      set_review_error_message('')
     }
 
     set_active_page(next_page)
@@ -323,6 +365,31 @@ export const App = () => {
     await load_library_words(library_query)
   }
 
+  const handle_review_grade = async (grade: number): Promise<void> => {
+    const current_review_word = review_due_words[0]
+    if (!current_review_word) {
+      return
+    }
+
+    set_review_grading_word_id(current_review_word.id)
+    set_review_status_message('')
+    set_review_error_message('')
+
+    const response = (await window.kotoba.invoke(IPC_CHANNELS.REVIEW_GRADE, {
+      word_id: current_review_word.id,
+      grade,
+    })) as IpcResponse<ReviewGradeResult>
+
+    set_review_grading_word_id(null)
+    if (is_failure(response)) {
+      set_review_error_message(response.error.message)
+      return
+    }
+
+    set_review_status_message(response.data.message_ja)
+    await load_review_queue()
+  }
+
   const save_disabled = useMemo(
     () =>
       is_saving ||
@@ -346,6 +413,8 @@ export const App = () => {
     [library_edit_form, library_editing_word_id, library_updating]
   )
 
+  const current_review_word = review_due_words[0] ?? null
+
   return (
     <main className="container">
       <header className="header">
@@ -367,6 +436,13 @@ export const App = () => {
           onClick={() => handle_page_change('library')}
         >
           単語帳
+        </button>
+        <button
+          type="button"
+          className={active_page === 'review' ? 'tab active' : 'tab'}
+          onClick={() => handle_page_change('review')}
+        >
+          復習
         </button>
       </nav>
 
@@ -441,7 +517,9 @@ export const App = () => {
             </p>
           ) : null}
         </section>
-      ) : (
+      ) : null}
+
+      {active_page === 'library' ? (
         <section className="panel">
           <h2>単語帳</h2>
           <label className="field">
@@ -579,7 +657,71 @@ export const App = () => {
             </p>
           ) : null}
         </section>
-      )}
+      ) : null}
+
+      {active_page === 'review' ? (
+        <section className="panel">
+          <h2>復習</h2>
+          <div className="review_stats">
+            <p className="review_stat">残り {review_due_count} 件</p>
+            <p className="review_stat">今日完了 {review_completed_today_count} 件</p>
+          </div>
+
+          {review_loading ? <p className="library_hint">復習キューを読み込み中...</p> : null}
+
+          {current_review_word ? (
+            <article className="review_card">
+              <p className="review_word">{current_review_word.word}</p>
+              <p className="review_reading">{current_review_word.reading_kana}</p>
+              <dl className="review_details">
+                <div>
+                  <dt>意味</dt>
+                  <dd>{current_review_word.meaning_ja}</dd>
+                </div>
+                <div>
+                  <dt>文脈</dt>
+                  <dd>{current_review_word.context_scene_ja}</dd>
+                </div>
+                <div>
+                  <dt>例文</dt>
+                  <dd>{current_review_word.example_sentence_ja}</dd>
+                </div>
+              </dl>
+              <p className="review_hint">評価を選ぶと次回の復習日時が更新されます。</p>
+              <div className="review_grade_row" aria-label="復習評価">
+                {REVIEW_GRADES.map((grade) => (
+                  <button
+                    key={grade}
+                    type="button"
+                    className="review_grade_button"
+                    onClick={() => {
+                      void handle_review_grade(grade)
+                    }}
+                    disabled={review_grading_word_id === current_review_word.id}
+                  >
+                    {review_grading_word_id === current_review_word.id ? '送信中...' : grade}
+                  </button>
+                ))}
+              </div>
+            </article>
+          ) : null}
+
+          {current_review_word === null && review_loading === false ? (
+            <p className="library_hint">今日の復習は完了しました。</p>
+          ) : null}
+
+          {review_status_message.length > 0 ? (
+            <p role="status" className="status_message">
+              {review_status_message}
+            </p>
+          ) : null}
+          {review_error_message.length > 0 ? (
+            <p role="alert" className="error_message">
+              {review_error_message}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
     </main>
   )
 }

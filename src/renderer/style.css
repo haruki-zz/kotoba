@@ -169,3 +169,70 @@ button:disabled {
   margin: 8px 0 0;
   color: #334155;
 }
+
+.review_stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.review_stat {
+  margin: 0;
+  color: #334155;
+}
+
+.review_card {
+  border: 1px solid #dbe3ee;
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 16px;
+}
+
+.review_word {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.review_reading {
+  margin: 8px 0 0;
+  color: #0f766e;
+  font-size: 16px;
+}
+
+.review_details {
+  margin: 16px 0 0;
+  display: grid;
+  gap: 12px;
+}
+
+.review_details div {
+  display: grid;
+  gap: 4px;
+}
+
+.review_details dt {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.review_details dd {
+  margin: 0;
+  color: #334155;
+}
+
+.review_hint {
+  margin: 16px 0 12px;
+  color: #475569;
+}
+
+.review_grade_row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.review_grade_button {
+  min-width: 64px;
+}

@@ -4,6 +4,7 @@ import { LibraryRepository } from './library_repository'
 import { LibraryService } from './library_service'
 import { create_default_keytar_secret_store } from './keytar_secret_store'
 import { register_ipc_router } from './ipc_router'
+import { ReviewService } from './review_service'
 import { SettingsRepository } from './settings_repository'
 import { WordAddDraftRepository } from './word_add_draft_repository'
 import { WordEntryService } from './word_entry_service'
@@ -61,11 +62,15 @@ app.whenReady().then(() => {
       const library_service = new LibraryService({
         library_repository,
       })
+      const review_service = new ReviewService({
+        library_repository,
+      })
 
       register_ipc_router({
         word_entry_service,
         word_add_draft_repository,
         library_service,
+        review_service,
       })
 
       create_main_window()

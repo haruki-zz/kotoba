@@ -10,6 +10,8 @@ export const IPC_CHANNELS = {
   LIBRARY_LIST: 'library:list',
   LIBRARY_UPDATE: 'library:update',
   LIBRARY_DELETE: 'library:delete',
+  REVIEW_QUEUE: 'review:queue',
+  REVIEW_GRADE: 'review:grade',
 } as const
 
 export type IpcAllowedChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS]
@@ -118,6 +120,49 @@ export interface LibraryDeletePayload {
 
 export interface LibraryDeleteResult {
   deleted_word_id: string
+  message_ja: string
+}
+
+export interface ReviewQueueWordItem {
+  id: string
+  word: string
+  reading_kana: string
+  meaning_ja: string
+  context_scene_ja: string
+  example_sentence_ja: string
+  review_state: {
+    repetition: number
+    interval_days: number
+    easiness_factor: number
+    next_review_at: string
+    last_review_at: string | null
+    last_grade: number | null
+  }
+}
+
+export interface ReviewQueueResult {
+  due_words: ReviewQueueWordItem[]
+  due_count: number
+  completed_today_count: number
+}
+
+export interface ReviewGradePayload {
+  word_id: string
+  grade: number
+}
+
+export interface ReviewGradeResult {
+  reviewed_word_id: string
+  updated_review_state: {
+    repetition: number
+    interval_days: number
+    easiness_factor: number
+    next_review_at: string
+    last_review_at: string | null
+    last_grade: number | null
+  }
+  due_count: number
+  completed_today_count: number
   message_ja: string
 }
 
@@ -255,4 +300,20 @@ export const is_library_delete_payload = (value: unknown): value is LibraryDelet
 
   const maybe_payload = value as Partial<LibraryDeletePayload>
   return typeof maybe_payload.word_id === 'string' && maybe_payload.word_id.trim().length > 0
+}
+
+export const is_review_grade_payload = (value: unknown): value is ReviewGradePayload => {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const maybe_payload = value as Partial<ReviewGradePayload>
+  return (
+    typeof maybe_payload.word_id === 'string' &&
+    maybe_payload.word_id.trim().length > 0 &&
+    typeof maybe_payload.grade === 'number' &&
+    Number.isInteger(maybe_payload.grade) &&
+    maybe_payload.grade >= 0 &&
+    maybe_payload.grade <= 5
+  )
 }

@@ -1,11 +1,11 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 10，且步骤 10 已通过用户验证。
-- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + E2E 回归已接入”阶段。
+- 当前已完成实施计划步骤 11，其中步骤 10 已通过用户验证，步骤 11 等待用户验证。
+- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + E2E 回归已接入”阶段。
 - 已具备主进程、预加载、渲染层、共享契约、单测与 E2E 的最小闭环。
-- 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路。
-- 后续开发入口是 `plan.md` 的 `步骤 11（SM-2 复习引擎与复习页）`。
+- 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路。
+- 后续开发入口在用户验证步骤 11 后切换到 `plan.md` 的 `步骤 12（review_logs 与统计基础）`。
 
 ## 2. 顶层文件结构与职责
 - `AGENTS.md`
@@ -64,11 +64,19 @@
     - `library:list`
     - `library:update`
     - `library:delete`
+    - `review:queue`
+    - `review:grade`
   - 将业务错误映射为 `APP_API_KEY_MISSING`、`APP_VALIDATION_ERROR`、`APP_GENERATION_FAILED`、`APP_STORAGE_ERROR`、`APP_NOT_FOUND`。
 - `library_service.ts`
   - 第 10 步核心服务：词库列表/搜索/编辑/删除。
   - 搜索规则：`trim + NFKC + 拉丁小写 + 假名不敏感`，字段范围 `word/reading_kana/meaning_ja`。
   - 编辑规则：字段约束校验 + 日语校验 + 重复单词冲突校验。
+- `sm2.ts`
+  - 第 11 步核心纯函数模块。
+  - 负责 SM-2 的 EF/interval/repetition/time 字段计算，不依赖 IO。
+- `review_service.ts`
+  - 第 11 步核心服务：待复习队列读取与评分持久化。
+  - 规则：`next_review_at <= now` 入队；“今日完成”按系统本地自然日统计。
 - `library_repository.ts`
   - 词库 JSON 仓储。
   - 能力：原子写入、串行写、每日备份、启动恢复、`schema_version` 顺序迁移、失败回滚。
@@ -116,9 +124,11 @@
   - 当前 UI 主页面。
   - 已实现：
     - 顶部标签页：`単語追加`、`単語帳`
+    - 顶部标签页：`復習`
     - `単語追加` 输入/生成/编辑/保存流程
     - 草稿机制：`800ms` 防抖自动保存、切页强制保存、`beforeunload` 强制保存、保存成功后清理
     - `単語帳` 列表、搜索、行内编辑、删除确认
+    - `復習` 到期卡片、评分按钮 `0-5`、剩余/今日完成统计
     - 生成/保存/编辑/删除状态与错误提示（日语）
 - `style.css`
   - 页面样式（表单、标签、状态提示样式）。
@@ -149,6 +159,10 @@
   - Gemini 重试/退避与非日语自动重试测试。
 - `src/main/library_service.test.ts`
   - 搜索标准化与词库编辑/删除行为测试。
+- `src/main/sm2.test.ts`
+  - SM-2 算法顺序、EF 下限、评分 `0-5` 覆盖测试。
+- `src/main/review_queue.test.ts`
+  - 待复习队列、本地时区今日统计、评分持久化测试。
 
 ### 4.2 端到端测试（Playwright + Electron）
 - `e2e/word_add.spec.ts`
@@ -158,12 +172,13 @@
     - `draft`：切页前强制保存可恢复
     - `duplicate-word`：`trim + NFKC` 判重覆盖
     - `library-crud`：词库列表/搜索/编辑/删除
+    - `review-flow`：复习页评分与 `review_state` 持久化
   - 使用临时 `userData` 目录，避免污染本地真实数据。
 
-## 5. 当前运行流程（步骤 10 快照）
+## 5. 当前运行流程（步骤 11 快照）
 1. `pnpm dev` 启动 Vite、main/preload watch、Electron。
 2. 渲染层通过 `window.kotoba.invoke` 调用 IPC。
-3. 主进程 `ipc_router` 校验 channel/payload 后分发到 `WordEntryService`、`WordAddDraftRepository`、`LibraryService`。
+3. 主进程 `ipc_router` 校验 channel/payload 后分发到 `WordEntryService`、`WordAddDraftRepository`、`LibraryService`、`ReviewService`。
 4. 生成流程：
   - 若未配置 API Key，返回 `APP_API_KEY_MISSING`。
   - 若配置有效，调用 Gemini 生成并回填四字段。
@@ -175,16 +190,20 @@
   - `library:list`：返回按 `updated_at` 倒序的词条列表，并按规范执行搜索标准化匹配。
   - `library:update`：更新词条字段并保留 `review_state`，发生冲突返回可定位错误。
   - `library:delete`：按 `word_id` 删除词条并更新 `updated_at`。
+7. 复习流程：
+  - `review:queue`：返回所有 `next_review_at <= now` 的词条，并统计本地自然日内已完成词条数。
+  - `review:grade`：按 SM-2 纯函数计算新 `review_state`，立即持久化到词库。
 
 ## 6. 当前交接重点
-- 已通过用户验证的最后一步是步骤 10，因此后续开发默认从步骤 11 开始。
+- 已通过用户验证的最后一步是步骤 10；步骤 11 已实现并等待验证。
 - 若后续修改 `単語帳`、IPC 契约、词库存储或搜索规则，必须同步更新对应单测、E2E 与 `memory-bank` 文档。
 - 当前 `単語帳` 已不是占位页，任何后续 AI 开发者都应将其视为已稳定实现的基础能力。
+- 当前 `復習` 页面也已具备最小闭环；在步骤 11 验证通过前，不应开始步骤 12 的 `review_logs` 改造。
 
 ## 7. 当前质量门禁流程
 1. 代码质量：`pnpm lint`、`pnpm format:check`、`pnpm typecheck`。
 2. 单元测试：`pnpm test`（实际执行 `pnpm test:unit`，仅覆盖 `src`）。
-3. E2E 测试：`pnpm test:e2e --grep "word-create|draft|duplicate-word|library-crud"`。
+3. E2E 测试：`pnpm test:e2e --grep "word-create|draft|duplicate-word|library-crud|review-flow"`。
 4. 提交门禁：`husky pre-commit -> pnpm lint-staged`。
 
 ## 8. memory-bank 文档职责

@@ -24,8 +24,17 @@ interface LaunchedApp {
 }
 
 interface LibraryWordRecord {
+  id: string
   word: string
   meaning_ja: string
+  review_state: {
+    repetition: number
+    interval_days: number
+    easiness_factor: number
+    next_review_at: string
+    last_review_at: string | null
+    last_grade: number | null
+  }
 }
 
 interface LibraryFileRecord {
@@ -278,4 +287,42 @@ test('library-crud: list search edit delete words in library page', async () => 
   expect(library.words[0]?.meaning_ja).toBe(
     '更新後の意味です。人工知能の応用領域全体を示す語です。'
   )
+})
+
+test('review-flow: grade due word and persist updated review_state', async () => {
+  const user_data_dir = await create_temp_user_data_dir('kotoba-e2e-review-flow')
+  const launched = await launch_app(user_data_dir)
+
+  try {
+    await create_word_by_generate_then_save(
+      launched.page,
+      '復習',
+      '学んだ内容を繰り返し確認する行為です。'
+    )
+    await expect(launched.page.getByRole('status')).toHaveText('単語を保存しました')
+
+    await launched.page.getByRole('button', { name: '復習' }).click()
+    await expect(launched.page.getByText('残り 1 件')).toBeVisible()
+    await expect(launched.page.locator('.review_word')).toHaveText('復習')
+
+    await launched.page.getByRole('button', { name: '4' }).click()
+    await expect(launched.page.getByRole('status')).toHaveText('復習結果を保存しました')
+    await expect(launched.page.getByText('残り 0 件')).toBeVisible()
+    await expect(launched.page.getByText('今日完了 1 件')).toBeVisible()
+    await expect(launched.page.getByText('今日の復習は完了しました。')).toBeVisible()
+  } finally {
+    await close_app(launched.electron_app)
+  }
+
+  const library = await read_library_file(user_data_dir)
+  expect(library.words).toHaveLength(1)
+  expect(library.words[0]?.word).toBe('復習')
+  expect(library.words[0]?.review_state.repetition).toBe(1)
+  expect(library.words[0]?.review_state.interval_days).toBe(1)
+  expect(library.words[0]?.review_state.last_grade).toBe(4)
+  expect(library.words[0]?.review_state.last_review_at).not.toBeNull()
+
+  const next_review_at = new Date(library.words[0]!.review_state.next_review_at).getTime()
+  const last_review_at = new Date(library.words[0]!.review_state.last_review_at!).getTime()
+  expect(next_review_at).toBeGreaterThan(last_review_at)
 })
