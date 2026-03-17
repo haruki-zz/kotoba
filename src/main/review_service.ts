@@ -1,4 +1,11 @@
-import { type ReviewState, type Word } from '../shared/domain_schema'
+import { randomUUID } from 'node:crypto'
+
+import {
+  REVIEW_LOG_RETENTION_LIMIT,
+  type ReviewLog,
+  type ReviewState,
+  type Word,
+} from '../shared/domain_schema'
 import { type LibraryRepository } from './library_repository'
 import { calculate_sm2_review_state } from './sm2'
 
@@ -74,6 +81,7 @@ export class ReviewService {
 
     const now = this.now()
     const now_iso = now.toISOString()
+    let before_review_state: ReviewState | null = null
     let updated_review_state: ReviewState | null = null
 
     const updated_library = await this.library_repository.update_library((current_library) => {
@@ -83,27 +91,38 @@ export class ReviewService {
       }
 
       const target_word = current_library.words[target_index]
-      updated_review_state = calculate_sm2_review_state({
+      const previous_review_state = { ...target_word.review_state }
+      const next_review_state = calculate_sm2_review_state({
         review_state: target_word.review_state,
         grade: input.grade,
         now,
       })
+      before_review_state = previous_review_state
+      updated_review_state = next_review_state
 
       const next_words = [...current_library.words]
       next_words[target_index] = {
         ...target_word,
-        review_state: updated_review_state,
+        review_state: next_review_state,
         updated_at: now_iso,
       }
+      const review_log = create_review_log({
+        word_id: target_word.id,
+        grade: input.grade,
+        reviewed_at: now_iso,
+        before_state: previous_review_state,
+        after_state: next_review_state,
+      })
 
       return {
         ...current_library,
         updated_at: now_iso,
         words: next_words,
+        review_logs: append_review_log(current_library.review_logs, review_log),
       }
     })
 
-    if (updated_review_state === null) {
+    if (before_review_state === null || updated_review_state === null) {
       throw new Error('Review state was not updated.')
     }
 
@@ -172,4 +191,28 @@ const validate_review_grade = (grade: number): void => {
   if (Number.isInteger(grade) === false || grade < 0 || grade > 5) {
     throw new ReviewValidationError('復習評価は0から5の整数で入力してください。')
   }
+}
+
+const create_review_log = (input: {
+  word_id: string
+  grade: number
+  reviewed_at: string
+  before_state: ReviewState
+  after_state: ReviewState
+}): ReviewLog => ({
+  id: randomUUID(),
+  word_id: input.word_id,
+  grade: input.grade,
+  reviewed_at: input.reviewed_at,
+  before_state: { ...input.before_state },
+  after_state: { ...input.after_state },
+})
+
+const append_review_log = (review_logs: ReviewLog[], review_log: ReviewLog): ReviewLog[] => {
+  const next_review_logs = [...review_logs, review_log]
+  if (next_review_logs.length <= REVIEW_LOG_RETENTION_LIMIT) {
+    return next_review_logs
+  }
+
+  return next_review_logs.slice(-REVIEW_LOG_RETENTION_LIMIT)
 }

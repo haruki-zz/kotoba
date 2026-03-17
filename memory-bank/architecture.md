@@ -1,11 +1,11 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 11，且步骤 11 已通过用户验证。
-- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + E2E 回归已接入”阶段。
+- 当前已完成实施计划步骤 12 的实现，其中步骤 11 已通过用户验证，步骤 12 等待用户验证。
+- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + E2E 回归已接入”阶段。
 - 已具备主进程、预加载、渲染层、共享契约、单测与 E2E 的最小闭环。
-- 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路。
-- 后续开发入口是 `plan.md` 的 `步骤 12（review_logs 与统计基础）`。
+- 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路、`review_logs` 基础审计链路。
+- 当前交接边界是等待用户验证 `plan.md` 的 `步骤 12（review_logs 与统计基础）`，不进入后续步骤。
 
 ## 2. 顶层文件结构与职责
 - `AGENTS.md`
@@ -77,6 +77,7 @@
 - `review_service.ts`
   - 第 11 步核心服务：待复习队列读取与评分持久化。
   - 规则：`next_review_at <= now` 入队；“今日完成”按系统本地自然日统计。
+  - 第 12 步补充：每次评分追加 `review_log`，并保留最近 `50000` 条。
 - `library_repository.ts`
   - 词库 JSON 仓储。
   - 能力：原子写入、串行写、每日备份、启动恢复、`schema_version` 顺序迁移、失败回滚。
@@ -115,7 +116,7 @@
   - 为 main/preload/renderer 提供统一契约。
 - `domain_schema.ts`
   - 领域 schema 与类型定义（`Word`、`ReviewState`、`ReviewLog`、`LibraryRoot`、`Settings`）。
-  - 固化 `schema_version=1` 与 AI 字段长度约束。
+  - 固化 `schema_version=1`、`REVIEW_LOG_RETENTION_LIMIT=50000` 与 AI 字段长度约束。
 
 ### 3.4 渲染层（`src/renderer`）
 - `main.tsx`
@@ -162,6 +163,10 @@
   - SM-2 算法顺序、EF 下限、评分 `0-5` 覆盖测试。
 - `src/main/review_queue.test.ts`
   - 待复习队列、本地时区今日统计、评分持久化测试。
+- `src/main/review_logs.test.ts`
+  - 评分后写入 `before_state/after_state/grade/reviewed_at` 的测试。
+- `src/main/log_retention.test.ts`
+  - `review_logs` 超过 `50000` 条时淘汰最旧记录的测试。
 
 ### 4.2 端到端测试（Playwright + Electron）
 - `e2e/word_add.spec.ts`
@@ -174,7 +179,7 @@
     - `review-flow`：复习页评分与 `review_state` 持久化
   - 使用临时 `userData` 目录，避免污染本地真实数据。
 
-## 5. 当前运行流程（步骤 11 快照）
+## 5. 当前运行流程（步骤 12 快照）
 1. `pnpm dev` 启动 Vite、main/preload watch、Electron。
 2. 渲染层通过 `window.kotoba.invoke` 调用 IPC。
 3. 主进程 `ipc_router` 校验 channel/payload 后分发到 `WordEntryService`、`WordAddDraftRepository`、`LibraryService`、`ReviewService`。
@@ -191,13 +196,14 @@
   - `library:delete`：按 `word_id` 删除词条并更新 `updated_at`。
 7. 复习流程：
   - `review:queue`：返回所有 `next_review_at <= now` 的词条，并统计本地自然日内已完成词条数。
-  - `review:grade`：按 SM-2 纯函数计算新 `review_state`，立即持久化到词库。
+  - `review:grade`：按 SM-2 纯函数计算新 `review_state`，追加一条 `review_log`，并立即持久化到词库。
+  - `review_logs` 保留最近 `50000` 条，超限时删除最旧记录。
 
 ## 6. 当前交接重点
-- 已通过用户验证的最后一步是步骤 11，因此后续开发默认从步骤 12 开始。
+- 已通过用户验证的最后一步是步骤 11；步骤 12 已实现并完成自测，当前应等待用户验证。
 - 若后续修改 `単語帳`、IPC 契约、词库存储或搜索规则，必须同步更新对应单测、E2E 与 `memory-bank` 文档。
 - 当前 `単語帳` 已不是占位页，任何后续 AI 开发者都应将其视为已稳定实现的基础能力。
-- 当前 `復習` 页面也已具备已验证的最小闭环；后续实现 `review_logs` 时不应破坏现有评分与队列行为。
+- 当前 `復習` 页面已在不破坏既有评分与队列行为的前提下补齐 `review_logs` 基础记录；用户未验证通过前不进入步骤 13。
 
 ## 7. 当前质量门禁流程
 1. 代码质量：`pnpm lint`、`pnpm format:check`、`pnpm typecheck`。

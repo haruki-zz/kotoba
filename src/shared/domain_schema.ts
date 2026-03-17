@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 export const LIBRARY_SCHEMA_VERSION = 1 as const
+export const REVIEW_LOG_RETENTION_LIMIT = 50_000 as const
 
 export const AI_FIELD_LIMITS = {
   reading_kana: {
