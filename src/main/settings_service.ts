@@ -8,7 +8,9 @@ export class SettingsApiKeyMissingError extends Error {
   readonly code = SETTINGS_API_KEY_MISSING_CODE
 
   constructor() {
-    super('API Key is not configured. 設定ページで API Key を設定してください。')
+    super(
+      'API キーが設定されていません。設定ページで API キーを設定してから、もう一度お試しください。'
+    )
     this.name = 'SettingsApiKeyMissingError'
   }
 }

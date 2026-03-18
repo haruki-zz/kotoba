@@ -24,7 +24,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:unit": "vitest run",
-    "test:e2e": "playwright test",
+    "test:e2e": "pnpm build && playwright test",
     "test": "pnpm test:unit",
     "typecheck": "tsc --noEmit",
     "verify": "pnpm lint && pnpm format:check && pnpm typecheck",

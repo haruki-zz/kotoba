@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
+import { type AppStartupStatusResult } from '../shared/ipc'
 import { LibraryRepository } from './library_repository'
 import { LibraryService } from './library_service'
 import { create_default_keytar_secret_store } from './keytar_secret_store'
@@ -36,6 +37,29 @@ const create_main_window = (): void => {
   void main_window.loadFile(path.join(__dirname, '../../dist/renderer/index.html'))
 }
 
+const create_startup_status = (
+  startup_result: Awaited<ReturnType<LibraryRepository['initialize_on_startup']>>
+): AppStartupStatusResult => {
+  if (startup_result.status === 'recovered') {
+    return {
+      notice_ja: '単語帳データの破損を検出したため、最新のバックアップから復元しました。',
+      notice_kind: 'warning',
+    }
+  }
+
+  if (startup_result.status === 'migrated') {
+    return {
+      notice_ja: '単語帳データを新しい形式に更新しました。',
+      notice_kind: 'info',
+    }
+  }
+
+  return {
+    notice_ja: null,
+    notice_kind: null,
+  }
+}
+
 app.whenReady().then(() => {
   const user_data_dir = app.getPath('userData')
   const library_repository = new LibraryRepository({
@@ -45,7 +69,8 @@ app.whenReady().then(() => {
 
   void library_repository
     .initialize_on_startup()
-    .then(() => {
+    .then((startup_result) => {
+      const startup_status = create_startup_status(startup_result)
       const settings_repository = new SettingsRepository({
         settings_file_path: path.join(user_data_dir, 'kotoba-settings.json'),
       })
@@ -71,6 +96,7 @@ app.whenReady().then(() => {
         word_add_draft_repository,
         library_service,
         review_service,
+        startup_status,
       })
 
       create_main_window()

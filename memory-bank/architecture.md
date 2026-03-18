@@ -1,11 +1,11 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 12，且步骤 12 已通过用户验证。
-- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + E2E 回归已接入”阶段。
+- 当前已完成实施计划步骤 13 的实现，其中步骤 12 已通过用户验证，步骤 13 等待用户验证。
+- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 全日语错误提示可用 + 启动恢复提示可用 + E2E 回归已接入”阶段。
 - 已具备主进程、预加载、渲染层、共享契约、单测与 E2E 的最小闭环。
-- 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路、`review_logs` 基础审计链路。
-- 后续开发入口是 `plan.md` 的 `步骤 13（全日语 UI 与错误处理收敛）`。
+- 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路、`review_logs` 基础审计链路、启动恢复提示链路。
+- 当前交接边界是等待用户验证 `plan.md` 的 `步骤 13（全日语 UI 与错误处理收敛）`，不进入后续步骤。
 
 ## 2. 顶层文件结构与职责
 - `AGENTS.md`
@@ -16,6 +16,7 @@
   - 依赖与脚本入口。
   - 关键脚本：`dev`、`build`、`lint`、`typecheck`、`test:unit`、`test:e2e`、`test`、`verify`、`make:seed-10k`、`bench:search`。
   - `dev:main` 与 `build:main` 使用 `--external:keytar` 以避免原生模块打包错误。
+  - `test:e2e` 会先执行 `pnpm build`，再运行 Playwright。
 - `scripts/`
   - `make_seed_10k.mjs`：生成 1 万词条基准数据。
   - `bench_search.mjs`：执行搜索性能基准并输出 `P50/P95`。
@@ -56,6 +57,7 @@
   - IPC 统一路由与错误映射。
   - 支持频道：
     - `app:ping`
+    - `app:startup-status`
     - `word-add:generate`
     - `word-add:save`
     - `word-add:draft:load`
@@ -67,6 +69,7 @@
     - `review:queue`
     - `review:grade`
   - 将业务错误映射为 `APP_API_KEY_MISSING`、`APP_VALIDATION_ERROR`、`APP_GENERATION_FAILED`、`APP_STORAGE_ERROR`、`APP_NOT_FOUND`。
+  - 第 13 步补充：把 AI 生成常见失败映射为带恢复引导的日语文案。
 - `library_service.ts`
   - 第 10 步核心服务：词库列表/搜索/编辑/删除。
   - 搜索规则：`trim + NFKC + 拉丁小写 + 假名不敏感`，字段范围 `word/reading_kana/meaning_ja`。
@@ -90,6 +93,7 @@
 - `settings_service.ts`
   - 组装 AI 运行时设置（settings + api key）。
   - API Key 缺失时抛 `SETTINGS_API_KEY_MISSING`。
+  - 缺失提示文案为纯日语。
 - `ai_provider.ts`
   - Provider 抽象与生成输出校验。
   - 能力：四字段 schema 校验、JSON 解析错误分类、非日语输出检测。
@@ -101,6 +105,7 @@
   - 保存规则：`word` 按 `trim + NFKC` 判重，命中时直接覆盖旧词条并保留既有 `review_state`。
   - 新词保存时创建初始 `review_state`。
   - 支持 `KOTOBA_FAKE_GENERATE_CARD_JSON` 测试桩（E2E 用）。
+  - 第 13 步补充：支持 `KOTOBA_FAKE_GENERATE_ERROR_CODE` 生成失败测试桩。
 - `word_add_draft_repository.ts`
   - `単語追加` 单份草稿仓储。
   - 能力：草稿读取、写入、清理；原子写入；基础 schema 校验。
@@ -114,6 +119,7 @@
 - `ipc.ts`
   - IPC 通道常量、请求响应类型、错误码、payload 校验函数。
   - 为 main/preload/renderer 提供统一契约。
+  - 第 13 步补充：新增 `app:startup-status` 与 `AppStartupStatusResult`。
 - `domain_schema.ts`
   - 领域 schema 与类型定义（`Word`、`ReviewState`、`ReviewLog`、`LibraryRoot`、`Settings`）。
   - 固化 `schema_version=1`、`REVIEW_LOG_RETENTION_LIMIT=50000` 与 AI 字段长度约束。
@@ -130,6 +136,7 @@
     - `単語帳` 列表、搜索、行内编辑、删除确认
     - `復習` 到期卡片、评分按钮 `0-5`、剩余/今日完成统计
     - 生成/保存/编辑/删除状态与错误提示（日语）
+    - 启动恢复/迁移时的顶部全局通知
 - `style.css`
   - 页面样式（表单、标签、状态提示样式）。
 - `window.d.ts`
@@ -177,33 +184,41 @@
     - `duplicate-word`：`trim + NFKC` 判重覆盖
     - `library-crud`：词库列表/搜索/编辑/删除
     - `review-flow`：复习页评分与 `review_state` 持久化
+    - `i18n-ja`：主页面、标签、按钮、搜索占位、删除确认弹窗均为日语
+    - `error-handling`：API Key 缺失/无效、网络失败、超时、损坏回退提示
   - 使用临时 `userData` 目录，避免污染本地真实数据。
 
-## 5. 当前运行流程（步骤 12 快照）
+## 5. 当前运行流程（步骤 13 快照）
 1. `pnpm dev` 启动 Vite、main/preload watch、Electron。
 2. 渲染层通过 `window.kotoba.invoke` 调用 IPC。
 3. 主进程 `ipc_router` 校验 channel/payload 后分发到 `WordEntryService`、`WordAddDraftRepository`、`LibraryService`、`ReviewService`。
-4. 生成流程：
+4. 启动提示流程：
+  - `LibraryRepository.initialize_on_startup()` 返回 `ok/created/recovered/migrated`。
+  - 主进程把 `recovered/migrated` 转换为 `app:startup-status` 的日语通知。
+  - 渲染层启动时读取该状态，并在页面顶部显示通知。
+5. 生成流程：
   - 若未配置 API Key，返回 `APP_API_KEY_MISSING`。
+  - 若 API Key 无效、网络失败、超时、429、解析失败，则返回日语错误提示，并保留当前输入。
   - 若配置有效，调用 Gemini 生成并回填四字段。
-5. 保存流程：
+6. 保存流程：
   - 执行字段校验与日语校验。
   - 按 `word(trim + NFKC)` 判重，命中则覆盖，否则新增。
   - 成功后清理草稿文件。
-6. 词库管理流程：
+7. 词库管理流程：
   - `library:list`：返回按 `updated_at` 倒序的词条列表，并按规范执行搜索标准化匹配。
   - `library:update`：更新词条字段并保留 `review_state`，发生冲突返回可定位错误。
   - `library:delete`：按 `word_id` 删除词条并更新 `updated_at`。
-7. 复习流程：
+8. 复习流程：
   - `review:queue`：返回所有 `next_review_at <= now` 的词条，并统计本地自然日内已完成词条数。
   - `review:grade`：按 SM-2 纯函数计算新 `review_state`，追加一条 `review_log`，并立即持久化到词库。
   - `review_logs` 保留最近 `50000` 条，超限时删除最旧记录。
 
 ## 6. 当前交接重点
-- 已通过用户验证的最后一步是步骤 12，因此后续开发默认从步骤 13 开始。
+- 已通过用户验证的最后一步是步骤 12；步骤 13 已实现并完成自测，当前应等待用户验证。
 - 若后续修改 `単語帳`、IPC 契约、词库存储或搜索规则，必须同步更新对应单测、E2E 与 `memory-bank` 文档。
 - 当前 `単語帳` 已不是占位页，任何后续 AI 开发者都应将其视为已稳定实现的基础能力。
-- 当前 `復習` 页面已在不破坏既有评分与队列行为的前提下补齐 `review_logs` 基础记录；后续实现步骤 13 时应保持既有复习持久化行为不回退。
+- 当前 `復習` 页面已在不破坏既有评分与队列行为的前提下补齐 `review_logs` 基础记录。
+- 当前第 13 步新增的全局启动提示与日语错误提示不应在后续步骤中被回退。
 
 ## 7. 当前质量门禁流程
 1. 代码质量：`pnpm lint`、`pnpm format:check`、`pnpm typecheck`。

@@ -1,4 +1,4 @@
-import { access, mkdtemp, readFile } from 'node:fs/promises'
+import { access, copyFile, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -23,6 +23,11 @@ interface LaunchedApp {
   page: Page
 }
 
+interface LaunchAppOptions {
+  fake_generated_card_json?: string | null
+  fake_generate_error_code?: 'api-key-missing' | 'network' | 'timeout' | 'api-key-invalid'
+}
+
 interface LibraryWordRecord {
   id: string
   word: string
@@ -38,17 +43,27 @@ interface LibraryWordRecord {
 }
 
 interface LibraryFileRecord {
+  schema_version: number
+  updated_at: string
   words: LibraryWordRecord[]
+  review_logs: unknown[]
 }
 
-const launch_app = async (user_data_dir: string): Promise<LaunchedApp> => {
+const launch_app = async (
+  user_data_dir: string,
+  options: LaunchAppOptions = {}
+): Promise<LaunchedApp> => {
   const electron_app = await electron.launch({
     args: ['.'],
     cwd: process.cwd(),
     env: {
       ...process.env,
       KOTOBA_USER_DATA_DIR: user_data_dir,
-      KOTOBA_FAKE_GENERATE_CARD_JSON: JSON.stringify(FAKE_GENERATED_CARD),
+      KOTOBA_FAKE_GENERATE_CARD_JSON:
+        options.fake_generated_card_json === undefined
+          ? JSON.stringify(FAKE_GENERATED_CARD)
+          : (options.fake_generated_card_json ?? ''),
+      KOTOBA_FAKE_GENERATE_ERROR_CODE: options.fake_generate_error_code ?? '',
     },
   })
 
@@ -77,6 +92,13 @@ const file_exists = async (target_path: string): Promise<boolean> => {
   } catch {
     return false
   }
+}
+
+const create_backup_from_current_library = async (user_data_dir: string): Promise<void> => {
+  const library_path = path.join(user_data_dir, 'kotoba-library.json')
+  const backup_dir_path = path.join(user_data_dir, 'backups')
+  await mkdir(backup_dir_path, { recursive: true })
+  await copyFile(library_path, path.join(backup_dir_path, 'kotoba-library-manual-recovery.json'))
 }
 
 const wait_for_kotoba_window = async (electron_app: ElectronApplication): Promise<Page> => {
@@ -325,4 +347,141 @@ test('review-flow: grade due word and persist updated review_state', async () =>
   const next_review_at = new Date(library.words[0]!.review_state.next_review_at).getTime()
   const last_review_at = new Date(library.words[0]!.review_state.last_review_at!).getTime()
   expect(next_review_at).toBeGreaterThan(last_review_at)
+})
+
+test('i18n-ja: shows japanese labels, actions, and dialog text on the main flows', async () => {
+  const user_data_dir = await create_temp_user_data_dir('kotoba-e2e-i18n-ja')
+  const launched = await launch_app(user_data_dir)
+
+  try {
+    await expect(launched.page.getByRole('heading', { name: 'Kotoba' })).toBeVisible()
+    await expect(
+      launched.page.getByText('日本語の単語を生成・編集して保存できます。')
+    ).toBeVisible()
+    await expect(launched.page.getByRole('button', { name: '単語追加' })).toBeVisible()
+    await expect(launched.page.getByRole('button', { name: '単語帳' })).toBeVisible()
+    await expect(launched.page.getByRole('button', { name: '復習' })).toBeVisible()
+    await expect(launched.page.getByLabel('単語')).toBeVisible()
+    await expect(launched.page.getByLabel('読み仮名')).toBeVisible()
+    await expect(launched.page.getByLabel('意味')).toBeVisible()
+    await expect(launched.page.getByLabel('文脈')).toBeVisible()
+    await expect(launched.page.getByLabel('例文')).toBeVisible()
+    await expect(launched.page.getByRole('button', { name: '生成' })).toBeVisible()
+    await expect(launched.page.getByRole('button', { name: '保存' })).toBeVisible()
+
+    await create_word_by_generate_then_save(
+      launched.page,
+      '景色',
+      '見える風景や周囲の眺めを表す言葉です。'
+    )
+    await expect(launched.page.getByRole('status')).toHaveText('単語を保存しました')
+
+    await launched.page.getByRole('button', { name: '単語帳' }).click()
+    await expect(launched.page.getByRole('heading', { name: '単語帳' })).toBeVisible()
+    await expect(launched.page.getByLabel('単語帳検索')).toHaveAttribute(
+      'placeholder',
+      '単語・読み仮名・意味で検索'
+    )
+    await expect(launched.page.getByRole('button', { name: '編集' })).toBeVisible()
+    await expect(launched.page.getByRole('button', { name: '削除' })).toBeVisible()
+
+    const delete_dialog = new Promise<void>((resolve) => {
+      launched.page.once('dialog', async (dialog) => {
+        expect(dialog.message()).toBe('「景色」を削除しますか？')
+        await dialog.dismiss()
+        resolve()
+      })
+    })
+    await launched.page.getByRole('button', { name: '削除' }).click()
+    await delete_dialog
+
+    await launched.page.getByRole('button', { name: '復習' }).click()
+    await expect(launched.page.getByRole('heading', { name: '復習' })).toBeVisible()
+    await expect(launched.page.getByText('残り 1 件')).toBeVisible()
+    await expect(launched.page.getByText('今日完了 0 件')).toBeVisible()
+    await expect(
+      launched.page.getByText('評価を選ぶと次回の復習日時が更新されます。')
+    ).toBeVisible()
+  } finally {
+    await close_app(launched.electron_app)
+  }
+})
+
+test('error-handling: keeps input and shows japanese guidance for generate failures', async () => {
+  const scenarios: Array<{
+    name: string
+    fake_generate_error_code: LaunchAppOptions['fake_generate_error_code']
+    expected_message: string
+  }> = [
+    {
+      name: 'api-key-missing',
+      fake_generate_error_code: 'api-key-missing',
+      expected_message:
+        'API キーが設定されていません。設定ページで API キーを設定してから、もう一度お試しください。',
+    },
+    {
+      name: 'network',
+      fake_generate_error_code: 'network',
+      expected_message:
+        'ネットワークエラーが発生しました。接続を確認して、もう一度お試しください。入力内容は保持されています。',
+    },
+    {
+      name: 'timeout',
+      fake_generate_error_code: 'timeout',
+      expected_message:
+        '応答がタイムアウトしました。時間を置いて、もう一度お試しください。入力内容は保持されています。',
+    },
+    {
+      name: 'api-key-invalid',
+      fake_generate_error_code: 'api-key-invalid',
+      expected_message: 'API キーが無効です。設定を確認してから、もう一度お試しください。',
+    },
+  ]
+
+  for (const scenario of scenarios) {
+    const user_data_dir = await create_temp_user_data_dir(`kotoba-e2e-${scenario.name}`)
+    const launched = await launch_app(user_data_dir, {
+      fake_generated_card_json: null,
+      fake_generate_error_code: scenario.fake_generate_error_code,
+    })
+
+    try {
+      await launched.page.getByLabel('単語').fill('試験')
+      await launched.page.getByRole('button', { name: '生成' }).click()
+      await expect(launched.page.getByRole('alert')).toHaveText(scenario.expected_message)
+      await expect(launched.page.getByLabel('単語')).toHaveValue('試験')
+    } finally {
+      await close_app(launched.electron_app)
+    }
+  }
+})
+
+test('error-handling: restores the latest backup and notifies the user in japanese', async () => {
+  const user_data_dir = await create_temp_user_data_dir('kotoba-e2e-startup-recovery')
+  const first_launch = await launch_app(user_data_dir)
+
+  try {
+    await create_word_by_generate_then_save(
+      first_launch.page,
+      '復旧',
+      '破損から戻したことを確認するための単語です。'
+    )
+    await expect(first_launch.page.getByRole('status')).toHaveText('単語を保存しました')
+  } finally {
+    await close_app(first_launch.electron_app)
+  }
+
+  await create_backup_from_current_library(user_data_dir)
+  await writeFile(path.join(user_data_dir, 'kotoba-library.json'), '{ broken json', 'utf8')
+
+  const relaunched = await launch_app(user_data_dir)
+  try {
+    await expect(relaunched.page.getByRole('alert')).toHaveText(
+      '単語帳データの破損を検出したため、最新のバックアップから復元しました。'
+    )
+    await relaunched.page.getByRole('button', { name: '単語帳' }).click()
+    await expect(relaunched.page.locator('.library_item')).toContainText('復旧')
+  } finally {
+    await close_app(relaunched.electron_app)
+  }
 })

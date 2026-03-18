@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import {
+  AiProviderError,
   ensure_generated_word_card_is_japanese,
   generated_word_card_schema,
   type AiProvider,
@@ -67,6 +68,11 @@ export class WordEntryService {
     const fake_generated_word_card = load_fake_generated_word_card_from_env()
     if (fake_generated_word_card !== null) {
       return fake_generated_word_card
+    }
+
+    const fake_generate_error = load_fake_generate_error_from_env()
+    if (fake_generate_error !== null) {
+      throw fake_generate_error
     }
 
     const runtime_settings = await load_ai_runtime_settings(this.settings_service_deps)
@@ -209,4 +215,30 @@ const load_fake_generated_word_card_from_env = (): GeneratedWordCard | null => {
 
   ensure_generated_word_card_is_japanese(parsed_card.data)
   return parsed_card.data
+}
+
+const load_fake_generate_error_from_env = (): Error | null => {
+  const fake_error_code = process.env.KOTOBA_FAKE_GENERATE_ERROR_CODE?.trim()
+  if (typeof fake_error_code !== 'string' || fake_error_code.length === 0) {
+    return null
+  }
+
+  switch (fake_error_code) {
+    case 'api-key-missing':
+      return new SettingsApiKeyMissingError()
+    case 'network':
+      return new AiProviderError('AI_NETWORK_ERROR', 'fetch failed', {
+        retryable: true,
+      })
+    case 'timeout':
+      return new AiProviderError('AI_TIMEOUT', 'request timed out', {
+        retryable: true,
+      })
+    case 'api-key-invalid':
+      return new AiProviderError('AI_UPSTREAM_STATUS', 'Unauthorized', {
+        status_code: 401,
+      })
+    default:
+      throw new WordEntryValidationError('生成テストエラーコードが不正です。')
+  }
 }

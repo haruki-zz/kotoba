@@ -2,6 +2,7 @@ export const IPC_BRIDGE_CHANNEL = 'kotoba:invoke' as const
 
 export const IPC_CHANNELS = {
   APP_PING: 'app:ping',
+  APP_STARTUP_STATUS: 'app:startup-status',
   WORD_ADD_GENERATE: 'word-add:generate',
   WORD_ADD_SAVE: 'word-add:save',
   WORD_ADD_DRAFT_LOAD: 'word-add:draft:load',
@@ -39,6 +40,11 @@ export interface PingPayload {
 export interface PingResult {
   echoed_message: string
   received_at: string
+}
+
+export interface AppStartupStatusResult {
+  notice_ja: string | null
+  notice_kind: 'info' | 'warning' | null
 }
 
 export interface WordAddGeneratePayload {

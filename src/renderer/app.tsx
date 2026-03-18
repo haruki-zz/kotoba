@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import './style.css'
 import {
+  type AppStartupStatusResult,
   IPC_CHANNELS,
   type IpcFailure,
   type IpcResponse,
@@ -63,6 +64,8 @@ const to_library_edit_form = (word: LibraryWordItem): LibraryEditForm => ({
 })
 
 export const App = () => {
+  const [app_notice_message, set_app_notice_message] = useState<string>('')
+  const [app_notice_kind, set_app_notice_kind] = useState<'info' | 'warning' | null>(null)
   const [active_page, set_active_page] = useState<AppPage>('word-add')
   const [draft, set_draft] = useState<WordAddDraftPayload>(EMPTY_DRAFT)
   const [draft_ready, set_draft_ready] = useState<boolean>(false)
@@ -149,6 +152,19 @@ export const App = () => {
     let mounted = true
 
     const load_initial_draft = async (): Promise<void> => {
+      const startup_status_response = (await window.kotoba.invoke(
+        IPC_CHANNELS.APP_STARTUP_STATUS
+      )) as IpcResponse<AppStartupStatusResult>
+      if (
+        mounted &&
+        startup_status_response.ok &&
+        startup_status_response.data.notice_ja !== null &&
+        startup_status_response.data.notice_kind !== null
+      ) {
+        set_app_notice_message(startup_status_response.data.notice_ja)
+        set_app_notice_kind(startup_status_response.data.notice_kind)
+      }
+
       const response = (await window.kotoba.invoke(
         IPC_CHANNELS.WORD_ADD_DRAFT_LOAD
       )) as IpcResponse<WordAddDraftLoadResult>
@@ -421,6 +437,15 @@ export const App = () => {
         <h1>Kotoba</h1>
         <p>日本語の単語を生成・編集して保存できます。</p>
       </header>
+
+      {app_notice_message.length > 0 ? (
+        <p
+          role={app_notice_kind === 'warning' ? 'alert' : 'status'}
+          className={app_notice_kind === 'warning' ? 'error_message' : 'status_message'}
+        >
+          {app_notice_message}
+        </p>
+      ) : null}
 
       <nav className="nav_tabs" aria-label="メインページ">
         <button

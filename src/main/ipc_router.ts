@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import {
   ALLOWED_CHANNEL_SET,
+  type AppStartupStatusResult,
   IPC_BRIDGE_CHANNEL,
   IPC_CHANNELS,
   create_failure_response,
@@ -51,6 +52,7 @@ interface IpcRouterDeps {
   word_add_draft_repository: WordAddDraftRepository
   library_service: LibraryService
   review_service: ReviewService
+  startup_status: AppStartupStatusResult
 }
 
 const app_ping_handler: ChannelHandler = (payload: unknown) => {
@@ -66,6 +68,12 @@ const app_ping_handler: ChannelHandler = (payload: unknown) => {
 
   return create_success_response(result)
 }
+
+const create_app_startup_status_handler =
+  (deps: IpcRouterDeps): ChannelHandler =>
+  async () => {
+    return create_success_response(deps.startup_status)
+  }
 
 const create_word_add_generate_handler =
   (deps: IpcRouterDeps): ChannelHandler =>
@@ -91,9 +99,15 @@ const create_word_add_generate_handler =
         return create_failure_response('APP_VALIDATION_ERROR', error.message)
       }
       if (error instanceof AiProviderError) {
-        return create_failure_response('APP_GENERATION_FAILED', error.message)
+        return create_failure_response(
+          'APP_GENERATION_FAILED',
+          to_generation_error_message_ja(error)
+        )
       }
-      throw error
+      return create_failure_response(
+        'APP_GENERATION_FAILED',
+        '生成に失敗しました。時間を置いて、もう一度お試しください。'
+      )
     }
   }
 
@@ -252,6 +266,7 @@ const create_review_grade_handler =
 export const register_ipc_router = (deps: IpcRouterDeps): void => {
   const channel_handler_map: Record<IpcAllowedChannel, ChannelHandler> = {
     [IPC_CHANNELS.APP_PING]: app_ping_handler,
+    [IPC_CHANNELS.APP_STARTUP_STATUS]: create_app_startup_status_handler(deps),
     [IPC_CHANNELS.WORD_ADD_GENERATE]: create_word_add_generate_handler(deps),
     [IPC_CHANNELS.WORD_ADD_SAVE]: create_word_add_save_handler(deps),
     [IPC_CHANNELS.WORD_ADD_DRAFT_LOAD]: create_word_add_draft_load_handler(deps),
@@ -287,4 +302,48 @@ export const register_ipc_router = (deps: IpcRouterDeps): void => {
       return create_failure_response('IPC_INTERNAL_ERROR', 'Internal IPC error.')
     }
   })
+}
+
+const to_generation_error_message_ja = (error: AiProviderError): string => {
+  const root_error = unwrap_ai_provider_error(error)
+
+  if (root_error.code === 'AI_NETWORK_ERROR') {
+    return 'ネットワークエラーが発生しました。接続を確認して、もう一度お試しください。入力内容は保持されています。'
+  }
+
+  if (root_error.code === 'AI_TIMEOUT') {
+    return '応答がタイムアウトしました。時間を置いて、もう一度お試しください。入力内容は保持されています。'
+  }
+
+  if (
+    root_error.code === 'AI_UPSTREAM_STATUS' &&
+    (root_error.status_code === 401 || root_error.status_code === 403)
+  ) {
+    return 'API キーが無効です。設定を確認してから、もう一度お試しください。'
+  }
+
+  if (root_error.code === 'AI_UPSTREAM_STATUS' && root_error.status_code === 429) {
+    return '利用回数の上限に達しました。しばらく待ってから、もう一度お試しください。'
+  }
+
+  if (root_error.code === 'AI_JSON_INVALID' || root_error.code === 'AI_NON_JAPANESE_OUTPUT') {
+    return '生成結果を解釈できませんでした。もう一度お試しください。必要であれば手動で編集してください。'
+  }
+
+  if (root_error.code === 'AI_CONFIG_INVALID') {
+    return 'AI の設定が不正です。設定内容を確認してください。'
+  }
+
+  return '生成に失敗しました。時間を置いて、もう一度お試しください。'
+}
+
+const unwrap_ai_provider_error = (error: AiProviderError): AiProviderError => {
+  if (error.code === 'AI_RETRY_EXHAUSTED') {
+    const cause = (error as Error & { cause?: unknown }).cause
+    if (cause instanceof AiProviderError) {
+      return unwrap_ai_provider_error(cause)
+    }
+  }
+
+  return error
 }
