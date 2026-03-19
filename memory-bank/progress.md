@@ -2,7 +2,7 @@
 
 ## 1. 当前状态
 - 记录日期：`2026-03-19`
-- 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成；其中步骤 `13` 已通过用户验证，步骤 `14` 已完成代码实现与本地验证。
+- 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成，且步骤 `13` 与步骤 `14` 均已通过用户验证。
 - 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 可回归”阶段。
 
 ## 2. 已完成事项
@@ -218,6 +218,16 @@
   - 新增频道：`app:startup-status`
   - 新增返回类型：`AppStartupStatusResult`
 - 已扩展主进程启动与错误映射：
+  - `src/main/main.ts`
+    - 启动时把词库恢复/迁移状态转换为可展示的日语通知
+  - `src/main/ipc_router.ts`
+    - `word-add:generate` 的 AI 错误映射收敛为日语提示
+- 已完成渲染层全日语收敛：
+  - `src/renderer/app.tsx`
+  - `src/renderer/style.css`
+  - 页面、标签、按钮、空态、提示、删除确认均统一为日语
+- 已新增步骤 13 验证：
+  - E2E：`e2e/word_add.spec.ts` 新增 `i18n-ja` 与 `error-handling` 用例
 
 ### 2.15 对应 plan.md 步骤 14（设置页面与 API Key 配置闭环）
 - 已扩展共享 IPC 契约：
@@ -254,10 +264,9 @@
   - `pnpm typecheck`
   - `pnpm test:unit -- settings`
   - `pnpm exec playwright test -g "settings|i18n-ja|error-handling"`
-  - `src/main/main.ts`
-    - 启动时把词库恢复/迁移状态转换为可展示的日语通知
-  - `src/main/ipc_router.ts`
-    - `word-add:generate` 的 AI 错误映射收敛为日语提示
+- 用户验证结果：
+  - 设置页可正常录入、保存、删除 API Key
+  - 当前步骤已通过用户验收
     - 覆盖场景：API Key 缺失、API Key 无效、网络失败、超时、解析失败、429
   - `src/main/settings_service.ts`
     - API Key 缺失引导错误改为纯日语文案
