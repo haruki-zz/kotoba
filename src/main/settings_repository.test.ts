@@ -7,8 +7,12 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { DEFAULT_SETTINGS } from '../shared/domain_schema'
 import { create_keytar_secret_store, type KeytarClient } from './keytar_secret_store'
 import {
+  delete_api_key,
+  read_settings_overview,
+  save_settings,
   SETTINGS_API_KEY_MISSING_CODE,
   SettingsApiKeyMissingError,
+  SettingsValidationError,
   load_ai_runtime_settings,
 } from './settings_service'
 import { SettingsRepository } from './settings_repository'
@@ -111,5 +115,95 @@ describe('settings_service', () => {
     expect(runtime_settings.timeout_seconds).toBe(DEFAULT_SETTINGS.timeout_seconds)
     expect(runtime_settings.retries).toBe(DEFAULT_SETTINGS.retries)
     expect(runtime_settings.api_key).toBe('test-gemini-key')
+  })
+
+  it('reads settings overview and saves settings without exposing the existing api key', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'kotoba-settings-overview-'))
+    temp_dirs.push(workspace)
+
+    const settings_file_path = join(workspace, 'kotoba-settings.json')
+    const settings_repository = new SettingsRepository({ settings_file_path })
+    const keytar_client = create_memory_keytar_client()
+    const api_key_secret_store = create_keytar_secret_store(keytar_client)
+
+    const initial_overview = await read_settings_overview({
+      settings_repository,
+      api_key_secret_store,
+    })
+    expect(initial_overview.has_api_key).toBe(false)
+    expect(initial_overview.model).toBe(DEFAULT_SETTINGS.model)
+
+    const saved = await save_settings(
+      {
+        settings_repository,
+        api_key_secret_store,
+      },
+      {
+        model: 'gemini-2.0-flash',
+        timeout_seconds: 20,
+        retries: 3,
+        api_key: '  new-secret-key  ',
+      }
+    )
+
+    expect(saved.model).toBe('gemini-2.0-flash')
+    expect(saved.timeout_seconds).toBe(20)
+    expect(saved.retries).toBe(3)
+    expect(saved.has_api_key).toBe(true)
+    expect(saved.message_ja).toContain('API キーを更新')
+    expect(await api_key_secret_store.get_api_key()).toBe('new-secret-key')
+
+    const saved_again = await save_settings(
+      {
+        settings_repository,
+        api_key_secret_store,
+      },
+      {
+        model: 'gemini-2.5-flash',
+        timeout_seconds: 15,
+        retries: 2,
+        api_key: '   ',
+      }
+    )
+
+    expect(saved_again.model).toBe('gemini-2.5-flash')
+    expect(saved_again.has_api_key).toBe(true)
+    expect(saved_again.message_ja).toBe('設定を保存しました。')
+    expect(await api_key_secret_store.get_api_key()).toBe('new-secret-key')
+  })
+
+  it('deletes api key and rejects invalid settings input', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'kotoba-settings-delete-'))
+    temp_dirs.push(workspace)
+
+    const settings_file_path = join(workspace, 'kotoba-settings.json')
+    const settings_repository = new SettingsRepository({ settings_file_path })
+    const keytar_client = create_memory_keytar_client()
+    const api_key_secret_store = create_keytar_secret_store(keytar_client)
+
+    await api_key_secret_store.set_api_key('delete-me')
+
+    const deleted = await delete_api_key({
+      settings_repository,
+      api_key_secret_store,
+    })
+    expect(deleted.has_api_key).toBe(false)
+    expect(deleted.message_ja).toBe('API キーを削除しました。')
+    expect(await api_key_secret_store.get_api_key()).toBeNull()
+
+    const invalid_error = await save_settings(
+      {
+        settings_repository,
+        api_key_secret_store,
+      },
+      {
+        model: 'gemini-2.5-flash',
+        timeout_seconds: 0,
+        retries: 2,
+      }
+    ).catch((error: unknown) => error)
+
+    expect(invalid_error).toBeInstanceOf(SettingsValidationError)
+    expect((invalid_error as SettingsValidationError).message).toContain('タイムアウト')
   })
 })

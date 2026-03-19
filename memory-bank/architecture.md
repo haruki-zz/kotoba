@@ -1,11 +1,11 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 13，且步骤 13 已通过用户验证。
-- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 全日语错误提示可用 + 启动恢复提示可用 + E2E 回归已接入”阶段。
+- 当前已完成实施计划步骤 14；步骤 13 已通过用户验证，步骤 14 已完成代码实现与本地验证。
+- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入”阶段。
 - 已具备主进程、预加载、渲染层、共享契约、单测与 E2E 的最小闭环。
-- 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路、`review_logs` 基础审计链路、启动恢复提示链路。
-- 后续开发入口是 `plan.md` 的 `步骤 14（打包、回归与发布验收）`。
+- 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路、`review_logs` 基础审计链路、启动恢复提示链路、设置页配置链路。
+- 后续开发入口是 `plan.md` 的 `步骤 15（打包、回归与发布验收）`。
 
 ## 2. 顶层文件结构与职责
 - `AGENTS.md`
@@ -51,13 +51,16 @@
   - Electron 主进程入口。
   - 创建窗口并加载渲染页面。
   - 设置安全基线：`contextIsolation: true`、`sandbox: true`、`nodeIntegration: false`。
-  - 启动时初始化 `LibraryRepository`、`SettingsRepository`、`WordAddDraftRepository`、`WordEntryService`、`LibraryService`、`ReviewService` 并注册 IPC。
+  - 启动时初始化 `LibraryRepository`、`SettingsRepository`、`WordAddDraftRepository`、共享 `api_key_secret_store`、`WordEntryService`、`LibraryService`、`ReviewService` 并注册 IPC。
   - 支持 `KOTOBA_USER_DATA_DIR` 覆盖 `userData` 目录（用于测试隔离）。
 - `ipc_router.ts`
   - IPC 统一路由与错误映射。
   - 支持频道：
     - `app:ping`
     - `app:startup-status`
+    - `settings:get`
+    - `settings:save`
+    - `settings:delete-api-key`
     - `word-add:generate`
     - `word-add:save`
     - `word-add:draft:load`
@@ -90,10 +93,12 @@
 - `keytar_secret_store.ts`
   - API Key 系统密钥链适配。
   - keytar service/account：`kotoba` / `gemini_api_key`。
+  - 支持 `KOTOBA_FAKE_KEYTAR_FILE` 文件型测试桩，用于 E2E 隔离。
 - `settings_service.ts`
   - 组装 AI 运行时设置（settings + api key）。
+  - 提供设置概览读取、设置保存、API Key 删除能力。
   - API Key 缺失时抛 `SETTINGS_API_KEY_MISSING`。
-  - 缺失提示文案为纯日语。
+  - 缺失提示文案与设置校验文案均为纯日语。
 - `ai_provider.ts`
   - Provider 抽象与生成输出校验。
   - 能力：四字段 schema 校验、JSON 解析错误分类、非日语输出检测。
@@ -120,6 +125,7 @@
   - IPC 通道常量、请求响应类型、错误码、payload 校验函数。
   - 为 main/preload/renderer 提供统一契约。
   - 第 13 步补充：新增 `app:startup-status` 与 `AppStartupStatusResult`。
+  - 第 14 步补充：新增设置相关 IPC 契约与 payload 校验。
 - `domain_schema.ts`
   - 领域 schema 与类型定义（`Word`、`ReviewState`、`ReviewLog`、`LibraryRoot`、`Settings`）。
   - 固化 `schema_version=1`、`REVIEW_LOG_RETENTION_LIMIT=50000` 与 AI 字段长度约束。
@@ -130,11 +136,12 @@
 - `app.tsx`
   - 当前 UI 主页面。
   - 已实现：
-    - 顶部标签页：`単語追加`、`単語帳`、`復習`
+    - 顶部标签页：`単語追加`、`単語帳`、`復習`、`設定`
     - `単語追加` 输入/生成/编辑/保存流程
     - 草稿机制：`800ms` 防抖自动保存、切页强制保存、`beforeunload` 强制保存、保存成功后清理
     - `単語帳` 列表、搜索、行内编辑、删除确认
     - `復習` 到期卡片、评分按钮 `0-5`、剩余/今日完成统计
+    - `設定`：`model / timeout / retries` 编辑、API Key 状态展示、更新与删除
     - 生成/保存/编辑/删除状态与错误提示（日语）
     - 启动恢复/迁移时的顶部全局通知
 - `style.css`
@@ -157,9 +164,9 @@
 - `src/main/library_repository.rollback.test.ts`
   - 迁移失败回滚测试。
 - `src/main/settings_repository.test.ts`
-  - 设置默认值、更新、API Key 缺失引导测试。
+  - 设置默认值、更新、设置概览/API Key 删除与缺失引导测试。
 - `src/main/keytar_secret_store.test.ts`
-  - keytar 存取删与 API Key 不落盘测试。
+  - keytar/文件型密钥存取删与 API Key 不落盘测试。
 - `src/main/gemini_provider_ai_provider.test.ts`
   - Gemini 正常输出路径测试。
 - `src/main/gemini_provider_ai_retry.test.ts`
@@ -184,14 +191,15 @@
     - `duplicate-word`：`trim + NFKC` 判重覆盖
     - `library-crud`：词库列表/搜索/编辑/删除
     - `review-flow`：复习页评分与 `review_state` 持久化
+    - `settings`：设置页保存、API Key 更新/删除、重启后回读
     - `i18n-ja`：主页面、标签、按钮、搜索占位、删除确认弹窗均为日语
     - `error-handling`：API Key 缺失/无效、网络失败、超时、损坏回退提示
-  - 使用临时 `userData` 目录，避免污染本地真实数据。
+  - 使用临时 `userData` 目录与 `KOTOBA_FAKE_KEYTAR_FILE`，避免污染本地真实数据与钥匙串。
 
-## 5. 当前运行流程（步骤 13 快照）
+## 5. 当前运行流程（步骤 14 快照）
 1. `pnpm dev` 启动 Vite、main/preload watch、Electron。
 2. 渲染层通过 `window.kotoba.invoke` 调用 IPC。
-3. 主进程 `ipc_router` 校验 channel/payload 后分发到 `WordEntryService`、`WordAddDraftRepository`、`LibraryService`、`ReviewService`。
+3. 主进程 `ipc_router` 校验 channel/payload 后分发到 `WordEntryService`、`WordAddDraftRepository`、`LibraryService`、`ReviewService` 与设置服务。
 4. 启动提示流程：
   - `LibraryRepository.initialize_on_startup()` 返回 `ok/created/recovered/migrated`。
   - 主进程把 `recovered/migrated` 转换为 `app:startup-status` 的日语通知。
@@ -208,22 +216,27 @@
   - `library:list`：返回按 `updated_at` 倒序的词条列表，并按规范执行搜索标准化匹配。
   - `library:update`：更新词条字段并保留 `review_state`，发生冲突返回可定位错误。
   - `library:delete`：按 `word_id` 删除词条并更新 `updated_at`。
-8. 复习流程：
+8. 设置流程：
+  - `settings:get`：返回当前 `provider / model / timeout / retries` 与 `has_api_key`。
+  - `settings:save`：保存非敏感设置；若提交了新的 API Key，则写入密钥存储且不回显。
+  - `settings:delete-api-key`：删除 API Key，并使后续生成恢复为“未设置”引导错误。
+9. 复习流程：
   - `review:queue`：返回所有 `next_review_at <= now` 的词条，并统计本地自然日内已完成词条数。
   - `review:grade`：按 SM-2 纯函数计算新 `review_state`，追加一条 `review_log`，并立即持久化到词库。
   - `review_logs` 保留最近 `50000` 条，超限时删除最旧记录。
 
 ## 6. 当前交接重点
-- 已通过用户验证的最后一步是步骤 13，因此后续开发默认从步骤 14 开始。
+- 已通过用户验证的最后一步仍是步骤 13；步骤 14 已完成实现与本地验证，因此后续开发默认从步骤 15 开始。
 - 若后续修改 `単語帳`、IPC 契约、词库存储或搜索规则，必须同步更新对应单测、E2E 与 `memory-bank` 文档。
 - 当前 `単語帳` 已不是占位页，任何后续 AI 开发者都应将其视为已稳定实现的基础能力。
 - 当前 `復習` 页面已在不破坏既有评分与队列行为的前提下补齐 `review_logs` 基础记录。
-- 当前第 13 步新增的全局启动提示与日语错误提示不应在后续步骤中被回退；步骤 14 主要应聚焦打包与最终回归。
+- 当前第 13 步新增的全局启动提示与日语错误提示不应在后续步骤中被回退。
+- 当前第 14 步新增的 `設定` 页面、设置 IPC 与 API Key 不回显规则不应在后续步骤中被回退；步骤 15 主要应聚焦打包与最终回归。
 
 ## 7. 当前质量门禁流程
 1. 代码质量：`pnpm lint`、`pnpm format:check`、`pnpm typecheck`。
 2. 单元测试：`pnpm test`（实际执行 `pnpm test:unit`，仅覆盖 `src`）。
-3. E2E 测试：`pnpm test:e2e --grep "word-create|draft|duplicate-word|library-crud|review-flow"`。
+3. E2E 测试：`pnpm exec playwright test -g "word-create|draft|duplicate-word|library-crud|review-flow|settings|i18n-ja|error-handling"`。
 4. 提交门禁：`husky pre-commit -> pnpm lint-staged`。
 
 ## 8. memory-bank 文档职责

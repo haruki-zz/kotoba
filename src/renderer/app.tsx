@@ -12,13 +12,16 @@ import {
   type ReviewGradeResult,
   type ReviewQueueResult,
   type ReviewQueueWordItem,
+  type SettingsDeleteApiKeyResult,
+  type SettingsGetResult,
+  type SettingsSaveResult,
   type WordAddDraftLoadResult,
   type WordAddDraftPayload,
   type WordAddGenerateResult,
   type WordAddSaveResult,
 } from '../shared/ipc'
 
-type AppPage = 'word-add' | 'library' | 'review'
+type AppPage = 'word-add' | 'library' | 'review' | 'settings'
 
 type LibraryEditForm = {
   word: string
@@ -26,6 +29,13 @@ type LibraryEditForm = {
   meaning_ja: string
   context_scene_ja: string
   example_sentence_ja: string
+}
+
+type SettingsForm = {
+  model: string
+  timeout_seconds: string
+  retries: string
+  api_key: string
 }
 
 const EMPTY_DRAFT: WordAddDraftPayload = {
@@ -42,6 +52,13 @@ const EMPTY_LIBRARY_EDIT_FORM: LibraryEditForm = {
   meaning_ja: '',
   context_scene_ja: '',
   example_sentence_ja: '',
+}
+
+const EMPTY_SETTINGS_FORM: SettingsForm = {
+  model: '',
+  timeout_seconds: '',
+  retries: '',
+  api_key: '',
 }
 
 const REVIEW_GRADES = [0, 1, 2, 3, 4, 5] as const
@@ -62,6 +79,22 @@ const to_library_edit_form = (word: LibraryWordItem): LibraryEditForm => ({
   context_scene_ja: word.context_scene_ja,
   example_sentence_ja: word.example_sentence_ja,
 })
+
+const to_settings_form = (settings: SettingsGetResult): SettingsForm => ({
+  model: settings.model,
+  timeout_seconds: String(settings.timeout_seconds),
+  retries: String(settings.retries),
+  api_key: '',
+})
+
+const parse_non_negative_integer = (value: string): number | null => {
+  const normalized = value.trim()
+  if (/^\d+$/.test(normalized) === false) {
+    return null
+  }
+
+  return Number.parseInt(normalized, 10)
+}
 
 export const App = () => {
   const [app_notice_message, set_app_notice_message] = useState<string>('')
@@ -94,6 +127,14 @@ export const App = () => {
   const [review_error_message, set_review_error_message] = useState<string>('')
   const [review_loading, set_review_loading] = useState<boolean>(false)
   const [review_grading_word_id, set_review_grading_word_id] = useState<string | null>(null)
+
+  const [settings_form, set_settings_form] = useState<SettingsForm>(EMPTY_SETTINGS_FORM)
+  const [settings_has_api_key, set_settings_has_api_key] = useState<boolean>(false)
+  const [settings_status_message, set_settings_status_message] = useState<string>('')
+  const [settings_error_message, set_settings_error_message] = useState<string>('')
+  const [settings_loading, set_settings_loading] = useState<boolean>(false)
+  const [settings_saving, set_settings_saving] = useState<boolean>(false)
+  const [settings_deleting_api_key, set_settings_deleting_api_key] = useState<boolean>(false)
 
   const set_field = useCallback((field: keyof WordAddDraftPayload, value: string): void => {
     set_draft((current) => ({
@@ -146,6 +187,24 @@ export const App = () => {
     set_review_due_count(response.data.due_count)
     set_review_completed_today_count(response.data.completed_today_count)
     set_review_error_message('')
+  }, [])
+
+  const load_settings_page = useCallback(async (): Promise<void> => {
+    set_settings_loading(true)
+
+    const response = (await window.kotoba.invoke(
+      IPC_CHANNELS.SETTINGS_GET
+    )) as IpcResponse<SettingsGetResult>
+
+    set_settings_loading(false)
+    if (is_failure(response)) {
+      set_settings_error_message(response.error.message)
+      return
+    }
+
+    set_settings_form(to_settings_form(response.data))
+    set_settings_has_api_key(response.data.has_api_key)
+    set_settings_error_message('')
   }, [])
 
   useEffect(() => {
@@ -233,6 +292,14 @@ export const App = () => {
     void load_review_queue()
   }, [active_page, load_review_queue])
 
+  useEffect(() => {
+    if (active_page !== 'settings') {
+      return
+    }
+
+    void load_settings_page()
+  }, [active_page, load_settings_page])
+
   const handle_generate_click = async (): Promise<void> => {
     if (draft.word.trim().length === 0) {
       set_error_message('単語を入力してください。')
@@ -298,6 +365,11 @@ export const App = () => {
     if (next_page === 'review') {
       set_review_status_message('')
       set_review_error_message('')
+    }
+
+    if (next_page === 'settings') {
+      set_settings_status_message('')
+      set_settings_error_message('')
     }
 
     set_active_page(next_page)
@@ -406,6 +478,83 @@ export const App = () => {
     await load_review_queue()
   }
 
+  const handle_settings_field = (field: keyof SettingsForm, value: string): void => {
+    set_settings_form((current) => ({
+      ...current,
+      [field]: value,
+    }))
+  }
+
+  const handle_settings_save = async (): Promise<void> => {
+    const model = settings_form.model.trim()
+    if (model.length === 0) {
+      set_settings_error_message('モデル名を入力してください。')
+      set_settings_status_message('')
+      return
+    }
+
+    const timeout_seconds = parse_non_negative_integer(settings_form.timeout_seconds)
+    if (timeout_seconds === null) {
+      set_settings_error_message('タイムアウトは整数で入力してください。')
+      set_settings_status_message('')
+      return
+    }
+
+    const retries = parse_non_negative_integer(settings_form.retries)
+    if (retries === null) {
+      set_settings_error_message('リトライ回数は整数で入力してください。')
+      set_settings_status_message('')
+      return
+    }
+
+    set_settings_saving(true)
+    set_settings_status_message('')
+    set_settings_error_message('')
+
+    const response = (await window.kotoba.invoke(IPC_CHANNELS.SETTINGS_SAVE, {
+      model,
+      timeout_seconds,
+      retries,
+      api_key: settings_form.api_key,
+    })) as IpcResponse<SettingsSaveResult>
+
+    set_settings_saving(false)
+    if (is_failure(response)) {
+      set_settings_error_message(response.error.message)
+      return
+    }
+
+    set_settings_form(to_settings_form(response.data))
+    set_settings_has_api_key(response.data.has_api_key)
+    set_settings_status_message(response.data.message_ja)
+  }
+
+  const handle_delete_api_key = async (): Promise<void> => {
+    set_settings_deleting_api_key(true)
+    set_settings_status_message('')
+    set_settings_error_message('')
+
+    const response = (await window.kotoba.invoke(
+      IPC_CHANNELS.SETTINGS_DELETE_API_KEY
+    )) as IpcResponse<SettingsDeleteApiKeyResult>
+
+    set_settings_deleting_api_key(false)
+    if (is_failure(response)) {
+      set_settings_error_message(response.error.message)
+      return
+    }
+
+    set_settings_form((current) => ({
+      ...current,
+      api_key: '',
+      model: response.data.model,
+      timeout_seconds: String(response.data.timeout_seconds),
+      retries: String(response.data.retries),
+    }))
+    set_settings_has_api_key(response.data.has_api_key)
+    set_settings_status_message(response.data.message_ja)
+  }
+
   const save_disabled = useMemo(
     () =>
       is_saving ||
@@ -427,6 +576,25 @@ export const App = () => {
       library_edit_form.context_scene_ja.trim().length === 0 ||
       library_edit_form.example_sentence_ja.trim().length === 0,
     [library_edit_form, library_editing_word_id, library_updating]
+  )
+
+  const settings_save_disabled = useMemo(
+    () =>
+      settings_loading ||
+      settings_saving ||
+      settings_form.model.trim().length === 0 ||
+      settings_form.timeout_seconds.trim().length === 0 ||
+      settings_form.retries.trim().length === 0,
+    [settings_form, settings_loading, settings_saving]
+  )
+
+  const settings_delete_disabled = useMemo(
+    () =>
+      settings_loading ||
+      settings_saving ||
+      settings_deleting_api_key ||
+      settings_has_api_key === false,
+    [settings_deleting_api_key, settings_has_api_key, settings_loading, settings_saving]
   )
 
   const current_review_word = review_due_words[0] ?? null
@@ -468,6 +636,13 @@ export const App = () => {
           onClick={() => handle_page_change('review')}
         >
           復習
+        </button>
+        <button
+          type="button"
+          className={active_page === 'settings' ? 'tab active' : 'tab'}
+          onClick={() => handle_page_change('settings')}
+        >
+          設定
         </button>
       </nav>
 
@@ -743,6 +918,95 @@ export const App = () => {
           {review_error_message.length > 0 ? (
             <p role="alert" className="error_message">
               {review_error_message}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
+      {active_page === 'settings' ? (
+        <section className="panel">
+          <h2>設定</h2>
+          <p className="settings_hint">
+            API キーの状態: {settings_has_api_key ? '登録済み' : '未設定'}
+          </p>
+          <p className="settings_hint">
+            API キー欄を空欄のまま保存すると、現在のキーをそのまま維持します。
+          </p>
+
+          <label className="field">
+            <span>プロバイダー</span>
+            <input aria-label="プロバイダー" value="gemini" readOnly />
+          </label>
+
+          <label className="field">
+            <span>モデル名</span>
+            <input
+              aria-label="モデル名"
+              value={settings_form.model}
+              onChange={(event) => handle_settings_field('model', event.target.value)}
+              placeholder="例: gemini-2.5-flash"
+            />
+          </label>
+
+          <label className="field">
+            <span>タイムアウト（秒）</span>
+            <input
+              aria-label="タイムアウト秒"
+              inputMode="numeric"
+              value={settings_form.timeout_seconds}
+              onChange={(event) => handle_settings_field('timeout_seconds', event.target.value)}
+            />
+          </label>
+
+          <label className="field">
+            <span>リトライ回数</span>
+            <input
+              aria-label="リトライ回数"
+              inputMode="numeric"
+              value={settings_form.retries}
+              onChange={(event) => handle_settings_field('retries', event.target.value)}
+            />
+          </label>
+
+          <label className="field">
+            <span>API キー</span>
+            <input
+              aria-label="API キー"
+              type="password"
+              value={settings_form.api_key}
+              onChange={(event) => handle_settings_field('api_key', event.target.value)}
+              placeholder={
+                settings_has_api_key ? '新しいキーを入力すると上書きされます' : 'API キーを入力'
+              }
+            />
+          </label>
+
+          <div className="button_row">
+            <button type="button" onClick={handle_settings_save} disabled={settings_save_disabled}>
+              {settings_saving ? '保存中...' : '設定を保存'}
+            </button>
+            <button
+              type="button"
+              className="button_danger"
+              onClick={() => {
+                void handle_delete_api_key()
+              }}
+              disabled={settings_delete_disabled}
+            >
+              {settings_deleting_api_key ? '削除中...' : 'API キーを削除'}
+            </button>
+          </div>
+
+          {settings_loading ? <p className="library_hint">設定を読み込み中...</p> : null}
+
+          {settings_status_message.length > 0 ? (
+            <p role="status" className="status_message">
+              {settings_status_message}
+            </p>
+          ) : null}
+          {settings_error_message.length > 0 ? (
+            <p role="alert" className="error_message">
+              {settings_error_message}
             </p>
           ) : null}
         </section>

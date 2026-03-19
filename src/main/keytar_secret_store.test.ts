@@ -5,7 +5,11 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { LibraryRepository } from './library_repository'
-import { create_keytar_secret_store, type KeytarClient } from './keytar_secret_store'
+import {
+  create_file_secret_store,
+  create_keytar_secret_store,
+  type KeytarClient,
+} from './keytar_secret_store'
 import { SettingsRepository } from './settings_repository'
 
 const temp_dirs: string[] = []
@@ -42,6 +46,25 @@ describe('keytar_secret_store', () => {
 
     await secret_store.set_api_key('  sample-api-key  ')
     expect(await secret_store.get_api_key()).toBe('sample-api-key')
+
+    await secret_store.delete_api_key()
+    expect(await secret_store.get_api_key()).toBeNull()
+  })
+
+  it('stores api key in a test file store when requested', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'kotoba-keytar-file-store-'))
+    temp_dirs.push(workspace)
+
+    const secret_file_path = join(workspace, 'secret.txt')
+    const secret_store = create_file_secret_store(secret_file_path)
+
+    expect(await secret_store.get_api_key()).toBeNull()
+
+    await secret_store.set_api_key('  file-store-key  ')
+    expect(await secret_store.get_api_key()).toBe('file-store-key')
+
+    const secret_raw = await readFile(secret_file_path, 'utf8')
+    expect(secret_raw).toContain('file-store-key')
 
     await secret_store.delete_api_key()
     expect(await secret_store.get_api_key()).toBeNull()

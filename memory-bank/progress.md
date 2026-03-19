@@ -1,9 +1,9 @@
 ﻿# Kotoba 开发进度记录
 
 ## 1. 当前状态
-- 记录日期：`2026-03-18`
-- 当前阶段：实施计划 `步骤 1` 到 `步骤 13` 已完成，且步骤 `13` 已通过用户验证。
-- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 全日语错误提示与启动恢复提示可用 + E2E 可回归”阶段。
+- 记录日期：`2026-03-19`
+- 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成；其中步骤 `13` 已通过用户验证，步骤 `14` 已完成代码实现与本地验证。
+- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 可回归”阶段。
 
 ## 2. 已完成事项
 ### 2.1 对应 plan.md 步骤 1（环境与版本基线冻结）
@@ -218,6 +218,42 @@
   - 新增频道：`app:startup-status`
   - 新增返回类型：`AppStartupStatusResult`
 - 已扩展主进程启动与错误映射：
+
+### 2.15 对应 plan.md 步骤 14（设置页面与 API Key 配置闭环）
+- 已扩展共享 IPC 契约：
+  - `src/shared/ipc.ts`
+  - 新增频道：`settings:get`、`settings:save`、`settings:delete-api-key`
+  - 新增类型：`SettingsGetResult`、`SettingsSavePayload`、`SettingsSaveResult`、`SettingsDeleteApiKeyResult`
+- 已扩展设置与密钥管理能力：
+  - `src/main/settings_service.ts`
+    - 新增设置概览读取、设置保存、API Key 删除能力
+    - 新增 `SettingsValidationError`
+  - `src/main/keytar_secret_store.ts`
+    - 保留系统密钥链存储
+    - 新增 `KOTOBA_FAKE_KEYTAR_FILE` 文件型密钥测试桩，避免 E2E 污染真实钥匙串
+  - `src/main/ipc_router.ts`
+    - 新增设置读取/保存/删除路由与日语错误映射
+  - `src/main/main.ts`
+    - 统一复用同一个 `api_key_secret_store` 实例给 `WordEntryService` 与设置 IPC
+- 已完成渲染层 `設定` 页面：
+  - `src/renderer/app.tsx`
+  - `src/renderer/style.css`
+  - 交互：
+    - 读取当前 `model / timeout / retries`
+    - 显示 API Key 是否已设置
+    - 支持录入并更新 API Key
+    - 支持删除 API Key
+    - 保存后不回显既有 API Key，只清空输入框
+- 已补齐步骤 14 测试：
+  - 单测：`src/main/settings_repository.test.ts`
+  - 单测：`src/main/keytar_secret_store.test.ts`
+  - E2E：`e2e/word_add.spec.ts` 新增 `settings` 用例
+- 本地验证结果：
+  - `pnpm lint`
+  - `pnpm format:check`
+  - `pnpm typecheck`
+  - `pnpm test:unit -- settings`
+  - `pnpm exec playwright test -g "settings|i18n-ja|error-handling"`
   - `src/main/main.ts`
     - 启动时把词库恢复/迁移状态转换为可展示的日语通知
   - `src/main/ipc_router.ts`

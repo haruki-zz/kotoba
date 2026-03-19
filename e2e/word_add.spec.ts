@@ -53,6 +53,7 @@ const launch_app = async (
   user_data_dir: string,
   options: LaunchAppOptions = {}
 ): Promise<LaunchedApp> => {
+  const fake_keytar_file = path.join(user_data_dir, 'kotoba-test-api-key.txt')
   const electron_app = await electron.launch({
     args: ['.'],
     cwd: process.cwd(),
@@ -64,6 +65,7 @@ const launch_app = async (
           ? JSON.stringify(FAKE_GENERATED_CARD)
           : (options.fake_generated_card_json ?? ''),
       KOTOBA_FAKE_GENERATE_ERROR_CODE: options.fake_generate_error_code ?? '',
+      KOTOBA_FAKE_KEYTAR_FILE: fake_keytar_file,
     },
   })
 
@@ -153,7 +155,9 @@ test('word-create: create word and persist after restart', async () => {
     await close_app(first_launch.electron_app)
   }
 
-  const second_launch = await launch_app(user_data_dir)
+  const second_launch = await launch_app(user_data_dir, {
+    fake_generated_card_json: null,
+  })
   try {
     await expect(second_launch.page.getByLabel('単語')).toHaveValue('')
   } finally {
@@ -181,7 +185,9 @@ test('draft: recover unsaved inputs after debounce autosave', async () => {
     await close_app(first_launch.electron_app)
   }
 
-  const second_launch = await launch_app(user_data_dir)
+  const second_launch = await launch_app(user_data_dir, {
+    fake_generated_card_json: null,
+  })
   try {
     await expect(second_launch.page.getByLabel('単語')).toHaveValue('散歩')
     await expect(second_launch.page.getByLabel('意味')).toHaveValue(
@@ -204,7 +210,9 @@ test('draft: save draft on page switch before debounce timeout', async () => {
     await close_app(first_launch.electron_app)
   }
 
-  const second_launch = await launch_app(user_data_dir)
+  const second_launch = await launch_app(user_data_dir, {
+    fake_generated_card_json: null,
+  })
   try {
     await expect(second_launch.page.getByLabel('単語')).toHaveValue('猫')
   } finally {
@@ -361,6 +369,7 @@ test('i18n-ja: shows japanese labels, actions, and dialog text on the main flows
     await expect(launched.page.getByRole('button', { name: '単語追加' })).toBeVisible()
     await expect(launched.page.getByRole('button', { name: '単語帳' })).toBeVisible()
     await expect(launched.page.getByRole('button', { name: '復習' })).toBeVisible()
+    await expect(launched.page.getByRole('button', { name: '設定' })).toBeVisible()
     await expect(launched.page.getByLabel('単語')).toBeVisible()
     await expect(launched.page.getByLabel('読み仮名')).toBeVisible()
     await expect(launched.page.getByLabel('意味')).toBeVisible()
@@ -404,6 +413,64 @@ test('i18n-ja: shows japanese labels, actions, and dialog text on the main flows
     ).toBeVisible()
   } finally {
     await close_app(launched.electron_app)
+  }
+})
+
+test('settings: save settings and api key, reload them, then delete api key', async () => {
+  const user_data_dir = await create_temp_user_data_dir('kotoba-e2e-settings')
+  const first_launch = await launch_app(user_data_dir)
+
+  try {
+    await first_launch.page.getByRole('button', { name: '設定' }).click()
+    await expect(first_launch.page.getByRole('heading', { name: '設定' })).toBeVisible()
+    await expect(first_launch.page.getByText('API キーの状態: 未設定')).toBeVisible()
+
+    await first_launch.page.getByLabel('モデル名').fill('gemini-2.0-flash')
+    await first_launch.page.getByLabel('タイムアウト秒').fill('20')
+    await first_launch.page.getByLabel('リトライ回数').fill('3')
+    await first_launch.page.getByLabel('API キー').fill('test-api-key-from-settings')
+    await first_launch.page.getByRole('button', { name: '設定を保存' }).click()
+
+    await expect(first_launch.page.getByRole('status')).toHaveText(
+      '設定を保存し、API キーを更新しました。'
+    )
+    await expect(first_launch.page.getByText('API キーの状態: 登録済み')).toBeVisible()
+    await expect(first_launch.page.getByLabel('API キー')).toHaveValue('')
+  } finally {
+    await close_app(first_launch.electron_app)
+  }
+
+  const settings_path = path.join(user_data_dir, 'kotoba-settings.json')
+  const settings_raw = await readFile(settings_path, 'utf8')
+  expect(settings_raw).toContain('"model": "gemini-2.0-flash"')
+  expect(settings_raw).toContain('"timeout_seconds": 20')
+  expect(settings_raw).toContain('"retries": 3')
+  expect(settings_raw).not.toContain('test-api-key-from-settings')
+
+  const second_launch = await launch_app(user_data_dir, {
+    fake_generated_card_json: null,
+  })
+  try {
+    await second_launch.page.getByRole('button', { name: '設定' }).click()
+    await expect(second_launch.page.getByText('API キーの状態: 登録済み')).toBeVisible()
+    await expect(second_launch.page.getByLabel('モデル名')).toHaveValue('gemini-2.0-flash')
+    await expect(second_launch.page.getByLabel('タイムアウト秒')).toHaveValue('20')
+    await expect(second_launch.page.getByLabel('リトライ回数')).toHaveValue('3')
+
+    await second_launch.page.getByRole('button', { name: 'API キーを削除' }).click()
+    await expect(second_launch.page.getByRole('status')).toHaveText('API キーを削除しました。')
+    await expect(second_launch.page.getByText('API キーの状態: 未設定')).toBeVisible()
+
+    await second_launch.page.getByRole('button', { name: '単語追加' }).click()
+    await second_launch.page.getByLabel('単語').fill('設定確認')
+    await second_launch.page.getByRole('button', { name: '生成' }).click()
+    await expect
+      .poll(() => second_launch.page.locator('body').innerText())
+      .toContain(
+        'API キーが設定されていません。設定ページで API キーを設定してから、もう一度お試しください。'
+      )
+  } finally {
+    await close_app(second_launch.electron_app)
   }
 })
 

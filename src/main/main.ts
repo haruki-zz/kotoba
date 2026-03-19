@@ -74,6 +74,7 @@ app.whenReady().then(() => {
       const settings_repository = new SettingsRepository({
         settings_file_path: path.join(user_data_dir, 'kotoba-settings.json'),
       })
+      const api_key_secret_store = create_default_keytar_secret_store()
 
       const word_add_draft_repository = new WordAddDraftRepository({
         draft_file_path: path.join(user_data_dir, 'kotoba-word-add-draft.json'),
@@ -82,7 +83,7 @@ app.whenReady().then(() => {
       const word_entry_service = new WordEntryService({
         library_repository,
         settings_repository,
-        api_key_secret_store: create_default_keytar_secret_store(),
+        api_key_secret_store,
       })
       const library_service = new LibraryService({
         library_repository,
@@ -97,6 +98,8 @@ app.whenReady().then(() => {
         library_service,
         review_service,
         startup_status,
+        settings_repository,
+        api_key_secret_store,
       })
 
       create_main_window()

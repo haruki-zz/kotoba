@@ -12,6 +12,7 @@ import {
   is_ipc_envelope,
   is_ping_payload,
   is_review_grade_payload,
+  is_settings_save_payload,
   is_word_add_draft_payload,
   is_word_add_generate_payload,
   is_word_add_save_payload,
@@ -23,10 +24,14 @@ import {
   type PingResult,
   type ReviewGradeResult,
   type ReviewQueueResult,
+  type SettingsDeleteApiKeyResult,
+  type SettingsGetResult,
+  type SettingsSaveResult,
   type WordAddDraftLoadResult,
   type WordAddGenerateResult,
   type WordAddSaveResult,
 } from '../shared/ipc'
+import { type ApiKeySecretStore } from './keytar_secret_store'
 import {
   LibraryValidationError,
   LibraryWordNotFoundError,
@@ -39,10 +44,15 @@ import {
 } from './review_service'
 import { type WordAddDraftRepository } from './word_add_draft_repository'
 import {
+  delete_api_key,
+  read_settings_overview,
+  save_settings,
   SettingsApiKeyMissingError,
-  WordEntryValidationError,
-  type WordEntryService,
-} from './word_entry_service'
+  SettingsValidationError,
+  type SettingsServiceDeps,
+} from './settings_service'
+import { type SettingsRepository } from './settings_repository'
+import { WordEntryValidationError, type WordEntryService } from './word_entry_service'
 import { AiProviderError } from './ai_provider'
 
 type ChannelHandler = (payload: unknown) => IpcResponse | Promise<IpcResponse>
@@ -53,6 +63,8 @@ interface IpcRouterDeps {
   library_service: LibraryService
   review_service: ReviewService
   startup_status: AppStartupStatusResult
+  settings_repository: SettingsRepository
+  api_key_secret_store: ApiKeySecretStore
 }
 
 const app_ping_handler: ChannelHandler = (payload: unknown) => {
@@ -73,6 +85,58 @@ const create_app_startup_status_handler =
   (deps: IpcRouterDeps): ChannelHandler =>
   async () => {
     return create_success_response(deps.startup_status)
+  }
+
+const create_settings_service_deps = (deps: IpcRouterDeps): SettingsServiceDeps => ({
+  settings_repository: deps.settings_repository,
+  api_key_secret_store: deps.api_key_secret_store,
+})
+
+const create_settings_get_handler =
+  (deps: IpcRouterDeps): ChannelHandler =>
+  async () => {
+    try {
+      const result: SettingsGetResult = await read_settings_overview(
+        create_settings_service_deps(deps)
+      )
+      return create_success_response(result)
+    } catch {
+      return create_failure_response('APP_STORAGE_ERROR', '設定の読み込みに失敗しました。')
+    }
+  }
+
+const create_settings_save_handler =
+  (deps: IpcRouterDeps): ChannelHandler =>
+  async (payload: unknown) => {
+    if (!is_settings_save_payload(payload)) {
+      return create_failure_response('IPC_PAYLOAD_INVALID', '設定保存の入力が不正です。')
+    }
+
+    try {
+      const result: SettingsSaveResult = await save_settings(
+        create_settings_service_deps(deps),
+        payload
+      )
+      return create_success_response(result)
+    } catch (error) {
+      if (error instanceof SettingsValidationError) {
+        return create_failure_response('APP_VALIDATION_ERROR', error.message)
+      }
+      return create_failure_response('APP_STORAGE_ERROR', '設定の保存に失敗しました。')
+    }
+  }
+
+const create_settings_delete_api_key_handler =
+  (deps: IpcRouterDeps): ChannelHandler =>
+  async () => {
+    try {
+      const result: SettingsDeleteApiKeyResult = await delete_api_key(
+        create_settings_service_deps(deps)
+      )
+      return create_success_response(result)
+    } catch {
+      return create_failure_response('APP_STORAGE_ERROR', 'API キーの削除に失敗しました。')
+    }
   }
 
 const create_word_add_generate_handler =
@@ -267,6 +331,9 @@ export const register_ipc_router = (deps: IpcRouterDeps): void => {
   const channel_handler_map: Record<IpcAllowedChannel, ChannelHandler> = {
     [IPC_CHANNELS.APP_PING]: app_ping_handler,
     [IPC_CHANNELS.APP_STARTUP_STATUS]: create_app_startup_status_handler(deps),
+    [IPC_CHANNELS.SETTINGS_GET]: create_settings_get_handler(deps),
+    [IPC_CHANNELS.SETTINGS_SAVE]: create_settings_save_handler(deps),
+    [IPC_CHANNELS.SETTINGS_DELETE_API_KEY]: create_settings_delete_api_key_handler(deps),
     [IPC_CHANNELS.WORD_ADD_GENERATE]: create_word_add_generate_handler(deps),
     [IPC_CHANNELS.WORD_ADD_SAVE]: create_word_add_save_handler(deps),
     [IPC_CHANNELS.WORD_ADD_DRAFT_LOAD]: create_word_add_draft_load_handler(deps),

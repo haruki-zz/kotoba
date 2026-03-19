@@ -81,6 +81,7 @@ body {
   display: flex;
   gap: 10px;
   margin-bottom: 14px;
+  flex-wrap: wrap;
 }
 
 button {
@@ -136,6 +137,11 @@ button:disabled {
 .library_hint {
   margin: 0 0 12px;
   color: #64748b;
+}
+
+.settings_hint {
+  margin: 0 0 12px;
+  color: #475569;
 }
 
 .library_list {

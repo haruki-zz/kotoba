@@ -3,6 +3,9 @@ export const IPC_BRIDGE_CHANNEL = 'kotoba:invoke' as const
 export const IPC_CHANNELS = {
   APP_PING: 'app:ping',
   APP_STARTUP_STATUS: 'app:startup-status',
+  SETTINGS_GET: 'settings:get',
+  SETTINGS_SAVE: 'settings:save',
+  SETTINGS_DELETE_API_KEY: 'settings:delete-api-key',
   WORD_ADD_GENERATE: 'word-add:generate',
   WORD_ADD_SAVE: 'word-add:save',
   WORD_ADD_DRAFT_LOAD: 'word-add:draft:load',
@@ -45,6 +48,29 @@ export interface PingResult {
 export interface AppStartupStatusResult {
   notice_ja: string | null
   notice_kind: 'info' | 'warning' | null
+}
+
+export interface SettingsGetResult {
+  provider: 'gemini'
+  model: string
+  timeout_seconds: number
+  retries: number
+  has_api_key: boolean
+}
+
+export interface SettingsSavePayload {
+  model: string
+  timeout_seconds: number
+  retries: number
+  api_key?: string
+}
+
+export interface SettingsSaveResult extends SettingsGetResult {
+  message_ja: string
+}
+
+export interface SettingsDeleteApiKeyResult extends SettingsGetResult {
+  message_ja: string
 }
 
 export interface WordAddGeneratePayload {
@@ -218,6 +244,22 @@ export const is_ping_payload = (value: unknown): value is PingPayload => {
 
   const maybe_payload = value as Partial<PingPayload>
   return typeof maybe_payload.message === 'string' && maybe_payload.message.trim().length > 0
+}
+
+export const is_settings_save_payload = (value: unknown): value is SettingsSavePayload => {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const maybe_payload = value as Partial<SettingsSavePayload>
+  return (
+    typeof maybe_payload.model === 'string' &&
+    typeof maybe_payload.timeout_seconds === 'number' &&
+    Number.isInteger(maybe_payload.timeout_seconds) &&
+    typeof maybe_payload.retries === 'number' &&
+    Number.isInteger(maybe_payload.retries) &&
+    (maybe_payload.api_key === undefined || typeof maybe_payload.api_key === 'string')
+  )
 }
 
 export const is_word_add_generate_payload = (value: unknown): value is WordAddGeneratePayload => {
