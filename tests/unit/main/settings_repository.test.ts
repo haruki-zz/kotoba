@@ -4,8 +4,11 @@ import { join } from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { DEFAULT_SETTINGS } from '../shared/domain_schema'
-import { create_keytar_secret_store, type KeytarClient } from './keytar_secret_store'
+import { DEFAULT_SETTINGS } from '../../../src/shared/domain_schema'
+import {
+  create_keytar_secret_store,
+  type KeytarClient,
+} from '../../../src/main/keytar_secret_store'
 import {
   delete_api_key,
   read_settings_overview,
@@ -14,8 +17,8 @@ import {
   SettingsApiKeyMissingError,
   SettingsValidationError,
   load_ai_runtime_settings,
-} from './settings_service'
-import { SettingsRepository } from './settings_repository'
+} from '../../../src/main/settings_service'
+import { SettingsRepository } from '../../../src/main/settings_repository'
 
 const temp_dirs: string[] = []
 

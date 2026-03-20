@@ -4,13 +4,13 @@ import { join } from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { LibraryRepository } from './library_repository'
+import { LibraryRepository } from '../../../src/main/library_repository'
 import {
   create_file_secret_store,
   create_keytar_secret_store,
   type KeytarClient,
-} from './keytar_secret_store'
-import { SettingsRepository } from './settings_repository'
+} from '../../../src/main/keytar_secret_store'
+import { SettingsRepository } from '../../../src/main/settings_repository'
 
 const temp_dirs: string[] = []
 

@@ -4,9 +4,9 @@ import { join } from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { LIBRARY_SCHEMA_VERSION, type ReviewState } from '../shared/domain_schema'
-import { LibraryRepository } from './library_repository'
-import { ReviewService } from './review_service'
+import { LIBRARY_SCHEMA_VERSION, type ReviewState } from '../../../src/shared/domain_schema'
+import { LibraryRepository } from '../../../src/main/library_repository'
+import { ReviewService } from '../../../src/main/review_service'
 
 const temp_dirs: string[] = []
 

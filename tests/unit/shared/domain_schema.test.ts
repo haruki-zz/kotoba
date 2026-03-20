@@ -5,7 +5,7 @@ import {
   DEFAULT_SETTINGS,
   library_root_schema,
   settings_schema,
-} from './domain_schema'
+} from '../../../src/shared/domain_schema'
 
 const VALID_TIMESTAMP = '2026-03-07T09:00:00.000Z'
 

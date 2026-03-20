@@ -24,10 +24,11 @@
   - 锁定依赖 patch 版本，保证可复现安装结果。
 - `tsconfig.json`
   - TypeScript 类型检查配置（strict/noEmit）。
+  - `include` 覆盖 `src` 与 `tests`，保证测试文件也能做类型检查。
 - `vite.config.ts`
   - 渲染层构建配置；`base: './'` 以支持 `file://` 加载生产资源。
 - `vitest.config.ts`
-  - 单元测试范围配置；仅包含 `src` 下测试并排除 `e2e/**`。
+  - 单元测试范围配置；仅包含 `tests/unit` 下测试并排除 `e2e/**`。
 - `playwright.config.ts`
   - E2E 配置入口；`testDir=./e2e`、单 worker、失败保留 trace。
 - `index.html`
@@ -42,6 +43,10 @@
   - 长期记忆文档目录（需求、技术栈、进度、架构）。
   - `progress.md` 记录步骤完成度与验证证据。
   - `architecture.md` 记录文件职责与运行快照。
+- `tests/`
+  - 单元测试目录。
+  - `tests/unit/main`：主进程相关单测。
+  - `tests/unit/shared`：共享 schema 与契约单测。
 - `e2e/`
   - Electron 端到端测试目录。
 
@@ -151,35 +156,35 @@
 
 ## 4. 测试文件结构与职责
 ### 4.1 单元测试（Vitest）
-- `src/shared/domain_schema.test.ts`
+- `tests/unit/shared/domain_schema.test.ts`
   - 领域 schema 校验测试。
-- `src/main/library_repository.repository.test.ts`
+- `tests/unit/main/library_repository.repository.test.ts`
   - 并发更新串行化测试。
-- `src/main/library_repository.backup.test.ts`
+- `tests/unit/main/library_repository.backup.test.ts`
   - 每日备份触发规则测试。
-- `src/main/library_repository.recovery.test.ts`
+- `tests/unit/main/library_repository.recovery.test.ts`
   - 启动损坏恢复测试。
-- `src/main/library_repository.migration.test.ts`
+- `tests/unit/main/library_repository.migration.test.ts`
   - 迁移成功路径测试。
-- `src/main/library_repository.rollback.test.ts`
+- `tests/unit/main/library_repository.rollback.test.ts`
   - 迁移失败回滚测试。
-- `src/main/settings_repository.test.ts`
+- `tests/unit/main/settings_repository.test.ts`
   - 设置默认值、更新、设置概览/API Key 删除与缺失引导测试。
-- `src/main/keytar_secret_store.test.ts`
+- `tests/unit/main/keytar_secret_store.test.ts`
   - keytar/文件型密钥存取删与 API Key 不落盘测试。
-- `src/main/gemini_provider_ai_provider.test.ts`
+- `tests/unit/main/gemini_provider_ai_provider.test.ts`
   - Gemini 正常输出路径测试。
-- `src/main/gemini_provider_ai_retry.test.ts`
+- `tests/unit/main/gemini_provider_ai_retry.test.ts`
   - Gemini 重试/退避与非日语自动重试测试。
-- `src/main/library_service.test.ts`
+- `tests/unit/main/library_service.test.ts`
   - 搜索标准化与词库编辑/删除行为测试。
-- `src/main/sm2.test.ts`
+- `tests/unit/main/sm2.test.ts`
   - SM-2 算法顺序、EF 下限、评分 `0-5` 覆盖测试。
-- `src/main/review_queue.test.ts`
+- `tests/unit/main/review_queue.test.ts`
   - 待复习队列、本地时区今日统计、评分持久化测试。
-- `src/main/review_logs.test.ts`
+- `tests/unit/main/review_logs.test.ts`
   - 评分后写入 `before_state/after_state/grade/reviewed_at` 的测试。
-- `src/main/log_retention.test.ts`
+- `tests/unit/main/log_retention.test.ts`
   - `review_logs` 超过 `50000` 条时淘汰最旧记录的测试。
 
 ### 4.2 端到端测试（Playwright + Electron）

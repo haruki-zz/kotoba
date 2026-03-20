@@ -4,13 +4,9 @@ import { join } from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import {
-  LIBRARY_SCHEMA_VERSION,
-  REVIEW_LOG_RETENTION_LIMIT,
-  type ReviewState,
-} from '../shared/domain_schema'
-import { LibraryRepository } from './library_repository'
-import { ReviewService } from './review_service'
+import { LIBRARY_SCHEMA_VERSION, type ReviewState } from '../../../src/shared/domain_schema'
+import { LibraryRepository } from '../../../src/main/library_repository'
+import { ReviewService } from '../../../src/main/review_service'
 
 const temp_dirs: string[] = []
 
@@ -20,40 +16,37 @@ afterEach(async () => {
   )
 })
 
-describe('log-retention', () => {
-  it('evicts the oldest review logs when the retention limit is exceeded', async () => {
+describe('review-logs', () => {
+  it('writes before_state and after_state for every graded review', async () => {
     const now = new Date('2026-03-16T09:00:00.000Z')
     const word = create_word({
       index: 1,
-      word: '保持上限',
+      word: '復習記録',
       next_review_at: '2026-03-16T09:00:00.000Z',
     })
-    const existing_review_logs = Array.from({ length: REVIEW_LOG_RETENTION_LIMIT }, (_, index) =>
-      create_review_log(index + 1, word.id)
-    )
     const review_service = await create_review_service({
       now,
       words: [word],
-      review_logs: existing_review_logs,
     })
 
-    await review_service.service.grade_review({
+    const result = await review_service.service.grade_review({
       word_id: word.id,
-      grade: 3,
+      grade: 5,
     })
 
     const library = await review_service.repository.read_library()
-    expect(library.review_logs).toHaveLength(REVIEW_LOG_RETENTION_LIMIT)
-    expect(
-      library.review_logs.some((review_log) => review_log.id === create_review_log_id(1))
-    ).toBe(false)
-    expect(library.review_logs[0]?.id).toBe(create_review_log_id(2))
+    expect(library.review_logs).toHaveLength(1)
 
-    const latest_review_log = library.review_logs.at(-1)
-    expect(latest_review_log).toMatchObject({
+    const review_log = library.review_logs[0]
+    expect(review_log?.id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    )
+    expect(review_log).toMatchObject({
       word_id: word.id,
-      grade: 3,
+      grade: 5,
       reviewed_at: now.toISOString(),
+      before_state: word.review_state,
+      after_state: result.updated_review_state,
     })
   })
 })
@@ -61,12 +54,11 @@ describe('log-retention', () => {
 const create_review_service = async (input: {
   now: Date
   words: Array<ReturnType<typeof create_word>>
-  review_logs: Array<ReturnType<typeof create_review_log>>
 }): Promise<{
   repository: LibraryRepository
   service: ReviewService
 }> => {
-  const workspace = await mkdtemp(join(tmpdir(), 'kotoba-log-retention-'))
+  const workspace = await mkdtemp(join(tmpdir(), 'kotoba-review-logs-'))
   temp_dirs.push(workspace)
 
   const repository = new LibraryRepository({
@@ -79,7 +71,7 @@ const create_review_service = async (input: {
     schema_version: LIBRARY_SCHEMA_VERSION,
     updated_at: input.now.toISOString(),
     words: input.words,
-    review_logs: input.review_logs,
+    review_logs: [],
   })
 
   return {
@@ -91,18 +83,21 @@ const create_review_service = async (input: {
   }
 }
 
-const create_review_log_id = (index: number): string =>
-  `10000000-0000-4000-8000-${index.toString().padStart(12, '0')}`
-
-const create_word = (input: { index: number; word: string; next_review_at: string }) => {
+const create_word = (input: {
+  index: number
+  word: string
+  next_review_at: string
+  last_review_at?: string | null
+  last_grade?: number | null
+}) => {
   const created_at = '2026-03-10T00:00:00.000Z'
   const review_state: ReviewState = {
     repetition: 0,
     interval_days: 0,
     easiness_factor: 2.5,
     next_review_at: input.next_review_at,
-    last_review_at: null,
-    last_grade: null,
+    last_review_at: input.last_review_at ?? null,
+    last_grade: input.last_grade ?? null,
   }
 
   return {
@@ -116,31 +111,5 @@ const create_word = (input: { index: number; word: string; next_review_at: strin
     review_state,
     created_at,
     updated_at: created_at,
-  }
-}
-
-const create_review_log = (index: number, word_id: string) => {
-  const reviewed_at = `2026-03-${((index % 28) + 1).toString().padStart(2, '0')}T00:00:00.000Z`
-  return {
-    id: create_review_log_id(index),
-    word_id,
-    grade: 4,
-    reviewed_at,
-    before_state: {
-      repetition: 0,
-      interval_days: 0,
-      easiness_factor: 2.5,
-      next_review_at: reviewed_at,
-      last_review_at: null,
-      last_grade: null,
-    },
-    after_state: {
-      repetition: 1,
-      interval_days: 1,
-      easiness_factor: 2.5,
-      next_review_at: reviewed_at,
-      last_review_at: reviewed_at,
-      last_grade: 4,
-    },
   }
 }

@@ -4,9 +4,13 @@ import { join } from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { LIBRARY_SCHEMA_VERSION } from '../shared/domain_schema'
-import { LibraryRepository } from './library_repository'
-import { LibraryService, LibraryWordNotFoundError, normalize_search_text } from './library_service'
+import { LIBRARY_SCHEMA_VERSION } from '../../../src/shared/domain_schema'
+import { LibraryRepository } from '../../../src/main/library_repository'
+import {
+  LibraryService,
+  LibraryWordNotFoundError,
+  normalize_search_text,
+} from '../../../src/main/library_service'
 
 const TEST_TIME = new Date('2026-03-12T12:00:00.000Z')
 const temp_dirs: string[] = []

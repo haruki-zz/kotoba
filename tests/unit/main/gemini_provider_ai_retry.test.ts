@@ -1,7 +1,7 @@
 import { ApiError, type GenerateContentResponse } from '@google/genai'
 import { describe, expect, it } from 'vitest'
 
-import { GeminiProvider, type GeminiClient } from './gemini_provider'
+import { GeminiProvider, type GeminiClient } from '../../../src/main/gemini_provider'
 
 const create_japanese_generated_text = (): string =>
   JSON.stringify({

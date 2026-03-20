@@ -57,7 +57,7 @@
   - AI 四字段长度上限：`reading_kana 1-32`、`meaning_ja 8-120`、`context_scene_ja 12-160`、`example_sentence_ja 8-80`
   - `schema_version` 固定为 `1`
   - UTC ISO 8601 时间格式约束（`...Z`）
-- 已新增 schema 单测：`src/shared/domain_schema.test.ts`
+- 已新增 schema 单测：`tests/unit/shared/domain_schema.test.ts`
 
 ### 2.5 对应 plan.md 步骤 5（JSON 存储与原子写入）
 - 已新增仓储实现：`src/main/library_repository.ts`
@@ -67,9 +67,9 @@
   - 每日首次写入备份
   - 启动损坏检测与最近有效备份回退
 - 已新增步骤 5 单测：
-  - `src/main/library_repository.repository.test.ts`
-  - `src/main/library_repository.backup.test.ts`
-  - `src/main/library_repository.recovery.test.ts`
+  - `tests/unit/main/library_repository.repository.test.ts`
+  - `tests/unit/main/library_repository.backup.test.ts`
+  - `tests/unit/main/library_repository.recovery.test.ts`
 
 ### 2.6 对应 plan.md 步骤 6（迁移机制）
 - 已扩展仓储启动流程：
@@ -77,8 +77,8 @@
   - 迁移前强制备份
   - 迁移失败自动回滚
 - 已新增步骤 6 单测：
-  - `src/main/library_repository.migration.test.ts`
-  - `src/main/library_repository.rollback.test.ts`
+  - `tests/unit/main/library_repository.migration.test.ts`
+  - `tests/unit/main/library_repository.rollback.test.ts`
 
 ### 2.7 对应 plan.md 步骤 7（设置模块与密钥管理）
 - 已新增设置仓储：`src/main/settings_repository.ts`
@@ -89,8 +89,8 @@
   - API Key 使用系统密钥链存储，不进入 JSON
   - API Key 缺失时抛出可引导错误
 - 已新增步骤 7 单测：
-  - `src/main/settings_repository.test.ts`
-  - `src/main/keytar_secret_store.test.ts`
+  - `tests/unit/main/settings_repository.test.ts`
+  - `tests/unit/main/keytar_secret_store.test.ts`
 
 ### 2.8 对应 plan.md 步骤 8（AI Provider 抽象与 Gemini 接入）
 - 已新增 Provider 抽象：`src/main/ai_provider.ts`
@@ -101,8 +101,8 @@
   - `500ms -> 1500ms` 指数退避（含 jitter）
   - 非日语输出自动重试（计入 `retries`）
 - 已新增步骤 8 单测：
-  - `src/main/gemini_provider_ai_provider.test.ts`
-  - `src/main/gemini_provider_ai_retry.test.ts`
+  - `tests/unit/main/gemini_provider_ai_provider.test.ts`
+  - `tests/unit/main/gemini_provider_ai_retry.test.ts`
 
 ### 2.9 对应 plan.md 步骤 9（单词新增页与草稿机制）
 - 已新增主进程能力：
@@ -164,7 +164,7 @@
   - `scripts/bench_search.mjs`
   - `package.json` 新增脚本：`make:seed-10k`、`bench:search`
 - 已新增步骤 10 测试：
-  - 单测：`src/main/library_service.test.ts`
+  - 单测：`tests/unit/main/library_service.test.ts`
   - E2E：`e2e/word_add.spec.ts` 新增 `library-crud` 用例
 
 ### 2.12 对应 plan.md 步骤 11（SM-2 复习引擎与复习页）
@@ -193,8 +193,8 @@
   - `src/renderer/style.css`
   - 交互：待复习卡片展示、评分按钮 `0-5`、剩余数量、今日完成数量、完成态提示
 - 已新增步骤 11 测试：
-  - 单测：`src/main/sm2.test.ts`
-  - 单测：`src/main/review_queue.test.ts`
+  - 单测：`tests/unit/main/sm2.test.ts`
+  - 单测：`tests/unit/main/review_queue.test.ts`
   - E2E：`e2e/word_add.spec.ts` 新增 `review-flow` 用例
 
 ### 2.13 对应 plan.md 步骤 12（review_logs 与统计基础）
@@ -209,8 +209,8 @@
   - `src/shared/domain_schema.ts`
   - 新增 `REVIEW_LOG_RETENTION_LIMIT = 50000`
 - 已新增步骤 12 测试：
-  - 单测：`src/main/review_logs.test.ts`
-  - 单测：`src/main/log_retention.test.ts`
+  - 单测：`tests/unit/main/review_logs.test.ts`
+  - 单测：`tests/unit/main/log_retention.test.ts`
 
 ### 2.14 对应 plan.md 步骤 13（全日语 UI 与错误处理收敛）
 - 已扩展共享 IPC 契约：
@@ -255,9 +255,21 @@
     - 支持删除 API Key
     - 保存后不回显既有 API Key，只清空输入框
 - 已补齐步骤 14 测试：
-  - 单测：`src/main/settings_repository.test.ts`
-  - 单测：`src/main/keytar_secret_store.test.ts`
+  - 单测：`tests/unit/main/settings_repository.test.ts`
+  - 单测：`tests/unit/main/keytar_secret_store.test.ts`
   - E2E：`e2e/word_add.spec.ts` 新增 `settings` 用例
+
+### 2.16 测试目录整理（源码/测试分离）
+- 已完成目录分离：
+  - `src/` 仅保留正式源码文件
+  - 单元测试统一迁移到 `tests/unit/main` 与 `tests/unit/shared`
+  - Playwright 端到端测试继续保留在 `e2e/`
+- 已同步工程配置：
+  - `vitest.config.ts` 改为仅扫描 `tests/unit/**/*.{test,spec}.{ts,tsx}`
+  - `tsconfig.json` 新增 `tests` 到 `include`
+- 当前约定：
+  - 后续新增单元测试一律放到 `tests/unit/`
+  - 后续新增端到端测试一律放到 `e2e/`
 - 本地验证结果：
   - `pnpm lint`
   - `pnpm format:check`

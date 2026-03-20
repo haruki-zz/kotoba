@@ -4,7 +4,7 @@ import { join } from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { LibraryRepository } from './library_repository'
+import { LibraryRepository } from '../../../src/main/library_repository'
 
 const TEST_TIME = new Date('2026-03-08T09:00:00+09:00')
 

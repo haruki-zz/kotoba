@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { calculate_sm2_review_state } from './sm2'
+import { calculate_sm2_review_state } from '../../../src/main/sm2'
 
 const TEST_NOW = new Date('2026-03-15T12:00:00.000Z')
 

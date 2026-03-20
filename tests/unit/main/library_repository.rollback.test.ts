@@ -4,7 +4,7 @@ import { join } from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { LibraryRepository, type LibraryMigration } from './library_repository'
+import { LibraryRepository, type LibraryMigration } from '../../../src/main/library_repository'
 
 const temp_dirs: string[] = []
 
