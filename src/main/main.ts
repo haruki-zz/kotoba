@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import path from 'node:path'
 import { type AppStartupStatusResult } from '../shared/ipc'
+import { ActivityService } from './activity_service'
 import { LibraryRepository } from './library_repository'
 import { LibraryService } from './library_service'
 import { create_default_keytar_secret_store } from './keytar_secret_store'
@@ -91,12 +92,16 @@ app.whenReady().then(() => {
       const review_service = new ReviewService({
         library_repository,
       })
+      const activity_service = new ActivityService({
+        library_repository,
+      })
 
       register_ipc_router({
         word_entry_service,
         word_add_draft_repository,
         library_service,
         review_service,
+        activity_service,
         startup_status,
         settings_repository,
         api_key_secret_store,

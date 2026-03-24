@@ -1,9 +1,9 @@
 ﻿# Kotoba 开发进度记录
 
 ## 1. 当前状态
-- 记录日期：`2026-03-19`
-- 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成，且步骤 `13` 与步骤 `14` 均已通过用户验证。
-- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 可回归”阶段。
+- 记录日期：`2026-03-24`
+- 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成，且其后已补充 `活動` heat map 功能。
+- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 可回归”阶段。
 
 ## 2. 已完成事项
 ### 2.1 对应 plan.md 步骤 1（环境与版本基线冻结）
@@ -259,7 +259,30 @@
   - 单测：`tests/unit/main/keytar_secret_store.test.ts`
   - E2E：`e2e/word_add.spec.ts` 新增 `settings` 用例
 
-### 2.16 测试目录整理（源码/测试分离）
+### 2.16 后续补充：活动 heat map
+- 已新增主进程统计服务：
+  - `src/main/activity_service.ts`
+  - 能力：
+    - 基于 `words.created_at` 与 `review_logs.reviewed_at` 按系统本地自然日聚合最近 `12` 周活动
+    - 输出总活动、活跃天数、当前连续天数、最长连续天数与每日强度等级
+- 已扩展 IPC 契约与路由：
+  - `src/shared/ipc.ts`
+  - `src/main/ipc_router.ts`
+  - 新增频道：`activity:heatmap`
+- 已完成主进程 wiring：
+  - `src/main/main.ts` 注入 `ActivityService`
+- 已完成渲染层 `活動` 页面：
+  - `src/renderer/app.tsx`
+  - `src/renderer/style.css`
+  - 交互：
+    - 最近 `12` 周 heat map
+    - 总活动 / 新增 / 复习 / 活跃天数 / 当前连续 / 最长连续摘要
+    - 当日高亮与空态引导
+- 已补齐验证：
+  - 单测：`tests/unit/main/activity_service.test.ts`
+  - E2E：`e2e/word_add.spec.ts` 新增 `activity-heatmap` 用例
+
+### 2.17 测试目录整理（源码/测试分离）
 - 已完成目录分离：
   - `src/` 仅保留正式源码文件
   - 单元测试统一迁移到 `tests/unit/main` 与 `tests/unit/shared`

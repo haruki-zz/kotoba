@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import './style.css'
 import {
+  type ActivityHeatmapCell,
+  type ActivityHeatmapResult,
   type AppStartupStatusResult,
   IPC_CHANNELS,
   type IpcFailure,
@@ -21,7 +23,7 @@ import {
   type WordAddSaveResult,
 } from '../shared/ipc'
 
-type AppPage = 'word-add' | 'library' | 'review' | 'settings'
+type AppPage = 'word-add' | 'library' | 'review' | 'activity' | 'settings'
 
 type LibraryEditForm = {
   word: string
@@ -62,6 +64,7 @@ const EMPTY_SETTINGS_FORM: SettingsForm = {
 }
 
 const REVIEW_GRADES = [0, 1, 2, 3, 4, 5] as const
+const ACTIVITY_WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'] as const
 
 const is_failure = (response: IpcResponse): response is IpcFailure => response.ok === false
 
@@ -96,6 +99,31 @@ const parse_non_negative_integer = (value: string): number | null => {
   return Number.parseInt(normalized, 10)
 }
 
+const build_activity_weeks = (
+  cells: ActivityHeatmapCell[]
+): Array<Array<ActivityHeatmapCell | null>> => {
+  const weeks: Array<Array<ActivityHeatmapCell | null>> = []
+  let current_week: Array<ActivityHeatmapCell | null> = Array.from({ length: 7 }, () => null)
+
+  for (const cell of cells) {
+    if (cell.weekday === 0 && current_week.some((value) => value !== null)) {
+      weeks.push(current_week)
+      current_week = Array.from({ length: 7 }, () => null)
+    }
+
+    current_week[cell.weekday] = cell
+  }
+
+  if (current_week.some((value) => value !== null)) {
+    weeks.push(current_week)
+  }
+
+  return weeks
+}
+
+const format_activity_cell_label = (cell: ActivityHeatmapCell): string =>
+  `${cell.date}: 活動 ${cell.activity_count} 件（追加 ${cell.added_word_count} 件、復習 ${cell.review_count} 件）`
+
 export const App = () => {
   const [app_notice_message, set_app_notice_message] = useState<string>('')
   const [app_notice_kind, set_app_notice_kind] = useState<'info' | 'warning' | null>(null)
@@ -127,6 +155,10 @@ export const App = () => {
   const [review_error_message, set_review_error_message] = useState<string>('')
   const [review_loading, set_review_loading] = useState<boolean>(false)
   const [review_grading_word_id, set_review_grading_word_id] = useState<string | null>(null)
+
+  const [activity_heatmap, set_activity_heatmap] = useState<ActivityHeatmapResult | null>(null)
+  const [activity_error_message, set_activity_error_message] = useState<string>('')
+  const [activity_loading, set_activity_loading] = useState<boolean>(false)
 
   const [settings_form, set_settings_form] = useState<SettingsForm>(EMPTY_SETTINGS_FORM)
   const [settings_has_api_key, set_settings_has_api_key] = useState<boolean>(false)
@@ -187,6 +219,23 @@ export const App = () => {
     set_review_due_count(response.data.due_count)
     set_review_completed_today_count(response.data.completed_today_count)
     set_review_error_message('')
+  }, [])
+
+  const load_activity_heatmap = useCallback(async (): Promise<void> => {
+    set_activity_loading(true)
+
+    const response = (await window.kotoba.invoke(
+      IPC_CHANNELS.ACTIVITY_HEATMAP
+    )) as IpcResponse<ActivityHeatmapResult>
+
+    set_activity_loading(false)
+    if (is_failure(response)) {
+      set_activity_error_message(response.error.message)
+      return
+    }
+
+    set_activity_heatmap(response.data)
+    set_activity_error_message('')
   }, [])
 
   const load_settings_page = useCallback(async (): Promise<void> => {
@@ -293,6 +342,14 @@ export const App = () => {
   }, [active_page, load_review_queue])
 
   useEffect(() => {
+    if (active_page !== 'activity') {
+      return
+    }
+
+    void load_activity_heatmap()
+  }, [active_page, load_activity_heatmap])
+
+  useEffect(() => {
     if (active_page !== 'settings') {
       return
     }
@@ -365,6 +422,10 @@ export const App = () => {
     if (next_page === 'review') {
       set_review_status_message('')
       set_review_error_message('')
+    }
+
+    if (next_page === 'activity') {
+      set_activity_error_message('')
     }
 
     if (next_page === 'settings') {
@@ -598,6 +659,10 @@ export const App = () => {
   )
 
   const current_review_word = review_due_words[0] ?? null
+  const activity_weeks = useMemo(
+    () => build_activity_weeks(activity_heatmap?.cells ?? []),
+    [activity_heatmap]
+  )
 
   return (
     <main className="container">
@@ -636,6 +701,13 @@ export const App = () => {
           onClick={() => handle_page_change('review')}
         >
           復習
+        </button>
+        <button
+          type="button"
+          className={active_page === 'activity' ? 'tab active' : 'tab'}
+          onClick={() => handle_page_change('activity')}
+        >
+          活動
         </button>
         <button
           type="button"
@@ -918,6 +990,117 @@ export const App = () => {
           {review_error_message.length > 0 ? (
             <p role="alert" className="error_message">
               {review_error_message}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
+      {active_page === 'activity' ? (
+        <section className="panel">
+          <h2>活動</h2>
+          <p className="settings_hint">
+            活動量は単語追加と復習の合計件数です。直近 12 週間の学習量を表示します。
+          </p>
+
+          {activity_heatmap ? (
+            <>
+              <div className="activity_summary_grid">
+                <article className="activity_summary_card">
+                  <p className="activity_summary_label">総活動</p>
+                  <p className="activity_summary_value">
+                    {activity_heatmap.total_activity_count} 件
+                  </p>
+                </article>
+                <article className="activity_summary_card">
+                  <p className="activity_summary_label">追加</p>
+                  <p className="activity_summary_value">
+                    {activity_heatmap.total_added_word_count} 件
+                  </p>
+                </article>
+                <article className="activity_summary_card">
+                  <p className="activity_summary_label">復習</p>
+                  <p className="activity_summary_value">{activity_heatmap.total_review_count} 件</p>
+                </article>
+                <article className="activity_summary_card">
+                  <p className="activity_summary_label">活動日</p>
+                  <p className="activity_summary_value">{activity_heatmap.active_day_count} 日</p>
+                </article>
+                <article className="activity_summary_card">
+                  <p className="activity_summary_label">現在連続</p>
+                  <p className="activity_summary_value">
+                    {activity_heatmap.current_streak_days} 日
+                  </p>
+                </article>
+                <article className="activity_summary_card">
+                  <p className="activity_summary_label">最長連続</p>
+                  <p className="activity_summary_value">
+                    {activity_heatmap.longest_streak_days} 日
+                  </p>
+                </article>
+              </div>
+
+              <p className="activity_range">
+                期間: {activity_heatmap.range_start} - {activity_heatmap.range_end}
+              </p>
+
+              <div className="activity_heatmap_scroll">
+                <div className="activity_heatmap_layout">
+                  <div className="activity_weekday_labels" aria-hidden="true">
+                    {ACTIVITY_WEEKDAY_LABELS.map((weekday) => (
+                      <span key={weekday}>{weekday}</span>
+                    ))}
+                  </div>
+                  <div className="activity_heatmap" role="grid" aria-label="学習活動ヒートマップ">
+                    {activity_weeks.map((week, week_index) => (
+                      <div
+                        key={`${week[0]?.date ?? 'week'}-${week_index}`}
+                        className="activity_week_column"
+                      >
+                        {week.map((cell, day_index) =>
+                          cell ? (
+                            <div
+                              key={cell.date}
+                              role="gridcell"
+                              aria-label={format_activity_cell_label(cell)}
+                              className={`activity_cell activity_level_${cell.level}${cell.is_today ? ' is_today' : ''}`}
+                              data-activity-date={cell.date}
+                              data-activity-count={cell.activity_count}
+                            />
+                          ) : (
+                            <div
+                              key={`empty-${week_index}-${day_index}`}
+                              className="activity_cell activity_placeholder"
+                              aria-hidden="true"
+                            />
+                          )
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="activity_legend" aria-hidden="true">
+                <span>少ない</span>
+                {[0, 1, 2, 3, 4].map((level) => (
+                  <span key={level} className={`activity_cell activity_level_${level}`} />
+                ))}
+                <span>多い</span>
+              </div>
+
+              {activity_heatmap.total_activity_count === 0 ? (
+                <p className="library_hint">
+                  まだ活動記録がありません。単語追加や復習をするとヒートマップに表示されます。
+                </p>
+              ) : null}
+            </>
+          ) : null}
+
+          {activity_loading ? <p className="library_hint">活動データを読み込み中...</p> : null}
+
+          {activity_error_message.length > 0 ? (
+            <p role="alert" className="error_message">
+              {activity_error_message}
             </p>
           ) : null}
         </section>

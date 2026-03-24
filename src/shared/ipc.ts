@@ -3,6 +3,7 @@ export const IPC_BRIDGE_CHANNEL = 'kotoba:invoke' as const
 export const IPC_CHANNELS = {
   APP_PING: 'app:ping',
   APP_STARTUP_STATUS: 'app:startup-status',
+  ACTIVITY_HEATMAP: 'activity:heatmap',
   SETTINGS_GET: 'settings:get',
   SETTINGS_SAVE: 'settings:save',
   SETTINGS_DELETE_API_KEY: 'settings:delete-api-key',
@@ -48,6 +49,29 @@ export interface PingResult {
 export interface AppStartupStatusResult {
   notice_ja: string | null
   notice_kind: 'info' | 'warning' | null
+}
+
+export interface ActivityHeatmapCell {
+  date: string
+  weekday: number
+  activity_count: number
+  review_count: number
+  added_word_count: number
+  level: 0 | 1 | 2 | 3 | 4
+  is_today: boolean
+}
+
+export interface ActivityHeatmapResult {
+  range_start: string
+  range_end: string
+  total_activity_count: number
+  total_review_count: number
+  total_added_word_count: number
+  active_day_count: number
+  current_streak_days: number
+  longest_streak_days: number
+  max_activity_count: number
+  cells: ActivityHeatmapCell[]
 }
 
 export interface SettingsGetResult {

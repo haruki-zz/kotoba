@@ -357,6 +357,51 @@ test('review-flow: grade due word and persist updated review_state', async () =>
   expect(next_review_at).toBeGreaterThan(last_review_at)
 })
 
+test('activity-heatmap: show daily activity based on word adds and reviews', async () => {
+  const user_data_dir = await create_temp_user_data_dir('kotoba-e2e-activity-heatmap')
+  const launched = await launch_app(user_data_dir)
+
+  try {
+    await create_word_by_generate_then_save(
+      launched.page,
+      '活動',
+      '毎日の学習状況や取り組み量を表す言葉です。'
+    )
+    await expect(launched.page.getByRole('status')).toHaveText('単語を保存しました')
+
+    await launched.page.getByRole('button', { name: '復習' }).click()
+    await launched.page.getByRole('button', { name: '4' }).click()
+    await expect(launched.page.getByRole('status')).toHaveText('復習結果を保存しました')
+
+    await launched.page.getByRole('button', { name: '活動' }).click()
+    await expect(launched.page.getByRole('heading', { name: '活動' })).toBeVisible()
+    await expect(
+      launched.page.getByText(
+        '活動量は単語追加と復習の合計件数です。直近 12 週間の学習量を表示します。'
+      )
+    ).toBeVisible()
+
+    const today_label = await launched.page.evaluate(() => {
+      const now = new Date()
+      const year = now.getFullYear().toString().padStart(4, '0')
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    })
+
+    await expect(
+      launched.page.getByRole('gridcell', {
+        name: new RegExp(`${today_label}: 活動 2 件（追加 1 件、復習 1 件）`),
+      })
+    ).toBeVisible()
+    await expect(
+      launched.page.locator('.activity_summary_card').filter({ hasText: '総活動' })
+    ).toContainText('2 件')
+  } finally {
+    await close_app(launched.electron_app)
+  }
+})
+
 test('i18n-ja: shows japanese labels, actions, and dialog text on the main flows', async () => {
   const user_data_dir = await create_temp_user_data_dir('kotoba-e2e-i18n-ja')
   const launched = await launch_app(user_data_dir)
@@ -369,6 +414,7 @@ test('i18n-ja: shows japanese labels, actions, and dialog text on the main flows
     await expect(launched.page.getByRole('button', { name: '単語追加' })).toBeVisible()
     await expect(launched.page.getByRole('button', { name: '単語帳' })).toBeVisible()
     await expect(launched.page.getByRole('button', { name: '復習' })).toBeVisible()
+    await expect(launched.page.getByRole('button', { name: '活動' })).toBeVisible()
     await expect(launched.page.getByRole('button', { name: '設定' })).toBeVisible()
     await expect(launched.page.getByLabel('単語')).toBeVisible()
     await expect(launched.page.getByLabel('読み仮名')).toBeVisible()

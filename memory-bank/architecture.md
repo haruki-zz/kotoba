@@ -1,8 +1,8 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 14，且步骤 13 与步骤 14 均已通过用户验证。
-- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入”阶段。
+- 当前已完成实施计划步骤 14，且其后已补充 `活動` heat map 能力。
+- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入”阶段。
 - 已具备主进程、预加载、渲染层、共享契约、单测与 E2E 的最小闭环。
 - 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路、`review_logs` 基础审计链路、启动恢复提示链路、设置页配置链路。
 - 后续开发入口是 `plan.md` 的 `步骤 15（打包、回归与发布验收）`。
@@ -56,13 +56,14 @@
   - Electron 主进程入口。
   - 创建窗口并加载渲染页面。
   - 设置安全基线：`contextIsolation: true`、`sandbox: true`、`nodeIntegration: false`。
-  - 启动时初始化 `LibraryRepository`、`SettingsRepository`、`WordAddDraftRepository`、共享 `api_key_secret_store`、`WordEntryService`、`LibraryService`、`ReviewService` 并注册 IPC。
+  - 启动时初始化 `LibraryRepository`、`SettingsRepository`、`WordAddDraftRepository`、共享 `api_key_secret_store`、`WordEntryService`、`LibraryService`、`ReviewService`、`ActivityService` 并注册 IPC。
   - 支持 `KOTOBA_USER_DATA_DIR` 覆盖 `userData` 目录（用于测试隔离）。
 - `ipc_router.ts`
   - IPC 统一路由与错误映射。
   - 支持频道：
     - `app:ping`
     - `app:startup-status`
+    - `activity:heatmap`
     - `settings:get`
     - `settings:save`
     - `settings:delete-api-key`
@@ -89,6 +90,10 @@
   - 第 11 步核心服务：待复习队列读取与评分持久化。
   - 规则：`next_review_at <= now` 入队；“今日完成”按系统本地自然日统计。
   - 第 12 步补充：每次评分追加 `review_log`，并保留最近 `50000` 条。
+- `activity_service.ts`
+  - 学习活动 heat map 统计服务。
+  - 基于 `words.created_at` 与 `review_logs.reviewed_at` 按系统本地自然日聚合最近 `12` 周活动。
+  - 输出总活动、活跃天数、当前连续天数、最长连续天数与每日强度等级。
 - `library_repository.ts`
   - 词库 JSON 仓储。
   - 能力：原子写入、串行写、每日备份、启动恢复、`schema_version` 顺序迁移、失败回滚。
@@ -131,6 +136,7 @@
   - 为 main/preload/renderer 提供统一契约。
   - 第 13 步补充：新增 `app:startup-status` 与 `AppStartupStatusResult`。
   - 第 14 步补充：新增设置相关 IPC 契约与 payload 校验。
+  - 后续补充：新增 `activity:heatmap` 与活动 heat map 返回类型。
 - `domain_schema.ts`
   - 领域 schema 与类型定义（`Word`、`ReviewState`、`ReviewLog`、`LibraryRoot`、`Settings`）。
   - 固化 `schema_version=1`、`REVIEW_LOG_RETENTION_LIMIT=50000` 与 AI 字段长度约束。
@@ -141,11 +147,12 @@
 - `app.tsx`
   - 当前 UI 主页面。
   - 已实现：
-    - 顶部标签页：`単語追加`、`単語帳`、`復習`、`設定`
+    - 顶部标签页：`単語追加`、`単語帳`、`復習`、`活動`、`設定`
     - `単語追加` 输入/生成/编辑/保存流程
     - 草稿机制：`800ms` 防抖自动保存、切页强制保存、`beforeunload` 强制保存、保存成功后清理
     - `単語帳` 列表、搜索、行内编辑、删除确认
     - `復習` 到期卡片、评分按钮 `0-5`、剩余/今日完成统计
+    - `活動`：最近 `12` 周 heat map、总活动/活跃天数/连续天数摘要
     - `設定`：`model / timeout / retries` 编辑、API Key 状态展示、更新与删除
     - 生成/保存/编辑/删除状态与错误提示（日语）
     - 启动恢复/迁移时的顶部全局通知
@@ -186,6 +193,8 @@
   - 评分后写入 `before_state/after_state/grade/reviewed_at` 的测试。
 - `tests/unit/main/log_retention.test.ts`
   - `review_logs` 超过 `50000` 条时淘汰最旧记录的测试。
+- `tests/unit/main/activity_service.test.ts`
+  - 活动 heat map 的本地自然日聚合、范围裁剪与连续天数测试。
 
 ### 4.2 端到端测试（Playwright + Electron）
 - `e2e/word_add.spec.ts`
@@ -196,6 +205,7 @@
     - `duplicate-word`：`trim + NFKC` 判重覆盖
     - `library-crud`：词库列表/搜索/编辑/删除
     - `review-flow`：复习页评分与 `review_state` 持久化
+    - `activity-heatmap`：活动页按当日新增 + 复习展示 heat map
     - `settings`：设置页保存、API Key 更新/删除、重启后回读
     - `i18n-ja`：主页面、标签、按钮、搜索占位、删除确认弹窗均为日语
     - `error-handling`：API Key 缺失/无效、网络失败、超时、损坏回退提示
@@ -204,7 +214,7 @@
 ## 5. 当前运行流程（步骤 14 快照）
 1. `pnpm dev` 启动 Vite、main/preload watch、Electron。
 2. 渲染层通过 `window.kotoba.invoke` 调用 IPC。
-3. 主进程 `ipc_router` 校验 channel/payload 后分发到 `WordEntryService`、`WordAddDraftRepository`、`LibraryService`、`ReviewService` 与设置服务。
+3. 主进程 `ipc_router` 校验 channel/payload 后分发到 `WordEntryService`、`WordAddDraftRepository`、`LibraryService`、`ReviewService`、`ActivityService` 与设置服务。
 4. 启动提示流程：
   - `LibraryRepository.initialize_on_startup()` 返回 `ok/created/recovered/migrated`。
   - 主进程把 `recovered/migrated` 转换为 `app:startup-status` 的日语通知。
@@ -229,6 +239,9 @@
   - `review:queue`：返回所有 `next_review_at <= now` 的词条，并统计本地自然日内已完成词条数。
   - `review:grade`：按 SM-2 纯函数计算新 `review_state`，追加一条 `review_log`，并立即持久化到词库。
   - `review_logs` 保留最近 `50000` 条，超限时删除最旧记录。
+10. 活动 heat map 流程：
+  - `activity:heatmap`：读取词库后基于 `words.created_at` 与 `review_logs.reviewed_at` 按本地自然日聚合最近 `12` 周活动。
+  - 渲染层展示总活动、活跃天数、连续天数与按强度分级的日历格。
 
 ## 6. 当前交接重点
 - 已通过用户验证的最后一步是步骤 14，因此后续开发默认从步骤 15 开始。

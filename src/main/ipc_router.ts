@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import {
   ALLOWED_CHANNEL_SET,
+  type ActivityHeatmapResult,
   type AppStartupStatusResult,
   IPC_BRIDGE_CHANNEL,
   IPC_CHANNELS,
@@ -31,6 +32,7 @@ import {
   type WordAddGenerateResult,
   type WordAddSaveResult,
 } from '../shared/ipc'
+import { type ActivityService } from './activity_service'
 import { type ApiKeySecretStore } from './keytar_secret_store'
 import {
   LibraryValidationError,
@@ -62,6 +64,7 @@ interface IpcRouterDeps {
   word_add_draft_repository: WordAddDraftRepository
   library_service: LibraryService
   review_service: ReviewService
+  activity_service: ActivityService
   startup_status: AppStartupStatusResult
   settings_repository: SettingsRepository
   api_key_secret_store: ApiKeySecretStore
@@ -85,6 +88,20 @@ const create_app_startup_status_handler =
   (deps: IpcRouterDeps): ChannelHandler =>
   async () => {
     return create_success_response(deps.startup_status)
+  }
+
+const create_activity_heatmap_handler =
+  (deps: IpcRouterDeps): ChannelHandler =>
+  async () => {
+    try {
+      const result: ActivityHeatmapResult = await deps.activity_service.get_heatmap()
+      return create_success_response(result)
+    } catch {
+      return create_failure_response(
+        'APP_STORAGE_ERROR',
+        '活動ヒートマップの読み込みに失敗しました。'
+      )
+    }
   }
 
 const create_settings_service_deps = (deps: IpcRouterDeps): SettingsServiceDeps => ({
@@ -331,6 +348,7 @@ export const register_ipc_router = (deps: IpcRouterDeps): void => {
   const channel_handler_map: Record<IpcAllowedChannel, ChannelHandler> = {
     [IPC_CHANNELS.APP_PING]: app_ping_handler,
     [IPC_CHANNELS.APP_STARTUP_STATUS]: create_app_startup_status_handler(deps),
+    [IPC_CHANNELS.ACTIVITY_HEATMAP]: create_activity_heatmap_handler(deps),
     [IPC_CHANNELS.SETTINGS_GET]: create_settings_get_handler(deps),
     [IPC_CHANNELS.SETTINGS_SAVE]: create_settings_save_handler(deps),
     [IPC_CHANNELS.SETTINGS_DELETE_API_KEY]: create_settings_delete_api_key_handler(deps),
