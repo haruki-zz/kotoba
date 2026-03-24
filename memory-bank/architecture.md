@@ -1,8 +1,8 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 14，且其后已补充 `活動` heat map 能力。
-- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入”阶段。
+- 当前已完成实施计划步骤 14，且其后 `活動` heat map 已补充到最新交付状态并通过当前用户验证。
+- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入”阶段。
 - 已具备主进程、预加载、渲染层、共享契约、单测与 E2E 的最小闭环。
 - 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路、`review_logs` 基础审计链路、启动恢复提示链路、设置页配置链路。
 - 后续开发入口是 `plan.md` 的 `步骤 15（打包、回归与发布验收）`。
@@ -93,6 +93,7 @@
 - `activity_service.ts`
   - 学习活动 heat map 统计服务。
   - 基于 `words.created_at` 与 `review_logs.reviewed_at` 按系统本地自然日聚合最近 `40` 周活动。
+  - 起点对齐到本地周起始日，用增加展示跨度而不是拉伸格子的方式扩展热力图整体宽度。
   - 输出总活动、活跃天数、当前连续天数、最长连续天数与每日强度等级。
 - `library_repository.ts`
   - 词库 JSON 仓储。
@@ -152,12 +153,14 @@
     - 草稿机制：`800ms` 防抖自动保存、切页强制保存、`beforeunload` 强制保存、保存成功后清理
     - `単語帳` 列表、搜索、行内编辑、删除确认
     - `復習` 到期卡片、评分按钮 `0-5`、剩余/今日完成统计
-    - `活動`：最近 `40` 周 heat map、总活动/活跃天数/连续天数摘要
+    - `活動`：最近 `40` 周 heat map、总活动/新增/复习/活跃天数/连续天数摘要
+    - `活動`：仅展示静态热力图与摘要，不显示 hover 详情弹窗或原生 tooltip
     - `設定`：`model / timeout / retries` 编辑、API Key 状态展示、更新与删除
     - 生成/保存/编辑/删除状态与错误提示（日语）
     - 启动恢复/迁移时的顶部全局通知
 - `style.css`
   - 页面样式（表单、标签、状态提示样式）。
+  - `活動` 页 heat map 采用固定 `14px` 方格、固定列间距/行间距，通过横向增加周数保持与主界面接近的整体宽度。
 - `window.d.ts`
   - `window.kotoba` 类型定义。
 
@@ -205,13 +208,13 @@
     - `duplicate-word`：`trim + NFKC` 判重覆盖
     - `library-crud`：词库列表/搜索/编辑/删除
     - `review-flow`：复习页评分与 `review_state` 持久化
-    - `activity-heatmap`：活动页按当日新增 + 复习展示 heat map
+    - `activity-heatmap`：活动页按当日新增 + 复习展示最近 `40` 周 heat map
     - `settings`：设置页保存、API Key 更新/删除、重启后回读
     - `i18n-ja`：主页面、标签、按钮、搜索占位、删除确认弹窗均为日语
     - `error-handling`：API Key 缺失/无效、网络失败、超时、损坏回退提示
   - 使用临时 `userData` 目录与 `KOTOBA_FAKE_KEYTAR_FILE`，避免污染本地真实数据与钥匙串。
 
-## 5. 当前运行流程（步骤 14 快照）
+## 5. 当前运行流程（步骤 14 完成后 + heat map 补充快照）
 1. `pnpm dev` 启动 Vite、main/preload watch、Electron。
 2. 渲染层通过 `window.kotoba.invoke` 调用 IPC。
 3. 主进程 `ipc_router` 校验 channel/payload 后分发到 `WordEntryService`、`WordAddDraftRepository`、`LibraryService`、`ReviewService`、`ActivityService` 与设置服务。
@@ -242,19 +245,21 @@
 10. 活动 heat map 流程：
   - `activity:heatmap`：读取词库后基于 `words.created_at` 与 `review_logs.reviewed_at` 按本地自然日聚合最近 `40` 周活动。
   - 渲染层展示总活动、活跃天数、连续天数与按强度分级的日历格。
+  - 当前渲染不显示 hover 详情弹窗或原生 tooltip，以避免界面闪烁。
 
 ## 6. 当前交接重点
-- 已通过用户验证的最后一步是步骤 14，因此后续开发默认从步骤 15 开始。
+- 已通过用户验证的最后一步是“步骤 14 完成后的一轮活动 heat map 补充迭代”，因此后续开发默认仍从步骤 15 开始。
 - 若后续修改 `単語帳`、IPC 契约、词库存储或搜索规则，必须同步更新对应单测、E2E 与 `memory-bank` 文档。
 - 当前 `単語帳` 已不是占位页，任何后续 AI 开发者都应将其视为已稳定实现的基础能力。
 - 当前 `復習` 页面已在不破坏既有评分与队列行为的前提下补齐 `review_logs` 基础记录。
 - 当前第 13 步新增的全局启动提示与日语错误提示不应在后续步骤中被回退。
 - 当前第 14 步新增的 `設定` 页面、设置 IPC 与 API Key 不回显规则不应在后续步骤中被回退；步骤 15 主要应聚焦打包与最终回归。
+- 当前 `活動` 页面已确定采用“固定格子尺寸 + `40` 周跨度 + 无 hover 详情窗”的实现方向，后续不应回退到会闪烁的浮层方案。
 
 ## 7. 当前质量门禁流程
 1. 代码质量：`pnpm lint`、`pnpm format:check`、`pnpm typecheck`。
 2. 单元测试：`pnpm test`（实际执行 `pnpm test:unit`，仅覆盖 `src`）。
-3. E2E 测试：`pnpm exec playwright test -g "word-create|draft|duplicate-word|library-crud|review-flow|settings|i18n-ja|error-handling"`。
+3. E2E 测试：`pnpm exec playwright test -g "word-create|draft|duplicate-word|library-crud|review-flow|activity-heatmap|settings|i18n-ja|error-handling"`。
 4. 提交门禁：`husky pre-commit -> pnpm lint-staged`。
 
 ## 8. memory-bank 文档职责
