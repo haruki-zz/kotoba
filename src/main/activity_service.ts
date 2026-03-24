@@ -2,7 +2,8 @@ import { type ReviewLog, type Word } from '../shared/domain_schema'
 import { type ActivityHeatmapCell, type ActivityHeatmapResult } from '../shared/ipc'
 import { type LibraryRepository } from './library_repository'
 
-const ACTIVITY_HEATMAP_DAYS = 84 as const
+const ACTIVITY_HEATMAP_WEEKS = 40 as const
+const DAYS_PER_WEEK = 7 as const
 
 interface ActivityServiceDeps {
   library_repository: LibraryRepository
@@ -35,8 +36,10 @@ const create_activity_heatmap_result = (input: {
   now: Date
 }): ActivityHeatmapResult => {
   const range_end = start_of_local_day(input.now)
-  const range_start = add_local_days(range_end, -(ACTIVITY_HEATMAP_DAYS - 1))
-  const cells = create_empty_cells(range_start)
+  const range_start = start_of_local_week(
+    add_local_days(range_end, -((ACTIVITY_HEATMAP_WEEKS - 1) * DAYS_PER_WEEK))
+  )
+  const cells = create_empty_cells(range_start, range_end)
   const cell_map = new Map(cells.map((cell) => [cell.date, cell]))
 
   for (const word of input.words) {
@@ -83,19 +86,26 @@ const create_activity_heatmap_result = (input: {
   }
 }
 
-const create_empty_cells = (range_start: Date): ActivityHeatmapCell[] =>
-  Array.from({ length: ACTIVITY_HEATMAP_DAYS }, (_, index) => {
-    const current_day = add_local_days(range_start, index)
-    return {
+const create_empty_cells = (range_start: Date, range_end: Date): ActivityHeatmapCell[] => {
+  const cells: ActivityHeatmapCell[] = []
+  let current_day = new Date(range_start)
+
+  while (current_day.getTime() <= range_end.getTime()) {
+    cells.push({
       date: format_local_day_key(current_day),
       weekday: current_day.getDay(),
       activity_count: 0,
       review_count: 0,
       added_word_count: 0,
       level: 0,
-      is_today: index === ACTIVITY_HEATMAP_DAYS - 1,
-    }
-  })
+      is_today: is_same_local_day(current_day, range_end),
+    })
+
+    current_day = add_local_days(current_day, 1)
+  }
+
+  return cells
+}
 
 const resolve_activity_level = (
   activity_count: number,
@@ -158,11 +168,22 @@ const count_longest_streak_days = (cells: ActivityHeatmapCell[]): number => {
 const start_of_local_day = (date: Date): Date =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0)
 
+const start_of_local_week = (date: Date): Date => {
+  const week_start = start_of_local_day(date)
+  week_start.setDate(week_start.getDate() - week_start.getDay())
+  return week_start
+}
+
 const add_local_days = (date: Date, days: number): Date => {
   const next_date = new Date(date)
   next_date.setDate(next_date.getDate() + days)
   return next_date
 }
+
+const is_same_local_day = (left: Date, right: Date): boolean =>
+  left.getFullYear() === right.getFullYear() &&
+  left.getMonth() === right.getMonth() &&
+  left.getDate() === right.getDate()
 
 const format_local_day_key = (date: Date): string => {
   const year = date.getFullYear().toString().padStart(4, '0')

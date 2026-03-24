@@ -263,7 +263,7 @@
 - 已新增主进程统计服务：
   - `src/main/activity_service.ts`
   - 能力：
-    - 基于 `words.created_at` 与 `review_logs.reviewed_at` 按系统本地自然日聚合最近 `12` 周活动
+    - 基于 `words.created_at` 与 `review_logs.reviewed_at` 按系统本地自然日聚合最近 `40` 周活动
     - 输出总活动、活跃天数、当前连续天数、最长连续天数与每日强度等级
 - 已扩展 IPC 契约与路由：
   - `src/shared/ipc.ts`
@@ -275,7 +275,7 @@
   - `src/renderer/app.tsx`
   - `src/renderer/style.css`
   - 交互：
-    - 最近 `12` 周 heat map
+    - 最近 `40` 周 heat map
     - 总活动 / 新增 / 复习 / 活跃天数 / 当前连续 / 最长连续摘要
     - 当日高亮与空态引导
 - 已补齐验证：

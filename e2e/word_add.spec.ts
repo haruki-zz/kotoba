@@ -377,7 +377,7 @@ test('activity-heatmap: show daily activity based on word adds and reviews', asy
     await expect(launched.page.getByRole('heading', { name: '活動' })).toBeVisible()
     await expect(
       launched.page.getByText(
-        '活動量は単語追加と復習の合計件数です。直近 12 週間の学習量を表示します。'
+        '活動量は単語追加と復習の合計件数です。直近 40 週間の学習量を表示します。'
       )
     ).toBeVisible()
 

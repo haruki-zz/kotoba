@@ -999,7 +999,7 @@ export const App = () => {
         <section className="panel">
           <h2>活動</h2>
           <p className="settings_hint">
-            活動量は単語追加と復習の合計件数です。直近 12 週間の学習量を表示します。
+            活動量は単語追加と復習の合計件数です。直近 40 週間の学習量を表示します。
           </p>
 
           {activity_heatmap ? (

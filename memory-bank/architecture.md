@@ -92,7 +92,7 @@
   - 第 12 步补充：每次评分追加 `review_log`，并保留最近 `50000` 条。
 - `activity_service.ts`
   - 学习活动 heat map 统计服务。
-  - 基于 `words.created_at` 与 `review_logs.reviewed_at` 按系统本地自然日聚合最近 `12` 周活动。
+  - 基于 `words.created_at` 与 `review_logs.reviewed_at` 按系统本地自然日聚合最近 `40` 周活动。
   - 输出总活动、活跃天数、当前连续天数、最长连续天数与每日强度等级。
 - `library_repository.ts`
   - 词库 JSON 仓储。
@@ -152,7 +152,7 @@
     - 草稿机制：`800ms` 防抖自动保存、切页强制保存、`beforeunload` 强制保存、保存成功后清理
     - `単語帳` 列表、搜索、行内编辑、删除确认
     - `復習` 到期卡片、评分按钮 `0-5`、剩余/今日完成统计
-    - `活動`：最近 `12` 周 heat map、总活动/活跃天数/连续天数摘要
+    - `活動`：最近 `40` 周 heat map、总活动/活跃天数/连续天数摘要
     - `設定`：`model / timeout / retries` 编辑、API Key 状态展示、更新与删除
     - 生成/保存/编辑/删除状态与错误提示（日语）
     - 启动恢复/迁移时的顶部全局通知
@@ -240,7 +240,7 @@
   - `review:grade`：按 SM-2 纯函数计算新 `review_state`，追加一条 `review_log`，并立即持久化到词库。
   - `review_logs` 保留最近 `50000` 条，超限时删除最旧记录。
 10. 活动 heat map 流程：
-  - `activity:heatmap`：读取词库后基于 `words.created_at` 与 `review_logs.reviewed_at` 按本地自然日聚合最近 `12` 周活动。
+  - `activity:heatmap`：读取词库后基于 `words.created_at` 与 `review_logs.reviewed_at` 按本地自然日聚合最近 `40` 周活动。
   - 渲染层展示总活动、活跃天数、连续天数与按强度分级的日历格。
 
 ## 6. 当前交接重点

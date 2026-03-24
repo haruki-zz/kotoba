@@ -79,11 +79,11 @@ describe('activity-service', () => {
 
     const heatmap = await activity_service.get_heatmap()
     expect(heatmap.range_end).toBe('2026-03-24')
-    expect(heatmap.range_start).toBe('2025-12-31')
-    expect(heatmap.total_activity_count).toBe(5)
-    expect(heatmap.total_added_word_count).toBe(2)
-    expect(heatmap.total_review_count).toBe(3)
-    expect(heatmap.active_day_count).toBe(3)
+    expect(heatmap.range_start).toBe('2025-06-22')
+    expect(heatmap.total_activity_count).toBe(7)
+    expect(heatmap.total_added_word_count).toBe(3)
+    expect(heatmap.total_review_count).toBe(4)
+    expect(heatmap.active_day_count).toBe(4)
     expect(heatmap.current_streak_days).toBe(3)
     expect(heatmap.longest_streak_days).toBe(3)
     expect(heatmap.max_activity_count).toBe(3)
@@ -106,7 +106,13 @@ describe('activity-service', () => {
       level: 1,
     })
 
-    expect(heatmap.cells.find((cell) => cell.date === '2025-12-01')).toBeUndefined()
+    const older_day = heatmap.cells.find((cell) => cell.date === '2025-12-01')
+    expect(older_day).toMatchObject({
+      activity_count: 2,
+      added_word_count: 1,
+      review_count: 1,
+      level: 2,
+    })
   })
 })
 
