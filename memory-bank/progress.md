@@ -3,7 +3,7 @@
 ## 1. 当前状态
 - 记录日期：`2026-03-24`
 - 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成，且其后活动 heat map 已完成一轮用户验证通过的补充迭代。
-- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已调宽到 `40` 周跨度 + 活动页记忆等级构成统计可用 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 可回归”阶段。
+- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已调宽到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 可回归”阶段。
 
 ## 2. 已完成事项
 ### 2.1 对应 plan.md 步骤 1（环境与版本基线冻结）
@@ -259,7 +259,38 @@
   - 单测：`tests/unit/main/keytar_secret_store.test.ts`
   - E2E：`e2e/word_add.spec.ts` 新增 `settings` 用例
 
-### 2.16 后续补充：活动 heat map
+### 2.16 活动页补充迭代：固定 `1-5` 级记忆等级统计
+- 已收敛活动页记忆等级口径：
+  - 不再直接展示原始 `review_state.repetition`
+  - 改为基于当前 `SM-2` 状态映射到固定 `1-5` 级后再统计百分比
+- 已新增 / 更新主进程实现：
+  - `src/main/sm2.ts`
+    - 新增 `resolve_sm2_memory_level`
+    - 当前映射规则：
+      - `repetition <= 0 -> level 1`
+      - `repetition == 1 -> level 2`
+      - `repetition == 2 -> level 3`
+      - `repetition == 3 -> level 4`
+      - `repetition >= 4 -> level 5`
+  - `src/main/activity_service.ts`
+    - 活动页统计结果固定输出 `1-5` 五个等级
+    - 即使某个等级当前没有词，也会返回 `0` 数量与 `0%`
+- 已更新共享契约与渲染层：
+  - `src/shared/ipc.ts`
+    - `ActivityMemoryLevelStat.level` 收紧为联合类型 `1 | 2 | 3 | 4 | 5`
+  - `src/renderer/app.tsx`
+    - `活動` 页面说明文案改为“当前 SM-2 状态的 5 段记忆等级”
+    - 记忆等级卡片稳定展示 `レベル 1` 到 `レベル 5`
+- 已补齐本轮验证：
+  - 单测：`tests/unit/main/sm2.test.ts` 新增固定 `1-5` 级映射测试
+  - 单测：`tests/unit/main/activity_service.test.ts` 更新为固定 `1-5` 级统计断言
+  - E2E：`e2e/word_add.spec.ts` 更新活动页断言，确认复习后展示 `レベル 2 = 100%`
+  - 本轮执行通过：
+    - `pnpm test:unit -- tests/unit/main/sm2.test.ts tests/unit/main/activity_service.test.ts`
+    - `pnpm typecheck`
+    - `pnpm exec playwright test e2e/word_add.spec.ts -g "activity-heatmap"`
+
+### 2.17 后续补充：活动 heat map
 - 已新增主进程统计服务：
   - `src/main/activity_service.ts`
   - 能力：
@@ -284,7 +315,7 @@
   - 单测：`tests/unit/main/activity_service.test.ts`
   - E2E：`e2e/word_add.spec.ts` 新增 `activity-heatmap` 用例
 
-### 2.17 测试目录整理（源码/测试分离）
+### 2.18 测试目录整理（源码/测试分离）
 - 已完成目录分离：
   - `src/` 仅保留正式源码文件
   - 单元测试统一迁移到 `tests/unit/main` 与 `tests/unit/shared`

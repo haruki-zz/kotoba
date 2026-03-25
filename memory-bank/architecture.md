@@ -1,8 +1,8 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 14；其后 `活動` heat map 已补充到最新交付状态并通过当前用户验证，本轮新增了记忆等级构成统计。
-- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入”阶段。
+- 当前已完成实施计划步骤 14；其后 `活動` heat map 已补充到最新交付状态并通过当前用户验证，本轮新增了固定 `1-5` 级记忆等级统计。
+- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入”阶段。
 - 已具备主进程、预加载、渲染层、共享契约、单测与 E2E 的最小闭环。
 - 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路、`review_logs` 基础审计链路、启动恢复提示链路、设置页配置链路。
 - 后续开发入口是 `plan.md` 的 `步骤 15（打包、回归与发布验收）`。
@@ -86,6 +86,7 @@
 - `sm2.ts`
   - 第 11 步核心纯函数模块。
   - 负责 SM-2 的 EF/interval/repetition/time 字段计算，不依赖 IO。
+  - 当前额外负责把 `review_state` 映射到固定 `1-5` 级记忆等级（供 `活動` 页面统计使用）。
 - `review_service.ts`
   - 第 11 步核心服务：待复习队列读取与评分持久化。
   - 规则：`next_review_at <= now` 入队；“今日完成”按系统本地自然日统计。
@@ -94,6 +95,7 @@
   - 学习活动 heat map 统计服务。
   - 基于 `words.created_at` 与 `review_logs.reviewed_at` 按系统本地自然日聚合最近 `40` 周活动。
   - 额外基于当前 `SM-2` 状态统计固定 `1-5` 级记忆等级分布与百分比。
+  - 当前保证返回的记忆等级列表固定包含 `1/2/3/4/5` 五档，即使某一档数量为 `0` 也不会省略。
   - 起点对齐到本地周起始日，用增加展示跨度而不是拉伸格子的方式扩展热力图整体宽度。
   - 输出总活动、活跃天数、当前连续天数、最长连续天数、记忆等级构成与每日强度等级。
 - `library_repository.ts`
@@ -139,6 +141,7 @@
   - 第 13 步补充：新增 `app:startup-status` 与 `AppStartupStatusResult`。
   - 第 14 步补充：新增设置相关 IPC 契约与 payload 校验。
   - 后续补充：新增 `activity:heatmap` 与活动 heat map 返回类型。
+  - 当前 `ActivityMemoryLevelStat.level` 固定为 `1 | 2 | 3 | 4 | 5`。
 - `domain_schema.ts`
   - 领域 schema 与类型定义（`Word`、`ReviewState`、`ReviewLog`、`LibraryRoot`、`Settings`）。
   - 固化 `schema_version=1`、`REVIEW_LOG_RETENTION_LIMIT=50000` 与 AI 字段长度约束。
@@ -154,7 +157,7 @@
     - 草稿机制：`800ms` 防抖自动保存、切页强制保存、`beforeunload` 强制保存、保存成功后清理
     - `単語帳` 列表、搜索、行内编辑、删除确认
     - `復習` 到期卡片、评分按钮 `0-5`、剩余/今日完成统计
-    - `活動`：最近 `40` 周 heat map、总活动/新增/复习/活跃天数/连续天数摘要、记忆等级构成
+    - `活動`：最近 `40` 周 heat map、总活动/新增/复习/活跃天数/连续天数摘要、固定 `1-5` 级记忆等级构成
     - `活動`：仅展示静态热力图与摘要，不显示 hover 详情弹窗或原生 tooltip
     - `設定`：`model / timeout / retries` 编辑、API Key 状态展示、更新与删除
     - 生成/保存/编辑/删除状态与错误提示（日语）
@@ -191,6 +194,7 @@
   - 搜索标准化与词库编辑/删除行为测试。
 - `tests/unit/main/sm2.test.ts`
   - SM-2 算法顺序、EF 下限、评分 `0-5` 覆盖测试。
+  - 额外覆盖固定 `1-5` 级记忆等级映射。
 - `tests/unit/main/review_queue.test.ts`
   - 待复习队列、本地时区今日统计、评分持久化测试。
 - `tests/unit/main/review_logs.test.ts`
@@ -198,7 +202,7 @@
 - `tests/unit/main/log_retention.test.ts`
   - `review_logs` 超过 `50000` 条时淘汰最旧记录的测试。
 - `tests/unit/main/activity_service.test.ts`
-  - 活动 heat map 的本地自然日聚合、范围裁剪与连续天数测试。
+  - 活动 heat map 的本地自然日聚合、范围裁剪、连续天数与固定 `1-5` 级记忆等级统计测试。
 
 ### 4.2 端到端测试（Playwright + Electron）
 - `e2e/word_add.spec.ts`
@@ -209,7 +213,7 @@
     - `duplicate-word`：`trim + NFKC` 判重覆盖
     - `library-crud`：词库列表/搜索/编辑/删除
     - `review-flow`：复习页评分与 `review_state` 持久化
-    - `activity-heatmap`：活动页按当日新增 + 复习展示最近 `40` 周 heat map
+    - `activity-heatmap`：活动页按当日新增 + 复习展示最近 `40` 周 heat map，并校验固定 `1-5` 级记忆等级统计
     - `settings`：设置页保存、API Key 更新/删除、重启后回读
     - `i18n-ja`：主页面、标签、按钮、搜索占位、删除确认弹窗均为日语
     - `error-handling`：API Key 缺失/无效、网络失败、超时、损坏回退提示
@@ -245,7 +249,8 @@
   - `review_logs` 保留最近 `50000` 条，超限时删除最旧记录。
 10. 活动 heat map 流程：
   - `activity:heatmap`：读取词库后基于 `words.created_at` 与 `review_logs.reviewed_at` 按本地自然日聚合最近 `40` 周活动。
-  - 渲染层展示总活动、活跃天数、连续天数与按强度分级的日历格。
+  - 主进程同时基于 `review_state` 计算固定 `1-5` 级记忆等级分布。
+  - 渲染层展示总活动、活跃天数、连续天数、固定 `1-5` 级记忆等级卡片与按强度分级的日历格。
   - 当前渲染不显示 hover 详情弹窗或原生 tooltip，以避免界面闪烁。
 
 ## 6. 当前交接重点
@@ -255,7 +260,7 @@
 - 当前 `復習` 页面已在不破坏既有评分与队列行为的前提下补齐 `review_logs` 基础记录。
 - 当前第 13 步新增的全局启动提示与日语错误提示不应在后续步骤中被回退。
 - 当前第 14 步新增的 `設定` 页面、设置 IPC 与 API Key 不回显规则不应在后续步骤中被回退；步骤 15 主要应聚焦打包与最终回归。
-- 当前 `活動` 页面已确定采用“固定格子尺寸 + `40` 周跨度 + 无 hover 详情窗”的实现方向，后续不应回退到会闪烁的浮层方案。
+- 当前 `活動` 页面已确定采用“固定格子尺寸 + `40` 周跨度 + 无 hover 详情窗 + 固定 `1-5` 级记忆等级卡片”的实现方向，后续不应回退到原始 `repetition` 裸展示或会闪烁的浮层方案。
 
 ## 7. 当前质量门禁流程
 1. 代码质量：`pnpm lint`、`pnpm format:check`、`pnpm typecheck`。
