@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import './style.css'
 import {
   type ActivityHeatmapCell,
+  type ActivityMemoryLevelStat,
   type ActivityHeatmapResult,
   type AppStartupStatusResult,
   IPC_CHANNELS,
@@ -123,6 +124,15 @@ const build_activity_weeks = (
 
 const format_activity_cell_label = (cell: ActivityHeatmapCell): string =>
   `${cell.date}: 活動 ${cell.activity_count} 件（追加 ${cell.added_word_count} 件、復習 ${cell.review_count} 件）`
+
+const format_activity_memory_level_percentage = (percentage: number): string =>
+  `${percentage.toFixed(1)}%`
+
+const format_activity_memory_level_label = (
+  stat: ActivityMemoryLevelStat,
+  total_word_count: number
+): string =>
+  `レベル ${stat.level}: ${stat.word_count} 語 / 全 ${total_word_count} 語（${format_activity_memory_level_percentage(stat.percentage)}）`
 
 export const App = () => {
   const [app_notice_message, set_app_notice_message] = useState<string>('')
@@ -1042,6 +1052,47 @@ export const App = () => {
               <p className="activity_range">
                 期間: {activity_heatmap.range_start} - {activity_heatmap.range_end}
               </p>
+
+              <section className="activity_memory_levels">
+                <div className="activity_memory_levels_header">
+                  <h3 className="activity_memory_levels_title">記憶レベル構成</h3>
+                  <p className="activity_memory_levels_hint">
+                    現在の SM-2 状態を 5 段階にまとめ、各レベルの割合を表示しています。
+                  </p>
+                </div>
+
+                {activity_heatmap.total_word_count > 0 ? (
+                  <div
+                    className="activity_memory_level_list"
+                    role="list"
+                    aria-label="記憶レベル構成"
+                  >
+                    {activity_heatmap.memory_level_stats.map((stat) => (
+                      <article
+                        key={stat.level}
+                        className="activity_memory_level_card"
+                        role="listitem"
+                        aria-label={format_activity_memory_level_label(
+                          stat,
+                          activity_heatmap.total_word_count
+                        )}
+                      >
+                        <p className="activity_memory_level_label">レベル {stat.level}</p>
+                        <p className="activity_memory_level_value">
+                          {format_activity_memory_level_percentage(stat.percentage)}
+                        </p>
+                        <p className="activity_memory_level_meta">
+                          {stat.word_count} 語 / 全 {activity_heatmap.total_word_count} 語
+                        </p>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="library_hint">
+                    まだ単語がありません。単語を保存すると記憶レベル構成が表示されます。
+                  </p>
+                )}
+              </section>
 
               <div className="activity_heatmap_scroll">
                 <div className="activity_heatmap_layout">

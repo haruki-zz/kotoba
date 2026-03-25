@@ -1,5 +1,7 @@
 import { type ReviewState } from '../shared/domain_schema'
 
+export type Sm2MemoryLevel = 1 | 2 | 3 | 4 | 5
+
 export interface CalculateSm2ReviewStateInput {
   review_state: ReviewState
   grade: number
@@ -30,6 +32,26 @@ export const calculate_sm2_review_state = (input: CalculateSm2ReviewStateInput):
     last_review_at: now_iso,
     last_grade: input.grade,
   }
+}
+
+export const resolve_sm2_memory_level = (review_state: ReviewState): Sm2MemoryLevel => {
+  if (review_state.repetition <= 0) {
+    return 1
+  }
+
+  if (review_state.repetition === 1) {
+    return 2
+  }
+
+  if (review_state.repetition === 2) {
+    return 3
+  }
+
+  if (review_state.repetition === 3) {
+    return 4
+  }
+
+  return 5
 }
 
 const calculate_interval_days = (input: {

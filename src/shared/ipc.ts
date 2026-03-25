@@ -61,16 +61,24 @@ export interface ActivityHeatmapCell {
   is_today: boolean
 }
 
+export interface ActivityMemoryLevelStat {
+  level: 1 | 2 | 3 | 4 | 5
+  word_count: number
+  percentage: number
+}
+
 export interface ActivityHeatmapResult {
   range_start: string
   range_end: string
   total_activity_count: number
   total_review_count: number
   total_added_word_count: number
+  total_word_count: number
   active_day_count: number
   current_streak_days: number
   longest_streak_days: number
   max_activity_count: number
+  memory_level_stats: ActivityMemoryLevelStat[]
   cells: ActivityHeatmapCell[]
 }
 

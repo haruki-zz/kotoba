@@ -275,6 +275,62 @@ button:disabled {
   color: #475569;
 }
 
+.activity_memory_levels {
+  margin: 0 0 20px;
+  border: 1px solid #dbe3ee;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  padding: 16px;
+}
+
+.activity_memory_levels_header {
+  margin-bottom: 12px;
+}
+
+.activity_memory_levels_title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 16px;
+}
+
+.activity_memory_levels_hint {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.activity_memory_level_list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.activity_memory_level_card {
+  border: 1px solid #dbe3ee;
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 14px;
+}
+
+.activity_memory_level_label {
+  margin: 0;
+  color: #475569;
+  font-size: 13px;
+}
+
+.activity_memory_level_value {
+  margin: 8px 0 0;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.activity_memory_level_meta {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
 .activity_heatmap_scroll {
   overflow-x: auto;
   padding-bottom: 8px;

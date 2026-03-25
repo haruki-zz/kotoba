@@ -65,6 +65,7 @@
   - 统计口径：每日 `activity_count = added_word_count + review_count`
   - 日期边界：系统本地时区自然日
   - 数据来源：`words.created_at` 与 `review_logs.reviewed_at`
+  - 活动页额外摘要：当前词库基于 `SM-2` 当前状态输出固定 `1-5` 级记忆等级分布，并显示各等级占总词数百分比
 - 草稿与输出约束：
   - 自动草稿：默认开启；输入 `800ms` 防抖保存；切页/关窗前强制保存
   - AI 输出长度上限：

@@ -397,6 +397,13 @@ test('activity-heatmap: show daily activity based on word adds and reviews', asy
     await expect(
       launched.page.locator('.activity_summary_card').filter({ hasText: '総活動' })
     ).toContainText('2 件')
+    await expect(launched.page.getByRole('heading', { name: '記憶レベル構成' })).toBeVisible()
+    await expect(
+      launched.page.locator('.activity_memory_level_card').filter({ hasText: 'レベル 2' })
+    ).toContainText('100.0%')
+    await expect(
+      launched.page.locator('.activity_memory_level_card').filter({ hasText: 'レベル 2' })
+    ).toContainText('1 語 / 全 1 語')
   } finally {
     await close_app(launched.electron_app)
   }

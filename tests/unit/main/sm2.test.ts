@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { calculate_sm2_review_state } from '../../../src/main/sm2'
+import { calculate_sm2_review_state, resolve_sm2_memory_level } from '../../../src/main/sm2'
 
 const TEST_NOW = new Date('2026-03-15T12:00:00.000Z')
 
@@ -93,6 +93,54 @@ describe('sm2', () => {
       expect(next_state.last_review_at).toBe(TEST_NOW.toISOString())
       expect(next_state.easiness_factor).toBeGreaterThanOrEqual(1.3)
     }
+  })
+
+  it('maps repetition counts to fixed five memory levels', () => {
+    expect(
+      resolve_sm2_memory_level(
+        create_review_state({
+          repetition: 0,
+          interval_days: 0,
+          easiness_factor: 2.5,
+        })
+      )
+    ).toBe(1)
+    expect(
+      resolve_sm2_memory_level(
+        create_review_state({
+          repetition: 1,
+          interval_days: 1,
+          easiness_factor: 2.5,
+        })
+      )
+    ).toBe(2)
+    expect(
+      resolve_sm2_memory_level(
+        create_review_state({
+          repetition: 2,
+          interval_days: 6,
+          easiness_factor: 2.5,
+        })
+      )
+    ).toBe(3)
+    expect(
+      resolve_sm2_memory_level(
+        create_review_state({
+          repetition: 3,
+          interval_days: 14,
+          easiness_factor: 2.5,
+        })
+      )
+    ).toBe(4)
+    expect(
+      resolve_sm2_memory_level(
+        create_review_state({
+          repetition: 8,
+          interval_days: 80,
+          easiness_factor: 2.5,
+        })
+      )
+    ).toBe(5)
   })
 })
 

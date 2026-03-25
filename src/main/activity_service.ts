@@ -1,9 +1,15 @@
 import { type ReviewLog, type Word } from '../shared/domain_schema'
-import { type ActivityHeatmapCell, type ActivityHeatmapResult } from '../shared/ipc'
+import {
+  type ActivityHeatmapCell,
+  type ActivityHeatmapResult,
+  type ActivityMemoryLevelStat,
+} from '../shared/ipc'
 import { type LibraryRepository } from './library_repository'
+import { resolve_sm2_memory_level } from './sm2'
 
 const ACTIVITY_HEATMAP_WEEKS = 40 as const
 const DAYS_PER_WEEK = 7 as const
+const SM2_MEMORY_LEVELS = [1, 2, 3, 4, 5] as const
 
 interface ActivityServiceDeps {
   library_repository: LibraryRepository
@@ -78,12 +84,33 @@ const create_activity_heatmap_result = (input: {
     total_activity_count: cells.reduce((total, cell) => total + cell.activity_count, 0),
     total_review_count: cells.reduce((total, cell) => total + cell.review_count, 0),
     total_added_word_count: cells.reduce((total, cell) => total + cell.added_word_count, 0),
+    total_word_count: input.words.length,
     active_day_count: cells.filter((cell) => cell.activity_count > 0).length,
     current_streak_days: count_current_streak_days(cells),
     longest_streak_days: count_longest_streak_days(cells),
     max_activity_count,
+    memory_level_stats: create_memory_level_stats(input.words),
     cells,
   }
+}
+
+const create_memory_level_stats = (words: Word[]): ActivityMemoryLevelStat[] => {
+  const level_counts = new Map<ActivityMemoryLevelStat['level'], number>()
+
+  for (const word of words) {
+    const level = resolve_sm2_memory_level(word.review_state)
+    level_counts.set(level, (level_counts.get(level) ?? 0) + 1)
+  }
+
+  return SM2_MEMORY_LEVELS.map((level) => {
+    const word_count = level_counts.get(level) ?? 0
+    return {
+      level,
+      word_count,
+      percentage:
+        words.length === 0 ? 0 : round_to_1_decimal_place((word_count / words.length) * 100),
+    }
+  })
 }
 
 const create_empty_cells = (range_start: Date, range_end: Date): ActivityHeatmapCell[] => {
@@ -191,3 +218,5 @@ const format_local_day_key = (date: Date): string => {
   const day = date.getDate().toString().padStart(2, '0')
   return `${year}-${month}-${day}`
 }
+
+const round_to_1_decimal_place = (value: number): number => Math.round(value * 10) / 10

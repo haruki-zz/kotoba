@@ -36,16 +36,19 @@ describe('activity-service', () => {
           index: 1,
           word: '追加一日目',
           created_at: new Date(2026, 2, 22, 9, 0, 0, 0).toISOString(),
+          repetition: 0,
         }),
         create_word({
           index: 2,
           word: '追加三日目',
           created_at: new Date(2026, 2, 24, 8, 0, 0, 0).toISOString(),
+          repetition: 1,
         }),
         create_word({
           index: 3,
           word: '範囲外',
           created_at: new Date(2025, 11, 1, 8, 0, 0, 0).toISOString(),
+          repetition: 4,
         }),
       ],
       review_logs: [
@@ -83,10 +86,18 @@ describe('activity-service', () => {
     expect(heatmap.total_activity_count).toBe(7)
     expect(heatmap.total_added_word_count).toBe(3)
     expect(heatmap.total_review_count).toBe(4)
+    expect(heatmap.total_word_count).toBe(3)
     expect(heatmap.active_day_count).toBe(4)
     expect(heatmap.current_streak_days).toBe(3)
     expect(heatmap.longest_streak_days).toBe(3)
     expect(heatmap.max_activity_count).toBe(3)
+    expect(heatmap.memory_level_stats).toEqual([
+      { level: 1, word_count: 1, percentage: 33.3 },
+      { level: 2, word_count: 1, percentage: 33.3 },
+      { level: 3, word_count: 0, percentage: 0 },
+      { level: 4, word_count: 0, percentage: 0 },
+      { level: 5, word_count: 1, percentage: 33.3 },
+    ])
 
     const last_day = heatmap.cells.at(-1)
     expect(last_day).toMatchObject({
@@ -116,9 +127,14 @@ describe('activity-service', () => {
   })
 })
 
-const create_word = (input: { index: number; word: string; created_at: string }) => {
+const create_word = (input: {
+  index: number
+  word: string
+  created_at: string
+  repetition?: number
+}) => {
   const review_state: ReviewState = {
-    repetition: 0,
+    repetition: input.repetition ?? 0,
     interval_days: 0,
     easiness_factor: 2.5,
     next_review_at: input.created_at,
