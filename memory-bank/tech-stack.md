@@ -61,6 +61,7 @@
   - `review_logs`：MVP 必选；保留最近 `50000` 条
   - `schema_version` 迁移：`vN -> vN+1` 顺序迁移，迁移前备份，失败自动回滚
 - 活动 heat map：
+  - 默认主界面：`活動`
   - 范围：最近 `40` 周，起始日对齐到本地周起始日
   - 统计口径：每日 `activity_count = added_word_count + review_count`
   - 日期边界：系统本地时区自然日

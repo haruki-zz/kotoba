@@ -137,7 +137,7 @@ const format_activity_memory_level_label = (
 export const App = () => {
   const [app_notice_message, set_app_notice_message] = useState<string>('')
   const [app_notice_kind, set_app_notice_kind] = useState<'info' | 'warning' | null>(null)
-  const [active_page, set_active_page] = useState<AppPage>('word-add')
+  const [active_page, set_active_page] = useState<AppPage>('activity')
   const [draft, set_draft] = useState<WordAddDraftPayload>(EMPTY_DRAFT)
   const [draft_ready, set_draft_ready] = useState<boolean>(false)
   const [status_message, set_status_message] = useState<string>('')
@@ -693,10 +693,10 @@ export const App = () => {
       <nav className="nav_tabs" aria-label="メインページ">
         <button
           type="button"
-          className={active_page === 'word-add' ? 'tab active' : 'tab'}
-          onClick={() => handle_page_change('word-add')}
+          className={active_page === 'activity' ? 'tab active' : 'tab'}
+          onClick={() => handle_page_change('activity')}
         >
-          単語追加
+          活動
         </button>
         <button
           type="button"
@@ -714,10 +714,10 @@ export const App = () => {
         </button>
         <button
           type="button"
-          className={active_page === 'activity' ? 'tab active' : 'tab'}
-          onClick={() => handle_page_change('activity')}
+          className={active_page === 'word-add' ? 'tab active' : 'tab'}
+          onClick={() => handle_page_change('word-add')}
         >
-          活動
+          単語追加
         </button>
         <button
           type="button"

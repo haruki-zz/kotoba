@@ -132,11 +132,18 @@ const create_word_by_generate_then_save = async (
   word: string,
   meaning_ja: string
 ): Promise<void> => {
+  await open_word_add_page(page)
   await page.getByLabel('単語').fill(word)
   await page.getByRole('button', { name: '生成' }).click()
   await expect(page.getByLabel('読み仮名')).toHaveValue(FAKE_GENERATED_CARD.reading_kana)
   await page.getByLabel('意味').fill(meaning_ja)
   await page.getByRole('button', { name: '保存' }).click()
+}
+
+const open_word_add_page = async (page: Page): Promise<void> => {
+  await page.getByRole('button', { name: '単語追加' }).click()
+  await expect(page.getByRole('button', { name: '単語追加' })).toHaveClass(/active/)
+  await expect(page.getByLabel('単語')).toBeVisible()
 }
 
 test('word-create: create word and persist after restart', async () => {
@@ -159,6 +166,7 @@ test('word-create: create word and persist after restart', async () => {
     fake_generated_card_json: null,
   })
   try {
+    await open_word_add_page(second_launch.page)
     await expect(second_launch.page.getByLabel('単語')).toHaveValue('')
   } finally {
     await close_app(second_launch.electron_app)
@@ -178,6 +186,7 @@ test('draft: recover unsaved inputs after debounce autosave', async () => {
   const first_launch = await launch_app(user_data_dir)
 
   try {
+    await open_word_add_page(first_launch.page)
     await first_launch.page.getByLabel('単語').fill('散歩')
     await first_launch.page.getByLabel('意味').fill('近所をゆっくり歩いて気分転換することです。')
     await first_launch.page.waitForTimeout(900)
@@ -189,6 +198,7 @@ test('draft: recover unsaved inputs after debounce autosave', async () => {
     fake_generated_card_json: null,
   })
   try {
+    await open_word_add_page(second_launch.page)
     await expect(second_launch.page.getByLabel('単語')).toHaveValue('散歩')
     await expect(second_launch.page.getByLabel('意味')).toHaveValue(
       '近所をゆっくり歩いて気分転換することです。'
@@ -203,6 +213,7 @@ test('draft: save draft on page switch before debounce timeout', async () => {
   const first_launch = await launch_app(user_data_dir)
 
   try {
+    await open_word_add_page(first_launch.page)
     await first_launch.page.getByLabel('単語').fill('猫')
     await first_launch.page.getByRole('button', { name: '単語帳' }).click()
     await first_launch.page.waitForTimeout(200)
@@ -214,6 +225,7 @@ test('draft: save draft on page switch before debounce timeout', async () => {
     fake_generated_card_json: null,
   })
   try {
+    await open_word_add_page(second_launch.page)
     await expect(second_launch.page.getByLabel('単語')).toHaveValue('猫')
   } finally {
     await close_app(second_launch.electron_app)
@@ -362,6 +374,7 @@ test('activity-heatmap: show daily activity based on word adds and reviews', asy
   const launched = await launch_app(user_data_dir)
 
   try {
+    await expect(launched.page.getByRole('heading', { name: '活動' })).toBeVisible()
     await create_word_by_generate_then_save(
       launched.page,
       '活動',
@@ -423,6 +436,13 @@ test('i18n-ja: shows japanese labels, actions, and dialog text on the main flows
     await expect(launched.page.getByRole('button', { name: '復習' })).toBeVisible()
     await expect(launched.page.getByRole('button', { name: '活動' })).toBeVisible()
     await expect(launched.page.getByRole('button', { name: '設定' })).toBeVisible()
+    await expect(launched.page.getByRole('heading', { name: '活動' })).toBeVisible()
+    await expect(
+      launched.page.getByText(
+        '活動量は単語追加と復習の合計件数です。直近 40 週間の学習量を表示します。'
+      )
+    ).toBeVisible()
+    await open_word_add_page(launched.page)
     await expect(launched.page.getByLabel('単語')).toBeVisible()
     await expect(launched.page.getByLabel('読み仮名')).toBeVisible()
     await expect(launched.page.getByLabel('意味')).toBeVisible()
@@ -566,6 +586,7 @@ test('error-handling: keeps input and shows japanese guidance for generate failu
     })
 
     try {
+      await open_word_add_page(launched.page)
       await launched.page.getByLabel('単語').fill('試験')
       await launched.page.getByRole('button', { name: '生成' }).click()
       await expect(launched.page.getByRole('alert')).toHaveText(scenario.expected_message)
