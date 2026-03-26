@@ -1,8 +1,8 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 14；其后 `活動` heat map 已补充到最新交付状态并通过当前用户验证，本轮新增了固定 `1-5` 级记忆等级统计。
-- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入”阶段。
+- 当前已完成实施计划步骤 14；其后 `活動` heat map 已补充到最新交付状态并通过当前用户验证，最近一轮迭代新增了“`活動` 作为默认主界面”的入口调整。
+- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页默认主界面可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入”阶段。
 - 已具备主进程、预加载、渲染层、共享契约、单测与 E2E 的最小闭环。
 - 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路、`review_logs` 基础审计链路、启动恢复提示链路、设置页配置链路。
 - 后续开发入口是 `plan.md` 的 `步骤 15（打包、回归与发布验收）`。
@@ -12,6 +12,14 @@
   - 仓库协作规范、文档读取顺序、AI 执行约束。
 - `plan.md`
   - 实施计划主文档（步骤目标、验收命令、通过指标）。
+- `memory-bank/design-doc.md`
+  - 产品需求、行为规则与主界面定义的 source of truth。
+- `memory-bank/tech-stack.md`
+  - 技术栈与默认值快照；实现默认值应与之保持一致。
+- `memory-bank/progress.md`
+  - 记录步骤完成情况、最新验证结果与下一步入口。
+- `memory-bank/architecture.md`
+  - 当前仓库结构、模块职责、运行流程与交接要点。
 - `package.json`
   - 依赖与脚本入口。
   - 关键脚本：`dev`、`build`、`lint`、`typecheck`、`test:unit`、`test:e2e`、`test`、`verify`、`make:seed-10k`、`bench:search`。
@@ -33,22 +41,22 @@
   - E2E 配置入口；`testDir=./e2e`、单 worker、失败保留 trace。
 - `index.html`
   - 渲染层 HTML 入口，挂载 React 根节点。
+- `.nvmrc`
+  - 本地 Node 版本基线提示文件，当前目标为 `22`。
 - `.eslintrc.cjs` / `.prettierrc.json` / `.prettierignore`
   - 代码质量与格式化配置。
 - `.husky/pre-commit`
   - 提交前执行 `pnpm lint-staged`。
 - `prompts/coding-principles.md`
   - 开发原则约束文档。
-- `memory-bank/`
-  - 长期记忆文档目录（需求、技术栈、进度、架构）。
-  - `progress.md` 记录步骤完成度与验证证据。
-  - `architecture.md` 记录文件职责与运行快照。
 - `tests/`
   - 单元测试目录。
   - `tests/unit/main`：主进程相关单测。
   - `tests/unit/shared`：共享 schema 与契约单测。
 - `e2e/`
   - Electron 端到端测试目录。
+- `test-results/`
+  - Playwright 运行结果目录，属于测试产物；除非用户明确要求，否则不应把其中变化当作业务改动的一部分。
 
 ## 3. src 目录结构与职责
 ### 3.1 主进程（`src/main`）
@@ -166,6 +174,7 @@
 - `style.css`
   - 页面样式（表单、标签、状态提示样式）。
   - `活動` 页 heat map 采用固定 `14px` 方格、固定列间距/行间距，通过横向增加周数保持与主界面接近的整体宽度。
+  - 标签高亮、活动卡片、热力图格子与滚动容器样式也集中定义在这里。
 - `window.d.ts`
   - `window.kotoba` 类型定义。
 
@@ -218,50 +227,56 @@
     - `settings`：设置页保存、API Key 更新/删除、重启后回读
     - `i18n-ja`：主页面、标签、按钮、搜索占位、删除确认弹窗均为日语
     - `error-handling`：API Key 缺失/无效、网络失败、超时、损坏回退提示
+  - 当前额外包含一个显式切换到 `単語追加` 页的辅助函数，用于隔离“默认主界面是 `活動`”这一入口变化，避免 E2E 用例对初始页面产生隐式耦合。
   - 使用临时 `userData` 目录与 `KOTOBA_FAKE_KEYTAR_FILE`，避免污染本地真实数据与钥匙串。
 
-## 5. 当前运行流程（步骤 14 完成后 + heat map 补充快照）
+## 5. 当前运行流程（步骤 14 完成后 + `活動` 主界面快照）
 1. `pnpm dev` 启动 Vite、main/preload watch、Electron。
 2. 渲染层通过 `window.kotoba.invoke` 调用 IPC。
 3. 主进程 `ipc_router` 校验 channel/payload 后分发到 `WordEntryService`、`WordAddDraftRepository`、`LibraryService`、`ReviewService`、`ActivityService` 与设置服务。
 4. 启动提示流程：
-  - `LibraryRepository.initialize_on_startup()` 返回 `ok/created/recovered/migrated`。
-  - 主进程把 `recovered/migrated` 转换为 `app:startup-status` 的日语通知。
-  - 渲染层启动时读取该状态，并在页面顶部显示通知。
-5. 生成流程：
+   - `LibraryRepository.initialize_on_startup()` 返回 `ok/created/recovered/migrated`。
+   - 主进程把 `recovered/migrated` 转换为 `app:startup-status` 的日语通知。
+   - 渲染层启动时读取该状态，并在页面顶部显示通知。
+5. 主界面入口流程：
+   - `src/renderer/app.tsx` 初始 `active_page` 固定为 `activity`。
+   - `活動` 页在初次渲染后立即请求 `activity:heatmap`。
+   - 用户首次进入应用时优先看到活动摘要、heat map 与记忆等级构成，而不是 `単語追加` 表单。
+6. 生成流程：
   - 若未配置 API Key，返回 `APP_API_KEY_MISSING`。
   - 若 API Key 无效、网络失败、超时、429、解析失败，则返回日语错误提示，并保留当前输入。
   - 若配置有效，调用 Gemini 生成并回填四字段。
-6. 保存流程：
+7. 保存流程：
   - 执行字段校验与日语校验。
   - 按 `word(trim + NFKC)` 判重，命中则覆盖，否则新增。
   - 成功后清理草稿文件。
-7. 词库管理流程：
+8. 词库管理流程：
   - `library:list`：返回按 `updated_at` 倒序的词条列表，并按规范执行搜索标准化匹配。
   - `library:update`：更新词条字段并保留 `review_state`，发生冲突返回可定位错误。
   - `library:delete`：按 `word_id` 删除词条并更新 `updated_at`。
-8. 设置流程：
+9. 设置流程：
   - `settings:get`：返回当前 `provider / model / timeout / retries` 与 `has_api_key`。
   - `settings:save`：保存非敏感设置；若提交了新的 API Key，则写入密钥存储且不回显。
   - `settings:delete-api-key`：删除 API Key，并使后续生成恢复为“未设置”引导错误。
-9. 复习流程：
+10. 复习流程：
   - `review:queue`：返回所有 `next_review_at <= now` 的词条，并统计本地自然日内已完成词条数。
   - `review:grade`：按 SM-2 纯函数计算新 `review_state`，追加一条 `review_log`，并立即持久化到词库。
   - `review_logs` 保留最近 `50000` 条，超限时删除最旧记录。
-10. 活动 heat map 流程：
+11. 活动 heat map 流程：
   - `activity:heatmap`：读取词库后基于 `words.created_at` 与 `review_logs.reviewed_at` 按本地自然日聚合最近 `40` 周活动。
   - 主进程同时基于 `review_state` 计算固定 `1-5` 级记忆等级分布。
   - 渲染层展示总活动、活跃天数、连续天数、固定 `1-5` 级记忆等级卡片与按强度分级的日历格。
   - 当前渲染不显示 hover 详情弹窗或原生 tooltip，以避免界面闪烁。
 
 ## 6. 当前交接重点
-- 已通过用户验证的最后一步是“步骤 14 完成后的一轮活动 heat map 补充迭代”，因此后续开发默认仍从步骤 15 开始。
+- 已通过用户验证的最后一步是“将 `活動` 调整为默认主界面”的迭代，因此后续开发默认仍从步骤 15 开始。
 - 若后续修改 `単語帳`、IPC 契约、词库存储或搜索规则，必须同步更新对应单测、E2E 与 `memory-bank` 文档。
 - 当前 `単語帳` 已不是占位页，任何后续 AI 开发者都应将其视为已稳定实现的基础能力。
 - 当前 `復習` 页面已在不破坏既有评分与队列行为的前提下补齐 `review_logs` 基础记录。
 - 当前第 13 步新增的全局启动提示与日语错误提示不应在后续步骤中被回退。
 - 当前第 14 步新增的 `設定` 页面、设置 IPC 与 API Key 不回显规则不应在后续步骤中被回退；步骤 15 主要应聚焦打包与最终回归。
 - 当前 `活動` 页面已确定采用“固定格子尺寸 + `40` 周跨度 + 无 hover 详情窗 + 固定 `1-5` 级记忆等级卡片”的实现方向，后续不应回退到原始 `repetition` 裸展示或会闪烁的浮层方案。
+- 当前首页信息架构也已确定为“先看 `活動`，再进入 `単語追加` / `復習` / `単語帳` 做操作”，后续若要调整必须同步修改 E2E 的初始页面假设。
 
 ## 7. 当前质量门禁流程
 1. 代码质量：`pnpm lint`、`pnpm format:check`、`pnpm typecheck`。
