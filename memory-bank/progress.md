@@ -1,9 +1,9 @@
 ﻿# Kotoba 开发进度记录
 
 ## 1. 当前状态
-- 记录日期：`2026-03-26`
-- 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成，且其后活动 heat map 已完成用户验证通过的补充迭代；最新一轮迭代已将 `活動` 调整为默认主界面。
-- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页作为默认主界面 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 可回归”阶段。
+- 记录日期：`2026-03-27`
+- 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成，且其后活动 heat map 已完成用户验证通过的补充迭代；最新一轮迭代已将 `活動` 调整为默认主界面。此后已新增 `ui-plan.md`，并完成其中第 `1` 步：`Tailwind CSS v4 + shadcn/ui` 基础设施接入。
+- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页作为默认主界面 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 可回归 + 渲染层已具备 Tailwind/shadcn 迁移前置条件”阶段。
 
 ## 2. 已完成事项
 ### 2.1 对应 plan.md 步骤 1（环境与版本基线冻结）
@@ -258,6 +258,45 @@
   - 单测：`tests/unit/main/settings_repository.test.ts`
   - 单测：`tests/unit/main/keytar_secret_store.test.ts`
   - E2E：`e2e/word_add.spec.ts` 新增 `settings` 用例
+
+### 2.16 对应 ui-plan.md 第 1 步（Tailwind CSS 与 shadcn/ui 基础设施接入）
+- 已新增 UI 重写计划文档：
+  - 根目录 `ui-plan.md`
+  - 明确 UI 重写范围、阶段拆分、迁移顺序、验证计划与风险控制
+- 已完成渲染层基础设施接入：
+  - `package.json`
+    - 新增运行时依赖：`clsx`、`tailwind-merge`
+    - 新增开发依赖：`tailwindcss`、`@tailwindcss/vite`、`tw-animate-css`
+  - `vite.config.ts`
+    - 接入 `@tailwindcss/vite`
+    - 新增 `@ -> ./src` 路径别名
+  - `tsconfig.json`
+    - 新增 `baseUrl` 与 `@/*` 路径映射
+  - 根目录 `components.json`
+    - 新增 `shadcn/ui` 配置文件
+    - 约定组件目录别名：
+      - `components -> @/renderer/components`
+      - `ui -> @/renderer/components/ui`
+      - `lib -> @/renderer/lib`
+      - `utils -> @/renderer/lib/utils`
+  - `src/renderer/style.css`
+    - 升级为 `Tailwind CSS v4` 全局样式入口
+    - 新增 `@theme inline` 设计 token、CSS variables 与基础 layer
+    - 保留既有页面样式，尚未开始页面迁移
+  - `src/renderer/lib/utils.ts`
+    - 新增 `cn()` 工具函数，供后续 `shadcn/ui` 组件组合 class 使用
+- 当前边界：
+  - 仅完成 UI 基础设施接入
+  - 尚未开始 `ui-plan.md` 第 `2` 步的应用壳与页面组件迁移
+- 已完成验证：
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm build`
+  - 用户已明确验证通过
+
+## 3. 下一步入口
+- 若继续产品主线交付，入口仍是 `plan.md` 的 `步骤 15（打包、回归与发布验收）`。
+- 若继续 UI 重写专项，入口是 `ui-plan.md` 的第 `2` 步：`应用壳与通用组件落地`。
 
 ### 2.16 活动页补充迭代：固定 `1-5` 级记忆等级统计
 - 已收敛活动页记忆等级口径：

@@ -1,17 +1,21 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 14；其后 `活動` heat map 已补充到最新交付状态并通过当前用户验证，最近一轮迭代新增了“`活動` 作为默认主界面”的入口调整。
-- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页默认主界面可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入”阶段。
+- 当前已完成实施计划步骤 14；其后 `活動` heat map 已补充到最新交付状态并通过当前用户验证，最近一轮迭代新增了“`活動` 作为默认主界面”的入口调整。此后又新增了 `ui-plan.md`，并完成第 1 步：渲染层 `Tailwind CSS v4 + shadcn/ui` 基础设施接入。
+- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页默认主界面可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入 + UI 迁移前置基础设施已就绪”阶段。
 - 已具备主进程、预加载、渲染层、共享契约、单测与 E2E 的最小闭环。
 - 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路、`review_logs` 基础审计链路、启动恢复提示链路、设置页配置链路。
-- 后续开发入口是 `plan.md` 的 `步骤 15（打包、回归与发布验收）`。
+- 若走产品主线，后续开发入口是 `plan.md` 的 `步骤 15（打包、回归与发布验收）`。
+- 若走 UI 重写专项，后续开发入口是 `ui-plan.md` 的第 `2` 步（应用壳与通用组件落地）。
 
 ## 2. 顶层文件结构与职责
 - `AGENTS.md`
   - 仓库协作规范、文档读取顺序、AI 执行约束。
 - `plan.md`
   - 实施计划主文档（步骤目标、验收命令、通过指标）。
+- `ui-plan.md`
+  - `shadcn/ui` UI 重写专项计划。
+  - 定义 UI 重写目标、阶段边界、页面迁移顺序与阶段性验收标准。
 - `memory-bank/design-doc.md`
   - 产品需求、行为规则与主界面定义的 source of truth。
 - `memory-bank/tech-stack.md`
@@ -25,16 +29,27 @@
   - 关键脚本：`dev`、`build`、`lint`、`typecheck`、`test:unit`、`test:e2e`、`test`、`verify`、`make:seed-10k`、`bench:search`。
   - `dev:main` 与 `build:main` 使用 `--external:keytar` 以避免原生模块打包错误。
   - `test:e2e` 会先执行 `pnpm build`，再运行 Playwright。
+  - 当前已包含渲染层 UI 基础设施依赖：
+    - `tailwindcss`
+    - `@tailwindcss/vite`
+    - `tw-animate-css`
+    - `clsx`
+    - `tailwind-merge`
 - `scripts/`
   - `make_seed_10k.mjs`：生成 1 万词条基准数据。
   - `bench_search.mjs`：执行搜索性能基准并输出 `P50/P95`。
 - `pnpm-lock.yaml`
   - 锁定依赖 patch 版本，保证可复现安装结果。
+- `components.json`
+  - `shadcn/ui` 配置文件。
+  - 定义样式方案、全局 CSS 入口、图标库与渲染层别名映射。
 - `tsconfig.json`
   - TypeScript 类型检查配置（strict/noEmit）。
   - `include` 覆盖 `src` 与 `tests`，保证测试文件也能做类型检查。
+  - 当前补充了 `baseUrl` 与 `@/*` 路径别名，供渲染层组件与 `shadcn/ui` 使用。
 - `vite.config.ts`
   - 渲染层构建配置；`base: './'` 以支持 `file://` 加载生产资源。
+  - 当前额外接入 `@tailwindcss/vite` 并声明 `@` 路径别名到 `./src`。
 - `vitest.config.ts`
   - 单元测试范围配置；仅包含 `tests/unit` 下测试并排除 `e2e/**`。
 - `playwright.config.ts`
@@ -172,11 +187,32 @@
     - 生成/保存/编辑/删除状态与错误提示（日语）
     - 启动恢复/迁移时的顶部全局通知
 - `style.css`
-  - 页面样式（表单、标签、状态提示样式）。
+  - 当前渲染层全局样式入口。
+  - 已接入 `Tailwind CSS v4` 与 `tw-animate-css`。
+  - 已定义 `@theme inline` 设计 token、CSS variables、颜色语义与基础 layer。
+  - 仍保留现有页面样式（表单、标签、状态提示样式），因为 UI 重写尚未进入页面迁移阶段。
   - `活動` 页 heat map 采用固定 `14px` 方格、固定列间距/行间距，通过横向增加周数保持与主界面接近的整体宽度。
   - 标签高亮、活动卡片、热力图格子与滚动容器样式也集中定义在这里。
+- `lib/utils.ts`
+  - 渲染层共享工具。
+  - 当前仅提供 `cn()`，用于组合 `clsx` 与 `tailwind-merge`，供后续 `shadcn/ui` 组件使用。
 - `window.d.ts`
   - `window.kotoba` 类型定义。
+
+### 3.5 当前渲染层 UI 基础设施状态
+- 已完成：
+  - `Tailwind CSS v4` 接入
+  - `@tailwindcss/vite` 插件接入
+  - `shadcn/ui` 配置文件落地
+  - `@/*` 路径别名与 `cn()` 工具函数落地
+- 尚未完成：
+  - `src/renderer/components/ui` 组件生成
+  - `AppShell`、通用状态组件、页面级 feature 拆分
+  - 任一页面的 `shadcn/ui` 视觉迁移
+- 因此当前 UI 实际运行方式仍是：
+  - 页面逻辑继续集中在 `src/renderer/app.tsx`
+  - 页面视觉仍主要依赖 `src/renderer/style.css`
+  - Tailwind/shadcn 仅作为后续迁移的底座，不应误判为页面已完成迁移
 
 ## 4. 测试文件结构与职责
 ### 4.1 单元测试（Vitest）
@@ -270,6 +306,8 @@
 
 ## 6. 当前交接重点
 - 已通过用户验证的最后一步是“将 `活動` 调整为默认主界面”的迭代，因此后续开发默认仍从步骤 15 开始。
+- 若当前目标是 UI 重写，不要直接大规模改 `src/renderer/app.tsx` 的业务逻辑；应先按 `ui-plan.md` 从应用壳和通用组件开始迁移。
+- 当前 `Tailwind CSS v4 + shadcn/ui` 只完成了基础设施接入，后续 AI 开发者不应把它误解为“组件库迁移已完成”。
 - 若后续修改 `単語帳`、IPC 契约、词库存储或搜索规则，必须同步更新对应单测、E2E 与 `memory-bank` 文档。
 - 当前 `単語帳` 已不是占位页，任何后续 AI 开发者都应将其视为已稳定实现的基础能力。
 - 当前 `復習` 页面已在不破坏既有评分与队列行为的前提下补齐 `review_logs` 基础记录。
@@ -294,7 +332,17 @@
 - `memory-bank/architecture.md`
   - 文件结构、模块职责与运行流程（本文档）。
 
-## 9. 信息流更新规则
+## 9. UI 重写专项文件职责
+- `ui-plan.md`
+  - UI 重写阶段边界与迁移顺序的 source of truth。
+- `components.json`
+  - `shadcn/ui` 代码生成与路径映射配置。
+- `src/renderer/style.css`
+  - 当前 Tailwind 全局入口与旧样式兼容层。
+- `src/renderer/lib/utils.ts`
+  - `cn()` 工具函数；后续所有 `shadcn/ui` 组件应复用此文件。
+
+## 10. 信息流更新规则
 - 需求或行为变更：先更新 `design-doc.md`，再同步 `tech-stack.md`。
 - 每完成一个实施步骤：更新 `progress.md`。
 - 文件结构或职责变化：同步更新 `architecture.md`。
