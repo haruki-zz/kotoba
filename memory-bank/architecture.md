@@ -1,12 +1,12 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 14；其后 `活動` heat map 已补充到最新交付状态并通过当前用户验证，最近一轮迭代新增了“`活動` 作为默认主界面”的入口调整。此后又新增了 `ui-plan.md`，并完成第 1 步：渲染层 `Tailwind CSS v4 + shadcn/ui` 基础设施接入。
-- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页默认主界面可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入 + UI 迁移前置基础设施已就绪”阶段。
+- 当前已完成实施计划步骤 14；其后 `活動` heat map 已补充到最新交付状态并通过当前用户验证，最近一轮迭代新增了“`活動` 作为默认主界面”的入口调整。此后又新增了 `ui-plan.md`，并完成第 1 步与第 2 步：渲染层 `Tailwind CSS v4 + shadcn/ui` 基础设施接入，以及应用壳与通用组件落地。
+- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页默认主界面可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入 + UI 迁移前置基础设施已就绪 + 应用壳与共享 UI 组件已就绪”阶段。
 - 已具备主进程、预加载、渲染层、共享契约、单测与 E2E 的最小闭环。
 - 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路、`review_logs` 基础审计链路、启动恢复提示链路、设置页配置链路。
 - 若走产品主线，后续开发入口是 `plan.md` 的 `步骤 15（打包、回归与发布验收）`。
-- 若走 UI 重写专项，后续开发入口是 `ui-plan.md` 的第 `2` 步（应用壳与通用组件落地）。
+- 若走 UI 重写专项，后续开发入口是 `ui-plan.md` 的第 `3` 步（按页面从低风险到高风险逐步迁移）。
 
 ## 2. 顶层文件结构与职责
 - `AGENTS.md`
@@ -175,8 +175,11 @@
 - `app.tsx`
   - 当前 UI 主页面。
   - 已实现：
+    - 顶层应用壳接入：`AppShell`、`PageHeader`、`AppNavigation`
     - 顶部标签页：`活動`、`単語帳`、`復習`、`単語追加`、`設定`
     - App 启动后默认进入 `活動` 主界面
+    - 全局通知统一改为 `StatusMessage`
+    - 页面内加载态、空态、成功态、错误态已开始复用共享组件
     - `単語追加` 输入/生成/编辑/保存流程
     - 草稿机制：`800ms` 防抖自动保存、切页强制保存、`beforeunload` 强制保存、保存成功后清理
     - `単語帳` 列表、搜索、行内编辑、删除确认
@@ -190,9 +193,26 @@
   - 当前渲染层全局样式入口。
   - 已接入 `Tailwind CSS v4` 与 `tw-animate-css`。
   - 已定义 `@theme inline` 设计 token、CSS variables、颜色语义与基础 layer。
-  - 仍保留现有页面样式（表单、标签、状态提示样式），因为 UI 重写尚未进入页面迁移阶段。
+  - 第 2 步后已移除旧的应用壳、导航、按钮与通知样式。
+  - 仍保留现有页面样式（字段布局、列表、复习卡、活动 heat map 等），因为 UI 重写尚未进入页面级迁移阶段。
   - `活動` 页 heat map 采用固定 `14px` 方格、固定列间距/行间距，通过横向增加周数保持与主界面接近的整体宽度。
   - 标签高亮、活动卡片、热力图格子与滚动容器样式也集中定义在这里。
+- `components/layout/app_shell.tsx`
+  - 应用壳组件。
+  - 负责整体背景、页面最大宽度、头部区域、导航区域与内容区域的外层布局。
+- `components/layout/app_navigation.tsx`
+  - 顶层主导航组件。
+  - 基于 `Tabs + ScrollArea` 实现主页面切换入口。
+- `components/layout/page_header.tsx`
+  - 顶部标题区组件。
+  - 负责 App 名称、当前页面标签、标题与说明文案。
+- `components/shared/status_message.tsx`
+  - 统一的状态提示组件。
+  - 负责 `info / success / warning / error` 四类消息的视觉表达。
+- `components/shared/empty_state.tsx`
+  - 通用空态组件。
+- `components/shared/loading_state.tsx`
+  - 通用加载态组件。
 - `lib/utils.ts`
   - 渲染层共享工具。
   - 当前仅提供 `cn()`，用于组合 `clsx` 与 `tailwind-merge`，供后续 `shadcn/ui` 组件使用。
@@ -205,14 +225,16 @@
   - `@tailwindcss/vite` 插件接入
   - `shadcn/ui` 配置文件落地
   - `@/*` 路径别名与 `cn()` 工具函数落地
+  - `src/renderer/components/ui` 通用 primitives 落地
+  - `AppShell`、主导航、标题区、共享状态组件落地
 - 尚未完成：
-  - `src/renderer/components/ui` 组件生成
-  - `AppShell`、通用状态组件、页面级 feature 拆分
-  - 任一页面的 `shadcn/ui` 视觉迁移
+  - 页面级 feature 拆分
+  - `設定 / 単語追加 / 単語帳 / 復習 / 活動` 的分阶段页面迁移
 - 因此当前 UI 实际运行方式仍是：
-  - 页面逻辑继续集中在 `src/renderer/app.tsx`
-  - 页面视觉仍主要依赖 `src/renderer/style.css`
-  - Tailwind/shadcn 仅作为后续迁移的底座，不应误判为页面已完成迁移
+  - 顶层壳层与共享控件已切到 `shadcn/ui` 风格
+  - 页面业务逻辑与大部分页面级布局仍集中在 `src/renderer/app.tsx`
+  - 页面细节视觉仍有较大一部分依赖 `src/renderer/style.css`
+  - 因此不应误判为“页面迁移已经完成”
 
 ## 4. 测试文件结构与职责
 ### 4.1 单元测试（Vitest）
@@ -307,7 +329,8 @@
 ## 6. 当前交接重点
 - 已通过用户验证的最后一步是“将 `活動` 调整为默认主界面”的迭代，因此后续开发默认仍从步骤 15 开始。
 - 若当前目标是 UI 重写，不要直接大规模改 `src/renderer/app.tsx` 的业务逻辑；应先按 `ui-plan.md` 从应用壳和通用组件开始迁移。
-- 当前 `Tailwind CSS v4 + shadcn/ui` 只完成了基础设施接入，后续 AI 开发者不应把它误解为“组件库迁移已完成”。
+- 当前 `Tailwind CSS v4 + shadcn/ui` 已完成基础设施接入和应用壳收口，但后续 AI 开发者不应把它误解为“页面迁移已完成”。
+- 当前 `src/renderer/components/ui`、`src/renderer/components/layout`、`src/renderer/components/shared` 已是后续 UI 重写的正式落点，新增通用控件应优先放入这些目录。
 - 若后续修改 `単語帳`、IPC 契约、词库存储或搜索规则，必须同步更新对应单测、E2E 与 `memory-bank` 文档。
 - 当前 `単語帳` 已不是占位页，任何后续 AI 开发者都应将其视为已稳定实现的基础能力。
 - 当前 `復習` 页面已在不破坏既有评分与队列行为的前提下补齐 `review_logs` 基础记录。
@@ -337,6 +360,12 @@
   - UI 重写阶段边界与迁移顺序的 source of truth。
 - `components.json`
   - `shadcn/ui` 代码生成与路径映射配置。
+- `src/renderer/components/ui/*.tsx`
+  - `shadcn/ui` 基础控件层。
+- `src/renderer/components/layout/*.tsx`
+  - 应用壳、主导航、标题区等布局层。
+- `src/renderer/components/shared/*.tsx`
+  - 共享状态与通用展示层。
 - `src/renderer/style.css`
   - 当前 Tailwind 全局入口与旧样式兼容层。
 - `src/renderer/lib/utils.ts`

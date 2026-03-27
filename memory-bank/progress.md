@@ -1,9 +1,9 @@
 ﻿# Kotoba 开发进度记录
 
 ## 1. 当前状态
-- 记录日期：`2026-03-27`
-- 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成，且其后活动 heat map 已完成用户验证通过的补充迭代；最新一轮迭代已将 `活動` 调整为默认主界面。此后已新增 `ui-plan.md`，并完成其中第 `1` 步：`Tailwind CSS v4 + shadcn/ui` 基础设施接入。
-- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页作为默认主界面 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 可回归 + 渲染层已具备 Tailwind/shadcn 迁移前置条件”阶段。
+- 记录日期：`2026-03-28`
+- 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成，且其后活动 heat map 已完成用户验证通过的补充迭代；最新一轮迭代已将 `活動` 调整为默认主界面。此后已新增 `ui-plan.md`，并完成其中第 `1` 步与第 `2` 步：`Tailwind CSS v4 + shadcn/ui` 基础设施接入，以及 `AppShell + 通用 UI 组件` 落地。
+- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页作为默认主界面 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 可回归 + 渲染层已具备 Tailwind/shadcn 迁移前置条件 + 应用壳与共享 UI 组件已完成”阶段。
 
 ## 2. 已完成事项
 ### 2.1 对应 plan.md 步骤 1（环境与版本基线冻结）
@@ -294,130 +294,53 @@
   - `pnpm build`
   - 用户已明确验证通过
 
+### 2.17 对应 ui-plan.md 第 2 步（应用壳与通用组件落地）
+- 已新增渲染层组件目录：
+  - `src/renderer/components/ui`
+  - `src/renderer/components/layout`
+  - `src/renderer/components/shared`
+- 已新增通用 UI primitives：
+  - `src/renderer/components/ui/button.tsx`
+  - `src/renderer/components/ui/input.tsx`
+  - `src/renderer/components/ui/textarea.tsx`
+  - `src/renderer/components/ui/card.tsx`
+  - `src/renderer/components/ui/badge.tsx`
+  - `src/renderer/components/ui/alert.tsx`
+  - `src/renderer/components/ui/separator.tsx`
+  - `src/renderer/components/ui/scroll_area.tsx`
+  - `src/renderer/components/ui/tabs.tsx`
+- 已新增布局与共享状态组件：
+  - `src/renderer/components/layout/app_shell.tsx`
+  - `src/renderer/components/layout/app_navigation.tsx`
+  - `src/renderer/components/layout/page_header.tsx`
+  - `src/renderer/components/shared/status_message.tsx`
+  - `src/renderer/components/shared/empty_state.tsx`
+  - `src/renderer/components/shared/loading_state.tsx`
+- 已完成顶层应用壳接入：
+  - `src/renderer/app.tsx`
+    - 顶层标题区改由 `PageHeader` 渲染
+    - 主导航改由 `AppNavigation` 渲染
+    - 页面外壳改由 `AppShell` 承载
+    - 全局启动通知改由 `StatusMessage` 统一呈现
+    - 页面内基础 `button / input / textarea / card` 已切换到通用组件
+    - 页面业务流程、状态字段与 IPC 调用保持不变
+  - `src/renderer/style.css`
+    - 移除了已被壳层与 primitives 取代的旧顶层样式
+    - 保留页面业务相关样式与 `活動` heat map 样式
+- 当前边界：
+  - 已完成应用壳、主导航、页面容器、全局通知、加载态、空态、错误/成功态的统一
+  - 尚未开始 `ui-plan.md` 第 `3` 步的页面级迁移
+  - 各页面的业务布局仍主要保留在 `src/renderer/app.tsx`
+- 已完成验证：
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm build`
+  - `pnpm test`
+  - 用户已明确验证通过
+
 ## 3. 下一步入口
 - 若继续产品主线交付，入口仍是 `plan.md` 的 `步骤 15（打包、回归与发布验收）`。
-- 若继续 UI 重写专项，入口是 `ui-plan.md` 的第 `2` 步：`应用壳与通用组件落地`。
-
-### 2.16 活动页补充迭代：固定 `1-5` 级记忆等级统计
-- 已收敛活动页记忆等级口径：
-  - 不再直接展示原始 `review_state.repetition`
-  - 改为基于当前 `SM-2` 状态映射到固定 `1-5` 级后再统计百分比
-- 已新增 / 更新主进程实现：
-  - `src/main/sm2.ts`
-    - 新增 `resolve_sm2_memory_level`
-    - 当前映射规则：
-      - `repetition <= 0 -> level 1`
-      - `repetition == 1 -> level 2`
-      - `repetition == 2 -> level 3`
-      - `repetition == 3 -> level 4`
-      - `repetition >= 4 -> level 5`
-  - `src/main/activity_service.ts`
-    - 活动页统计结果固定输出 `1-5` 五个等级
-    - 即使某个等级当前没有词，也会返回 `0` 数量与 `0%`
-- 已更新共享契约与渲染层：
-  - `src/shared/ipc.ts`
-    - `ActivityMemoryLevelStat.level` 收紧为联合类型 `1 | 2 | 3 | 4 | 5`
-  - `src/renderer/app.tsx`
-    - `活動` 页面说明文案改为“当前 SM-2 状态的 5 段记忆等级”
-    - 记忆等级卡片稳定展示 `レベル 1` 到 `レベル 5`
-- 已补齐本轮验证：
-  - 单测：`tests/unit/main/sm2.test.ts` 新增固定 `1-5` 级映射测试
-  - 单测：`tests/unit/main/activity_service.test.ts` 更新为固定 `1-5` 级统计断言
-  - E2E：`e2e/word_add.spec.ts` 更新活动页断言，确认复习后展示 `レベル 2 = 100%`
-  - 本轮执行通过：
-    - `pnpm test:unit -- tests/unit/main/sm2.test.ts tests/unit/main/activity_service.test.ts`
-    - `pnpm typecheck`
-    - `pnpm exec playwright test e2e/word_add.spec.ts -g "activity-heatmap"`
-
-### 2.17 后续补充：活动 heat map
-- 已新增主进程统计服务：
-  - `src/main/activity_service.ts`
-  - 能力：
-    - 基于 `words.created_at` 与 `review_logs.reviewed_at` 按系统本地自然日聚合最近 `40` 周活动
-    - 统计起点对齐到本地周起始日，在不改变单个格子尺寸与间距的前提下扩展整体显示宽度
-    - 输出总活动、活跃天数、当前连续天数、最长连续天数与每日强度等级
-- 已扩展 IPC 契约与路由：
-  - `src/shared/ipc.ts`
-  - `src/main/ipc_router.ts`
-  - 新增频道：`activity:heatmap`
-- 已完成主进程 wiring：
-  - `src/main/main.ts` 注入 `ActivityService`
-- 已完成渲染层 `活動` 页面：
-  - `src/renderer/app.tsx`
-  - `src/renderer/style.css`
-  - 交互：
-    - 最近 `40` 周 heat map
-    - 总活动 / 新增 / 复习 / 活跃天数 / 当前连续 / 最长连续摘要
-    - 当日高亮与空态引导
-    - 不显示 hover 详情弹窗或原生 tooltip，避免界面闪烁
-- 已补齐验证：
-  - 单测：`tests/unit/main/activity_service.test.ts`
-  - E2E：`e2e/word_add.spec.ts` 新增 `activity-heatmap` 用例
-
-### 2.18 测试目录整理（源码/测试分离）
-- 已完成目录分离：
-  - `src/` 仅保留正式源码文件
-  - 单元测试统一迁移到 `tests/unit/main` 与 `tests/unit/shared`
-  - Playwright 端到端测试继续保留在 `e2e/`
-- 已同步工程配置：
-  - `vitest.config.ts` 改为仅扫描 `tests/unit/**/*.{test,spec}.{ts,tsx}`
-  - `tsconfig.json` 新增 `tests` 到 `include`
-- 当前约定：
-  - 后续新增单元测试一律放到 `tests/unit/`
-  - 后续新增端到端测试一律放到 `e2e/`
-- 本地验证结果：
-  - `pnpm lint`
-  - `pnpm format:check`
-  - `pnpm typecheck`
-  - `pnpm test:unit -- settings`
-  - `pnpm exec playwright test -g "settings|i18n-ja|error-handling"`
-- 用户验证结果：
-  - 设置页可正常录入、保存、删除 API Key
-  - 当前步骤已通过用户验收
-    - 覆盖场景：API Key 缺失、API Key 无效、网络失败、超时、解析失败、429
-  - `src/main/settings_service.ts`
-    - API Key 缺失引导错误改为纯日语文案
-  - `src/main/word_entry_service.ts`
-    - 新增 E2E 用测试桩：`KOTOBA_FAKE_GENERATE_ERROR_CODE`
-- 已扩展渲染层提示：
-  - `src/renderer/app.tsx`
-  - 能力：
-    - 应用启动后读取 `app:startup-status`
-    - 若发生备份恢复或迁移，顶部显示全局日语通知
-    - 生成失败时展示日语且带恢复引导的错误信息
-- 已补齐步骤 13 验收测试：
-  - `e2e/word_add.spec.ts`
-  - 新增用例：
-    - `i18n-ja`
-    - `error-handling`
-- 已修正 E2E 脚本：
-  - `package.json`
-  - `test:e2e` 先执行 `pnpm build`，确保端到端测试始终基于当前源码产物
-
-### 2.19 活动画面提升为默认主界面
-- 已调整渲染层默认入口：
-  - `src/renderer/app.tsx`
-  - 默认 `active_page` 从 `word-add` 调整为 `activity`
-  - 顶部标签顺序调整为：`活動`、`単語帳`、`復習`、`単語追加`、`設定`
-- 已同步测试入口假设：
-  - `e2e/word_add.spec.ts`
-  - 新增显式进入 `単語追加` 页的测试辅助函数，避免默认首页变化导致用例依赖隐式初始状态
-  - `activity-heatmap` / `i18n-ja` / `error-handling` 等用例已按新首页行为回归通过
-- 已同步长期记忆文档：
-  - `memory-bank/design-doc.md`
-  - `memory-bank/tech-stack.md`
-  - `memory-bank/architecture.md`
-  - 明确 `活動` 为默认主界面
-- 本轮验证结果：
-  - `pnpm typecheck` 通过
-  - `pnpm test:e2e` 11/11 通过
-  - 当前本地环境 Node 为 `v25.2.1`，与仓库 `Node 22.x` 基线不一致，因此命令执行时会出现 engine warning；但本轮类型检查与 E2E 实际均通过
-
-## 3. 验证结果快照
-### 3.1 步骤 8 验证（历史）
-- 执行命令：
-  - `pnpm test:unit -- ai-provider`
-  - `pnpm test:unit -- ai-retry`
+- 若继续 UI 重写专项，入口是 `ui-plan.md` 的第 `3` 步：按页面从低风险到高风险逐步迁移。
 - 结果：通过
 
 ### 3.2 步骤 9 验证（已通过用户验证）
