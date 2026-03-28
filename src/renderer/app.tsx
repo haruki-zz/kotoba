@@ -6,6 +6,7 @@ import { PageHeader } from '@/renderer/components/layout/page_header'
 import { EmptyState } from '@/renderer/components/shared/empty_state'
 import { LoadingState } from '@/renderer/components/shared/loading_state'
 import { StatusMessage } from '@/renderer/components/shared/status_message'
+import { SettingsPage } from '@/renderer/features/settings/settings_page'
 import { Button } from '@/renderer/components/ui/button'
 import { Card, CardContent } from '@/renderer/components/ui/card'
 import { Input } from '@/renderer/components/ui/input'
@@ -1194,95 +1195,20 @@ export const App = () => {
       ) : null}
 
       {active_page === 'settings' ? (
-        <Card className="border-border/80 bg-card/95">
-          <CardContent className="space-y-4 p-5 sm:p-6">
-            <p className="settings_hint">
-              API キーの状態: {settings_has_api_key ? '登録済み' : '未設定'}
-            </p>
-            <p className="settings_hint">
-              API キー欄を空欄のまま保存すると、現在のキーをそのまま維持します。
-            </p>
-
-            <label className="field">
-              <span>プロバイダー</span>
-              <Input aria-label="プロバイダー" value="gemini" readOnly />
-            </label>
-
-            <label className="field">
-              <span>モデル名</span>
-              <Input
-                aria-label="モデル名"
-                value={settings_form.model}
-                onChange={(event) => handle_settings_field('model', event.target.value)}
-                placeholder="例: gemini-2.5-flash"
-              />
-            </label>
-
-            <label className="field">
-              <span>タイムアウト（秒）</span>
-              <Input
-                aria-label="タイムアウト秒"
-                inputMode="numeric"
-                value={settings_form.timeout_seconds}
-                onChange={(event) => handle_settings_field('timeout_seconds', event.target.value)}
-              />
-            </label>
-
-            <label className="field">
-              <span>リトライ回数</span>
-              <Input
-                aria-label="リトライ回数"
-                inputMode="numeric"
-                value={settings_form.retries}
-                onChange={(event) => handle_settings_field('retries', event.target.value)}
-              />
-            </label>
-
-            <label className="field">
-              <span>API キー</span>
-              <Input
-                aria-label="API キー"
-                type="password"
-                value={settings_form.api_key}
-                onChange={(event) => handle_settings_field('api_key', event.target.value)}
-                placeholder={
-                  settings_has_api_key ? '新しいキーを入力すると上書きされます' : 'API キーを入力'
-                }
-              />
-            </label>
-
-            <div className="button_row">
-              <Button
-                type="button"
-                onClick={handle_settings_save}
-                disabled={settings_save_disabled}
-              >
-                {settings_saving ? '保存中...' : '設定を保存'}
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => {
-                  void handle_delete_api_key()
-                }}
-                disabled={settings_delete_disabled}
-              >
-                {settings_deleting_api_key ? '削除中...' : 'API キーを削除'}
-              </Button>
-            </div>
-
-            {settings_loading ? <LoadingState message="設定を読み込み中..." /> : null}
-
-            <div className="space-y-3">
-              {settings_status_message.length > 0 ? (
-                <StatusMessage message={settings_status_message} kind="success" role="status" />
-              ) : null}
-              {settings_error_message.length > 0 ? (
-                <StatusMessage message={settings_error_message} kind="error" role="alert" />
-              ) : null}
-            </div>
-          </CardContent>
-        </Card>
+        <SettingsPage
+          delete_disabled={settings_delete_disabled}
+          error_message={settings_error_message}
+          form={settings_form}
+          has_api_key={settings_has_api_key}
+          is_deleting_api_key={settings_deleting_api_key}
+          is_loading={settings_loading}
+          is_saving={settings_saving}
+          on_delete_api_key={handle_delete_api_key}
+          on_field_change={handle_settings_field}
+          on_save={handle_settings_save}
+          save_disabled={settings_save_disabled}
+          status_message={settings_status_message}
+        />
       ) : null}
     </AppShell>
   )
