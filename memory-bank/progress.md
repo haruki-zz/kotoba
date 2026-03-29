@@ -1,9 +1,9 @@
 ﻿# Kotoba 开发进度记录
 
 ## 1. 当前状态
-- 记录日期：`2026-03-28`
-- 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成，且其后活动 heat map 已完成用户验证通过的补充迭代；最新一轮迭代已将 `活動` 调整为默认主界面。此后已新增 `ui-plan.md`，并完成其中第 `1` 步与第 `2` 步：`Tailwind CSS v4 + shadcn/ui` 基础设施接入，以及 `AppShell + 通用 UI 组件` 落地。
-- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页作为默认主界面 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 可回归 + 渲染层已具备 Tailwind/shadcn 迁移前置条件 + 应用壳与共享 UI 组件已完成”阶段。
+- 记录日期：`2026-03-29`
+- 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成，且其后活动 heat map 已完成用户验证通过的补充迭代；最新一轮迭代已将 `活動` 调整为默认主界面。此后已新增 `ui-plan.md`，并完成其中第 `1` 步、第 `2` 步，以及第 `3` 步的首个页面迁移：`設定` 页已切换到独立 feature 组件并通过当前用户验证。
+- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页作为默认主界面 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入 + 渲染层已具备 Tailwind/shadcn 迁移前置条件 + 应用壳与共享 UI 组件已完成 + `設定` 页面级迁移已完成”阶段。
 
 ## 2. 已完成事项
 ### 2.1 对应 plan.md 步骤 1（环境与版本基线冻结）
@@ -259,7 +259,33 @@
   - 单测：`tests/unit/main/keytar_secret_store.test.ts`
   - E2E：`e2e/word_add.spec.ts` 新增 `settings` 用例
 
-### 2.16 对应 ui-plan.md 第 1 步（Tailwind CSS 与 shadcn/ui 基础设施接入）
+### 2.16 对应 ui-plan.md 第 3 步当前进度（页面迁移：`設定`）
+- 已完成 `ui-plan.md` 第 `3` 步的首个页面迁移，并通过当前用户验证：
+  - 页面：`設定`
+  - 迁移方式：保留 `App` 中既有 settings 状态、表单校验与 IPC 调用，仅将页面视图抽离到独立 feature 组件
+- 已新增渲染层 feature 文件：
+  - `src/renderer/features/settings/settings_page.tsx`
+  - 能力：
+    - 使用 `Card / Badge / Input / Button / StatusMessage / LoadingState` 重组设置页布局
+    - 将“生成既定值”和“API キー管理”拆为两个卡片区域
+    - 保持 `モデル名 / タイムアウト秒 / リトライ回数 / API キー` 的可访问标签不变
+    - 保持“保存后不回显 API Key”“删除后回到未设置状态”的既有行为不变
+- 已更新渲染层接线：
+  - `src/renderer/app.tsx`
+  - 变更：
+    - `設定` 页面不再在 `App` JSX 中内联展开
+    - 当前改为由 `SettingsPage` 接收 props 渲染
+- 本轮验证结果：
+  - `pnpm lint` 通过
+  - `pnpm typecheck` 通过
+  - `pnpm test` 通过
+  - 额外执行了基于 Electron 的 `設定` 页 smoke 验证，确认可切换到 `設定`、保存设置、更新 API Key 状态与本地持久化正常
+- 交接注意事项：
+  - 本轮没有继续迁移 `単語追加 / 単語帳 / 復習 / 活動`
+  - `ui-plan.md` 第 `3` 步后续入口应从推荐顺序的下一项 `単語追加` 继续
+  - 当前导航组件基于 `Tabs`，语义角色为 `tab`；若后续运行 Playwright 导航相关用例，需要注意不要继续假设其角色是 `button`
+
+### 2.17 对应 ui-plan.md 第 1 步（Tailwind CSS 与 shadcn/ui 基础设施接入）
 - 已新增 UI 重写计划文档：
   - 根目录 `ui-plan.md`
   - 明确 UI 重写范围、阶段拆分、迁移顺序、验证计划与风险控制
@@ -294,7 +320,7 @@
   - `pnpm build`
   - 用户已明确验证通过
 
-### 2.17 对应 ui-plan.md 第 2 步（应用壳与通用组件落地）
+### 2.18 对应 ui-plan.md 第 2 步（应用壳与通用组件落地）
 - 已新增渲染层组件目录：
   - `src/renderer/components/ui`
   - `src/renderer/components/layout`
