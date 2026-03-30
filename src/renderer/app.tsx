@@ -3,18 +3,14 @@ import './style.css'
 import { AppNavigation, type AppNavigationItem } from '@/renderer/components/layout/app_navigation'
 import { AppShell } from '@/renderer/components/layout/app_shell'
 import { PageHeader } from '@/renderer/components/layout/page_header'
-import { EmptyState } from '@/renderer/components/shared/empty_state'
-import { LoadingState } from '@/renderer/components/shared/loading_state'
 import { StatusMessage } from '@/renderer/components/shared/status_message'
+import { ActivityPage } from '@/renderer/features/activity/activity_page'
+import { LibraryPage } from '@/renderer/features/library/library_page'
+import { ReviewPage } from '@/renderer/features/review/review_page'
 import { SettingsPage } from '@/renderer/features/settings/settings_page'
-import { Button } from '@/renderer/components/ui/button'
-import { Card, CardContent } from '@/renderer/components/ui/card'
-import { Input } from '@/renderer/components/ui/input'
+import { WordAddPage } from '@/renderer/features/word_add/word_add_page'
 import { Separator } from '@/renderer/components/ui/separator'
-import { Textarea } from '@/renderer/components/ui/textarea'
 import {
-  type ActivityHeatmapCell,
-  type ActivityMemoryLevelStat,
   type ActivityHeatmapResult,
   type AppStartupStatusResult,
   IPC_CHANNELS,
@@ -76,8 +72,6 @@ const EMPTY_SETTINGS_FORM: SettingsForm = {
   api_key: '',
 }
 
-const REVIEW_GRADES = [0, 1, 2, 3, 4, 5] as const
-const ACTIVITY_WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'] as const
 const APP_NAME = 'Kotoba'
 
 const APP_NAVIGATION_ITEMS: AppNavigationItem<AppPage>[] = [
@@ -149,40 +143,6 @@ const parse_non_negative_integer = (value: string): number | null => {
   return Number.parseInt(normalized, 10)
 }
 
-const build_activity_weeks = (
-  cells: ActivityHeatmapCell[]
-): Array<Array<ActivityHeatmapCell | null>> => {
-  const weeks: Array<Array<ActivityHeatmapCell | null>> = []
-  let current_week: Array<ActivityHeatmapCell | null> = Array.from({ length: 7 }, () => null)
-
-  for (const cell of cells) {
-    if (cell.weekday === 0 && current_week.some((value) => value !== null)) {
-      weeks.push(current_week)
-      current_week = Array.from({ length: 7 }, () => null)
-    }
-
-    current_week[cell.weekday] = cell
-  }
-
-  if (current_week.some((value) => value !== null)) {
-    weeks.push(current_week)
-  }
-
-  return weeks
-}
-
-const format_activity_cell_label = (cell: ActivityHeatmapCell): string =>
-  `${cell.date}: 活動 ${cell.activity_count} 件（追加 ${cell.added_word_count} 件、復習 ${cell.review_count} 件）`
-
-const format_activity_memory_level_percentage = (percentage: number): string =>
-  `${percentage.toFixed(1)}%`
-
-const format_activity_memory_level_label = (
-  stat: ActivityMemoryLevelStat,
-  total_word_count: number
-): string =>
-  `レベル ${stat.level}: ${stat.word_count} 語 / 全 ${total_word_count} 語（${format_activity_memory_level_percentage(stat.percentage)}）`
-
 export const App = () => {
   const [app_notice_message, set_app_notice_message] = useState<string>('')
   const [app_notice_kind, set_app_notice_kind] = useState<'info' | 'warning' | null>(null)
@@ -206,6 +166,7 @@ export const App = () => {
     useState<LibraryEditForm>(EMPTY_LIBRARY_EDIT_FORM)
   const [library_updating, set_library_updating] = useState<boolean>(false)
   const [library_deleting_word_id, set_library_deleting_word_id] = useState<string | null>(null)
+  const [library_delete_target, set_library_delete_target] = useState<LibraryWordItem | null>(null)
 
   const [review_due_words, set_review_due_words] = useState<ReviewQueueWordItem[]>([])
   const [review_due_count, set_review_due_count] = useState<number>(0)
@@ -492,6 +453,10 @@ export const App = () => {
       set_settings_error_message('')
     }
 
+    if (next_page !== 'library') {
+      set_library_delete_target(null)
+    }
+
     set_active_page(next_page)
   }
 
@@ -544,32 +509,48 @@ export const App = () => {
     await load_library_words(library_query)
   }
 
-  const handle_library_delete = async (word: LibraryWordItem): Promise<void> => {
-    const confirmed = window.confirm(`「${word.word}」を削除しますか？`)
-    if (confirmed === false) {
+  const handle_request_library_delete = (word: LibraryWordItem): void => {
+    set_library_delete_target(word)
+    set_library_status_message('')
+    set_library_error_message('')
+  }
+
+  const handle_cancel_library_delete = (): void => {
+    if (library_deleting_word_id !== null) {
       return
     }
 
-    set_library_deleting_word_id(word.id)
+    set_library_delete_target(null)
+  }
+
+  const handle_confirm_library_delete = async (): Promise<void> => {
+    const target_word = library_delete_target
+    if (target_word === null) {
+      return
+    }
+
+    set_library_deleting_word_id(target_word.id)
     set_library_status_message('')
     set_library_error_message('')
 
     const response = (await window.kotoba.invoke(IPC_CHANNELS.LIBRARY_DELETE, {
-      word_id: word.id,
+      word_id: target_word.id,
     })) as IpcResponse<LibraryDeleteResult>
 
     set_library_deleting_word_id(null)
     if (is_failure(response)) {
       set_library_error_message(response.error.message)
+      set_library_delete_target(null)
       return
     }
 
-    if (library_editing_word_id === word.id) {
+    if (library_editing_word_id === target_word.id) {
       set_library_editing_word_id(null)
       set_library_edit_form(EMPTY_LIBRARY_EDIT_FORM)
     }
 
     set_library_status_message(response.data.message_ja)
+    set_library_delete_target(null)
     await load_library_words(library_query)
   }
 
@@ -718,10 +699,6 @@ export const App = () => {
   )
 
   const current_review_word = review_due_words[0] ?? null
-  const activity_weeks = useMemo(
-    () => build_activity_weeks(activity_heatmap?.cells ?? []),
-    [activity_heatmap]
-  )
   const current_page_meta = APP_PAGE_META[active_page]
 
   return (
@@ -756,442 +733,64 @@ export const App = () => {
       }
     >
       {active_page === 'word-add' ? (
-        <Card className="border-border/80 bg-card/95">
-          <CardContent className="space-y-4 p-5 sm:p-6">
-            <label className="field">
-              <span>単語</span>
-              <Input
-                aria-label="単語"
-                value={draft.word}
-                onChange={(event) => set_field('word', event.target.value)}
-                placeholder="例: 食べる"
-              />
-            </label>
-
-            <div className="button_row">
-              <Button type="button" onClick={handle_generate_click} disabled={is_generating}>
-                {is_generating ? '生成中...' : '生成'}
-              </Button>
-              <Button type="button" onClick={handle_save_click} disabled={save_disabled}>
-                {is_saving ? '保存中...' : '保存'}
-              </Button>
-            </div>
-
-            <label className="field">
-              <span>読み仮名</span>
-              <Input
-                aria-label="読み仮名"
-                value={draft.reading_kana}
-                onChange={(event) => set_field('reading_kana', event.target.value)}
-              />
-            </label>
-
-            <label className="field">
-              <span>意味（日本語）</span>
-              <Textarea
-                aria-label="意味"
-                rows={3}
-                value={draft.meaning_ja}
-                onChange={(event) => set_field('meaning_ja', event.target.value)}
-              />
-            </label>
-
-            <label className="field">
-              <span>文脈</span>
-              <Textarea
-                aria-label="文脈"
-                rows={3}
-                value={draft.context_scene_ja}
-                onChange={(event) => set_field('context_scene_ja', event.target.value)}
-              />
-            </label>
-
-            <label className="field">
-              <span>例文</span>
-              <Textarea
-                aria-label="例文"
-                rows={2}
-                value={draft.example_sentence_ja}
-                onChange={(event) => set_field('example_sentence_ja', event.target.value)}
-              />
-            </label>
-
-            <div className="space-y-3">
-              {status_message.length > 0 ? (
-                <StatusMessage message={status_message} kind="success" role="status" />
-              ) : null}
-              {error_message.length > 0 ? (
-                <StatusMessage message={error_message} kind="error" role="alert" />
-              ) : null}
-            </div>
-          </CardContent>
-        </Card>
+        <WordAddPage
+          draft={draft}
+          error_message={error_message}
+          is_generating={is_generating}
+          is_saving={is_saving}
+          on_field_change={set_field}
+          on_generate={handle_generate_click}
+          on_save={handle_save_click}
+          save_disabled={save_disabled}
+          status_message={status_message}
+        />
       ) : null}
 
       {active_page === 'library' ? (
-        <Card className="border-border/80 bg-card/95">
-          <CardContent className="space-y-4 p-5 sm:p-6">
-            <label className="field">
-              <span>検索</span>
-              <Input
-                aria-label="単語帳検索"
-                value={library_query}
-                onChange={(event) => set_library_query(event.target.value)}
-                placeholder="単語・読み仮名・意味で検索"
-              />
-            </label>
-
-            <p className="library_count">
-              {library_matched_count} 件 / 全 {library_total_count} 件
-            </p>
-
-            {library_loading ? <LoadingState message="読み込み中..." /> : null}
-
-            {library_words.length === 0 && library_loading === false ? (
-              <EmptyState
-                title="該当する単語がありません。"
-                description="検索条件を変更してもう一度確認してください。"
-              />
-            ) : null}
-
-            <ul className="library_list">
-              {library_words.map((word) => {
-                const is_editing = library_editing_word_id === word.id
-                const is_deleting = library_deleting_word_id === word.id
-
-                if (is_editing) {
-                  return (
-                    <li key={word.id} className="library_item">
-                      <label className="field">
-                        <span>単語</span>
-                        <Input
-                          aria-label="編集単語"
-                          value={library_edit_form.word}
-                          onChange={(event) =>
-                            handle_library_edit_field('word', event.target.value)
-                          }
-                        />
-                      </label>
-                      <label className="field">
-                        <span>読み仮名</span>
-                        <Input
-                          aria-label="編集読み仮名"
-                          value={library_edit_form.reading_kana}
-                          onChange={(event) =>
-                            handle_library_edit_field('reading_kana', event.target.value)
-                          }
-                        />
-                      </label>
-                      <label className="field">
-                        <span>意味（日本語）</span>
-                        <Textarea
-                          aria-label="編集意味"
-                          rows={3}
-                          value={library_edit_form.meaning_ja}
-                          onChange={(event) =>
-                            handle_library_edit_field('meaning_ja', event.target.value)
-                          }
-                        />
-                      </label>
-                      <label className="field">
-                        <span>文脈</span>
-                        <Textarea
-                          aria-label="編集文脈"
-                          rows={3}
-                          value={library_edit_form.context_scene_ja}
-                          onChange={(event) =>
-                            handle_library_edit_field('context_scene_ja', event.target.value)
-                          }
-                        />
-                      </label>
-                      <label className="field">
-                        <span>例文</span>
-                        <Textarea
-                          aria-label="編集例文"
-                          rows={2}
-                          value={library_edit_form.example_sentence_ja}
-                          onChange={(event) =>
-                            handle_library_edit_field('example_sentence_ja', event.target.value)
-                          }
-                        />
-                      </label>
-                      <div className="button_row">
-                        <Button
-                          type="button"
-                          onClick={handle_library_update}
-                          disabled={library_update_disabled}
-                        >
-                          {library_updating ? '更新中...' : '更新'}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          onClick={handle_cancel_library_edit}
-                        >
-                          キャンセル
-                        </Button>
-                      </div>
-                    </li>
-                  )
-                }
-
-                return (
-                  <li key={word.id} className="library_item">
-                    <p className="library_word">{word.word}</p>
-                    <p className="library_reading">{word.reading_kana}</p>
-                    <p className="library_meaning">{word.meaning_ja}</p>
-                    <div className="button_row">
-                      <Button type="button" onClick={() => handle_start_library_edit(word)}>
-                        編集
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        onClick={() => {
-                          void handle_library_delete(word)
-                        }}
-                        disabled={is_deleting}
-                      >
-                        {is_deleting ? '削除中...' : '削除'}
-                      </Button>
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-
-            <div className="space-y-3">
-              {library_status_message.length > 0 ? (
-                <StatusMessage message={library_status_message} kind="success" role="status" />
-              ) : null}
-              {library_error_message.length > 0 ? (
-                <StatusMessage message={library_error_message} kind="error" role="alert" />
-              ) : null}
-            </div>
-          </CardContent>
-        </Card>
+        <LibraryPage
+          delete_target={library_delete_target}
+          deleting_word_id={library_deleting_word_id}
+          edit_form={library_edit_form}
+          editing_word_id={library_editing_word_id}
+          error_message={library_error_message}
+          is_loading={library_loading}
+          is_updating={library_updating}
+          matched_count={library_matched_count}
+          on_cancel_delete={handle_cancel_library_delete}
+          on_cancel_edit={handle_cancel_library_edit}
+          on_confirm_delete={handle_confirm_library_delete}
+          on_edit_field={handle_library_edit_field}
+          on_query_change={set_library_query}
+          on_request_delete={handle_request_library_delete}
+          on_start_edit={handle_start_library_edit}
+          on_update={handle_library_update}
+          query={library_query}
+          status_message={library_status_message}
+          total_count={library_total_count}
+          update_disabled={library_update_disabled}
+          words={library_words}
+        />
       ) : null}
 
       {active_page === 'review' ? (
-        <Card className="border-border/80 bg-card/95">
-          <CardContent className="space-y-4 p-5 sm:p-6">
-            <div className="review_stats">
-              <p className="review_stat">残り {review_due_count} 件</p>
-              <p className="review_stat">今日完了 {review_completed_today_count} 件</p>
-            </div>
-
-            {review_loading ? <LoadingState message="復習キューを読み込み中..." /> : null}
-
-            {current_review_word ? (
-              <article className="review_card">
-                <p className="review_word">{current_review_word.word}</p>
-                <p className="review_reading">{current_review_word.reading_kana}</p>
-                <dl className="review_details">
-                  <div>
-                    <dt>意味</dt>
-                    <dd>{current_review_word.meaning_ja}</dd>
-                  </div>
-                  <div>
-                    <dt>文脈</dt>
-                    <dd>{current_review_word.context_scene_ja}</dd>
-                  </div>
-                  <div>
-                    <dt>例文</dt>
-                    <dd>{current_review_word.example_sentence_ja}</dd>
-                  </div>
-                </dl>
-                <p className="review_hint">評価を選ぶと次回の復習日時が更新されます。</p>
-                <div className="review_grade_row" aria-label="復習評価">
-                  {REVIEW_GRADES.map((grade) => (
-                    <Button
-                      key={grade}
-                      type="button"
-                      variant="outline"
-                      className="review_grade_button"
-                      onClick={() => {
-                        void handle_review_grade(grade)
-                      }}
-                      disabled={review_grading_word_id === current_review_word.id}
-                    >
-                      {review_grading_word_id === current_review_word.id ? '送信中...' : grade}
-                    </Button>
-                  ))}
-                </div>
-              </article>
-            ) : null}
-
-            {current_review_word === null && review_loading === false ? (
-              <EmptyState
-                title="今日の復習は完了しました。"
-                description="新しく到期した単語がある場合は、このページに自動で表示されます。"
-              />
-            ) : null}
-
-            <div className="space-y-3">
-              {review_status_message.length > 0 ? (
-                <StatusMessage message={review_status_message} kind="success" role="status" />
-              ) : null}
-              {review_error_message.length > 0 ? (
-                <StatusMessage message={review_error_message} kind="error" role="alert" />
-              ) : null}
-            </div>
-          </CardContent>
-        </Card>
+        <ReviewPage
+          completed_today_count={review_completed_today_count}
+          current_review_word={current_review_word}
+          due_count={review_due_count}
+          error_message={review_error_message}
+          grading_word_id={review_grading_word_id}
+          is_loading={review_loading}
+          on_grade={handle_review_grade}
+          status_message={review_status_message}
+        />
       ) : null}
 
       {active_page === 'activity' ? (
-        <Card className="border-border/80 bg-card/95">
-          <CardContent className="space-y-4 p-5 sm:p-6">
-            <p className="settings_hint">
-              活動量は単語追加と復習の合計件数です。直近 40 週間の学習量を表示します。
-            </p>
-
-            {activity_heatmap ? (
-              <>
-                <div className="activity_summary_grid">
-                  <article className="activity_summary_card">
-                    <p className="activity_summary_label">総活動</p>
-                    <p className="activity_summary_value">
-                      {activity_heatmap.total_activity_count} 件
-                    </p>
-                  </article>
-                  <article className="activity_summary_card">
-                    <p className="activity_summary_label">追加</p>
-                    <p className="activity_summary_value">
-                      {activity_heatmap.total_added_word_count} 件
-                    </p>
-                  </article>
-                  <article className="activity_summary_card">
-                    <p className="activity_summary_label">復習</p>
-                    <p className="activity_summary_value">
-                      {activity_heatmap.total_review_count} 件
-                    </p>
-                  </article>
-                  <article className="activity_summary_card">
-                    <p className="activity_summary_label">活動日</p>
-                    <p className="activity_summary_value">{activity_heatmap.active_day_count} 日</p>
-                  </article>
-                  <article className="activity_summary_card">
-                    <p className="activity_summary_label">現在連続</p>
-                    <p className="activity_summary_value">
-                      {activity_heatmap.current_streak_days} 日
-                    </p>
-                  </article>
-                  <article className="activity_summary_card">
-                    <p className="activity_summary_label">最長連続</p>
-                    <p className="activity_summary_value">
-                      {activity_heatmap.longest_streak_days} 日
-                    </p>
-                  </article>
-                </div>
-
-                <p className="activity_range">
-                  期間: {activity_heatmap.range_start} - {activity_heatmap.range_end}
-                </p>
-
-                <section className="activity_memory_levels">
-                  <div className="activity_memory_levels_header">
-                    <h3 className="activity_memory_levels_title">記憶レベル構成</h3>
-                    <p className="activity_memory_levels_hint">
-                      現在の SM-2 状態を 5 段階にまとめ、各レベルの割合を表示しています。
-                    </p>
-                  </div>
-
-                  {activity_heatmap.total_word_count > 0 ? (
-                    <div
-                      className="activity_memory_level_list"
-                      role="list"
-                      aria-label="記憶レベル構成"
-                    >
-                      {activity_heatmap.memory_level_stats.map((stat) => (
-                        <article
-                          key={stat.level}
-                          className="activity_memory_level_card"
-                          role="listitem"
-                          aria-label={format_activity_memory_level_label(
-                            stat,
-                            activity_heatmap.total_word_count
-                          )}
-                        >
-                          <p className="activity_memory_level_label">レベル {stat.level}</p>
-                          <p className="activity_memory_level_value">
-                            {format_activity_memory_level_percentage(stat.percentage)}
-                          </p>
-                          <p className="activity_memory_level_meta">
-                            {stat.word_count} 語 / 全 {activity_heatmap.total_word_count} 語
-                          </p>
-                        </article>
-                      ))}
-                    </div>
-                  ) : (
-                    <EmptyState
-                      title="まだ単語がありません。"
-                      description="単語を保存すると記憶レベル構成がここに表示されます。"
-                    />
-                  )}
-                </section>
-
-                <div className="activity_heatmap_scroll">
-                  <div className="activity_heatmap_layout">
-                    <div className="activity_weekday_labels" aria-hidden="true">
-                      {ACTIVITY_WEEKDAY_LABELS.map((weekday) => (
-                        <span key={weekday}>{weekday}</span>
-                      ))}
-                    </div>
-                    <div className="activity_heatmap" role="grid" aria-label="学習活動ヒートマップ">
-                      {activity_weeks.map((week, week_index) => (
-                        <div
-                          key={`${week[0]?.date ?? 'week'}-${week_index}`}
-                          className="activity_week_column"
-                        >
-                          {week.map((cell, day_index) =>
-                            cell ? (
-                              <div
-                                key={cell.date}
-                                role="gridcell"
-                                aria-label={format_activity_cell_label(cell)}
-                                className={`activity_cell activity_level_${cell.level}${cell.is_today ? ' is_today' : ''}`}
-                                data-activity-date={cell.date}
-                                data-activity-count={cell.activity_count}
-                              />
-                            ) : (
-                              <div
-                                key={`empty-${week_index}-${day_index}`}
-                                className="activity_cell activity_placeholder"
-                                aria-hidden="true"
-                              />
-                            )
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="activity_legend" aria-hidden="true">
-                  <span>少ない</span>
-                  {[0, 1, 2, 3, 4].map((level) => (
-                    <span key={level} className={`activity_cell activity_level_${level}`} />
-                  ))}
-                  <span>多い</span>
-                </div>
-
-                {activity_heatmap.total_activity_count === 0 ? (
-                  <EmptyState
-                    title="まだ活動記録がありません。"
-                    description="単語追加や復習をするとヒートマップに表示されます。"
-                  />
-                ) : null}
-              </>
-            ) : null}
-
-            {activity_loading ? <LoadingState message="活動データを読み込み中..." /> : null}
-
-            {activity_error_message.length > 0 ? (
-              <StatusMessage message={activity_error_message} kind="error" role="alert" />
-            ) : null}
-          </CardContent>
-        </Card>
+        <ActivityPage
+          error_message={activity_error_message}
+          heatmap={activity_heatmap}
+          is_loading={activity_loading}
+        />
       ) : null}
 
       {active_page === 'settings' ? (

@@ -140,9 +140,14 @@ const create_word_by_generate_then_save = async (
   await page.getByRole('button', { name: '保存' }).click()
 }
 
+const open_page = async (page: Page, tab_name: string, title: string): Promise<void> => {
+  await page.getByRole('tab', { name: tab_name }).click()
+  await expect(page.getByRole('tab', { name: tab_name })).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByRole('heading', { name: title })).toBeVisible()
+}
+
 const open_word_add_page = async (page: Page): Promise<void> => {
-  await page.getByRole('button', { name: '単語追加' }).click()
-  await expect(page.getByRole('button', { name: '単語追加' })).toHaveClass(/active/)
+  await open_page(page, '単語追加', '新しい単語を追加')
   await expect(page.getByLabel('単語')).toBeVisible()
 }
 
@@ -156,7 +161,7 @@ test('word-create: create word and persist after restart', async () => {
       '食べる',
       '食物を口にして栄養を取る基本的な行為です。'
     )
-    await expect(first_launch.page.getByRole('status')).toHaveText('単語を保存しました')
+    await expect(first_launch.page.getByRole('status')).toContainText('単語を保存しました')
     await expect(first_launch.page.getByLabel('単語')).toHaveValue('')
   } finally {
     await close_app(first_launch.electron_app)
@@ -215,7 +220,7 @@ test('draft: save draft on page switch before debounce timeout', async () => {
   try {
     await open_word_add_page(first_launch.page)
     await first_launch.page.getByLabel('単語').fill('猫')
-    await first_launch.page.getByRole('button', { name: '単語帳' }).click()
+    await first_launch.page.getByRole('tab', { name: '単語帳' }).click()
     await first_launch.page.waitForTimeout(200)
   } finally {
     await close_app(first_launch.electron_app)
@@ -242,14 +247,14 @@ test('duplicate-word: overwrite existing word by normalized word key', async () 
       ' ｶﾀｶﾅ ',
       '最初に保存した意味です。重複上書き前の内容です。'
     )
-    await expect(launched.page.getByRole('status')).toHaveText('単語を保存しました')
+    await expect(launched.page.getByRole('status')).toContainText('単語を保存しました')
 
     await create_word_by_generate_then_save(
       launched.page,
       'カタカナ',
       '二回目の保存で既存単語を上書きした後の内容です。'
     )
-    await expect(launched.page.getByRole('status')).toHaveText('既存の単語を更新しました')
+    await expect(launched.page.getByRole('status')).toContainText('既存の単語を更新しました')
   } finally {
     await close_app(launched.electron_app)
   }
@@ -270,16 +275,16 @@ test('library-crud: list search edit delete words in library page', async () => 
       'かたかな',
       '文字体系について説明する最初の意味です。'
     )
-    await expect(launched.page.getByRole('status')).toHaveText('単語を保存しました')
+    await expect(launched.page.getByRole('status')).toContainText('単語を保存しました')
 
     await create_word_by_generate_then_save(
       launched.page,
       'AI',
       '人工知能の技術分野を指す単語です。'
     )
-    await expect(launched.page.getByRole('status')).toHaveText('単語を保存しました')
+    await expect(launched.page.getByRole('status')).toContainText('単語を保存しました')
 
-    await launched.page.getByRole('button', { name: '単語帳' }).click()
+    await open_page(launched.page, '単語帳', '保存済み単語の管理')
     await expect(launched.page.locator('.library_item')).toHaveCount(2)
 
     await launched.page.getByLabel('単語帳検索').fill(' ｶﾀｶﾅ ')
@@ -299,24 +304,22 @@ test('library-crud: list search edit delete words in library page', async () => 
       .getByLabel('編集意味')
       .fill('更新後の意味です。人工知能の応用領域全体を示す語です。')
     await launched.page.getByRole('button', { name: '更新' }).click()
-    await expect(launched.page.getByRole('status')).toHaveText('単語を更新しました')
+    await expect(launched.page.getByRole('status')).toContainText('単語を更新しました')
     await expect(launched.page.locator('.library_item').filter({ hasText: 'AI' })).toContainText(
       '更新後の意味です。人工知能の応用領域全体を示す語です。'
     )
 
-    const dialog_handled = new Promise<void>((resolve) => {
-      launched.page.once('dialog', (dialog) => {
-        void dialog.accept().then(() => resolve())
-      })
-    })
     await launched.page
       .locator('.library_item')
       .filter({ hasText: 'かたかな' })
       .getByRole('button', { name: '削除' })
       .click()
-    await dialog_handled
+    await expect(launched.page.getByRole('alertdialog')).toContainText(
+      '「かたかな」を削除します。この操作は取り消せません。'
+    )
+    await launched.page.getByRole('button', { name: '削除する' }).click()
 
-    await expect(launched.page.getByRole('status')).toHaveText('単語を削除しました')
+    await expect(launched.page.getByRole('status')).toContainText('単語を削除しました')
     await expect(launched.page.locator('.library_item')).toHaveCount(1)
     await expect(launched.page.locator('.library_item')).toContainText('AI')
   } finally {
@@ -341,16 +344,17 @@ test('review-flow: grade due word and persist updated review_state', async () =>
       '復習',
       '学んだ内容を繰り返し確認する行為です。'
     )
-    await expect(launched.page.getByRole('status')).toHaveText('単語を保存しました')
+    await expect(launched.page.getByRole('status')).toContainText('単語を保存しました')
 
-    await launched.page.getByRole('button', { name: '復習' }).click()
-    await expect(launched.page.getByText('残り 1 件')).toBeVisible()
+    await open_page(launched.page, '復習', '今日の復習キュー')
+    await expect(launched.page.locator('.review_due_stat')).toContainText('1 件')
+    await expect(launched.page.locator('.review_completed_stat')).toContainText('0 件')
     await expect(launched.page.locator('.review_word')).toHaveText('復習')
 
     await launched.page.getByRole('button', { name: '4' }).click()
-    await expect(launched.page.getByRole('status')).toHaveText('復習結果を保存しました')
-    await expect(launched.page.getByText('残り 0 件')).toBeVisible()
-    await expect(launched.page.getByText('今日完了 1 件')).toBeVisible()
+    await expect(launched.page.getByRole('status')).toContainText('復習結果を保存しました')
+    await expect(launched.page.locator('.review_due_stat')).toContainText('0 件')
+    await expect(launched.page.locator('.review_completed_stat')).toContainText('1 件')
     await expect(launched.page.getByText('今日の復習は完了しました。')).toBeVisible()
   } finally {
     await close_app(launched.electron_app)
@@ -374,20 +378,19 @@ test('activity-heatmap: show daily activity based on word adds and reviews', asy
   const launched = await launch_app(user_data_dir)
 
   try {
-    await expect(launched.page.getByRole('heading', { name: '活動' })).toBeVisible()
+    await expect(launched.page.getByRole('heading', { name: '学習活動の全体像' })).toBeVisible()
     await create_word_by_generate_then_save(
       launched.page,
       '活動',
       '毎日の学習状況や取り組み量を表す言葉です。'
     )
-    await expect(launched.page.getByRole('status')).toHaveText('単語を保存しました')
+    await expect(launched.page.getByRole('status')).toContainText('単語を保存しました')
 
-    await launched.page.getByRole('button', { name: '復習' }).click()
+    await open_page(launched.page, '復習', '今日の復習キュー')
     await launched.page.getByRole('button', { name: '4' }).click()
-    await expect(launched.page.getByRole('status')).toHaveText('復習結果を保存しました')
+    await expect(launched.page.getByRole('status')).toContainText('復習結果を保存しました')
 
-    await launched.page.getByRole('button', { name: '活動' }).click()
-    await expect(launched.page.getByRole('heading', { name: '活動' })).toBeVisible()
+    await open_page(launched.page, '活動', '学習活動の全体像')
     await expect(
       launched.page.getByText(
         '活動量は単語追加と復習の合計件数です。直近 40 週間の学習量を表示します。'
@@ -427,16 +430,16 @@ test('i18n-ja: shows japanese labels, actions, and dialog text on the main flows
   const launched = await launch_app(user_data_dir)
 
   try {
-    await expect(launched.page.getByRole('heading', { name: 'Kotoba' })).toBeVisible()
+    await expect(launched.page.getByText('Kotoba')).toBeVisible()
     await expect(
-      launched.page.getByText('日本語の単語を生成・編集して保存できます。')
+      launched.page.getByText('直近 40 週間の学習量と現在の記憶レベル構成を確認できます。')
     ).toBeVisible()
-    await expect(launched.page.getByRole('button', { name: '単語追加' })).toBeVisible()
-    await expect(launched.page.getByRole('button', { name: '単語帳' })).toBeVisible()
-    await expect(launched.page.getByRole('button', { name: '復習' })).toBeVisible()
-    await expect(launched.page.getByRole('button', { name: '活動' })).toBeVisible()
-    await expect(launched.page.getByRole('button', { name: '設定' })).toBeVisible()
-    await expect(launched.page.getByRole('heading', { name: '活動' })).toBeVisible()
+    await expect(launched.page.getByRole('tab', { name: '単語追加' })).toBeVisible()
+    await expect(launched.page.getByRole('tab', { name: '単語帳' })).toBeVisible()
+    await expect(launched.page.getByRole('tab', { name: '復習' })).toBeVisible()
+    await expect(launched.page.getByRole('tab', { name: '活動' })).toBeVisible()
+    await expect(launched.page.getByRole('tab', { name: '設定' })).toBeVisible()
+    await expect(launched.page.getByRole('heading', { name: '学習活動の全体像' })).toBeVisible()
     await expect(
       launched.page.getByText(
         '活動量は単語追加と復習の合計件数です。直近 40 週間の学習量を表示します。'
@@ -456,10 +459,9 @@ test('i18n-ja: shows japanese labels, actions, and dialog text on the main flows
       '景色',
       '見える風景や周囲の眺めを表す言葉です。'
     )
-    await expect(launched.page.getByRole('status')).toHaveText('単語を保存しました')
+    await expect(launched.page.getByRole('status')).toContainText('単語を保存しました')
 
-    await launched.page.getByRole('button', { name: '単語帳' }).click()
-    await expect(launched.page.getByRole('heading', { name: '単語帳' })).toBeVisible()
+    await open_page(launched.page, '単語帳', '保存済み単語の管理')
     await expect(launched.page.getByLabel('単語帳検索')).toHaveAttribute(
       'placeholder',
       '単語・読み仮名・意味で検索'
@@ -467,20 +469,15 @@ test('i18n-ja: shows japanese labels, actions, and dialog text on the main flows
     await expect(launched.page.getByRole('button', { name: '編集' })).toBeVisible()
     await expect(launched.page.getByRole('button', { name: '削除' })).toBeVisible()
 
-    const delete_dialog = new Promise<void>((resolve) => {
-      launched.page.once('dialog', async (dialog) => {
-        expect(dialog.message()).toBe('「景色」を削除しますか？')
-        await dialog.dismiss()
-        resolve()
-      })
-    })
     await launched.page.getByRole('button', { name: '削除' }).click()
-    await delete_dialog
+    await expect(launched.page.getByRole('alertdialog')).toContainText(
+      '「景色」を削除します。この操作は取り消せません。'
+    )
+    await launched.page.getByRole('button', { name: '削除しない' }).click()
 
-    await launched.page.getByRole('button', { name: '復習' }).click()
-    await expect(launched.page.getByRole('heading', { name: '復習' })).toBeVisible()
-    await expect(launched.page.getByText('残り 1 件')).toBeVisible()
-    await expect(launched.page.getByText('今日完了 0 件')).toBeVisible()
+    await open_page(launched.page, '復習', '今日の復習キュー')
+    await expect(launched.page.locator('.review_due_stat')).toContainText('1 件')
+    await expect(launched.page.locator('.review_completed_stat')).toContainText('0 件')
     await expect(
       launched.page.getByText('評価を選ぶと次回の復習日時が更新されます。')
     ).toBeVisible()
@@ -494,8 +491,7 @@ test('settings: save settings and api key, reload them, then delete api key', as
   const first_launch = await launch_app(user_data_dir)
 
   try {
-    await first_launch.page.getByRole('button', { name: '設定' }).click()
-    await expect(first_launch.page.getByRole('heading', { name: '設定' })).toBeVisible()
+    await open_page(first_launch.page, '設定', 'Gemini 設定の管理')
     await expect(first_launch.page.getByText('API キーの状態: 未設定')).toBeVisible()
 
     await first_launch.page.getByLabel('モデル名').fill('gemini-2.0-flash')
@@ -504,7 +500,7 @@ test('settings: save settings and api key, reload them, then delete api key', as
     await first_launch.page.getByLabel('API キー').fill('test-api-key-from-settings')
     await first_launch.page.getByRole('button', { name: '設定を保存' }).click()
 
-    await expect(first_launch.page.getByRole('status')).toHaveText(
+    await expect(first_launch.page.getByRole('status')).toContainText(
       '設定を保存し、API キーを更新しました。'
     )
     await expect(first_launch.page.getByText('API キーの状態: 登録済み')).toBeVisible()
@@ -524,17 +520,17 @@ test('settings: save settings and api key, reload them, then delete api key', as
     fake_generated_card_json: null,
   })
   try {
-    await second_launch.page.getByRole('button', { name: '設定' }).click()
+    await open_page(second_launch.page, '設定', 'Gemini 設定の管理')
     await expect(second_launch.page.getByText('API キーの状態: 登録済み')).toBeVisible()
     await expect(second_launch.page.getByLabel('モデル名')).toHaveValue('gemini-2.0-flash')
     await expect(second_launch.page.getByLabel('タイムアウト秒')).toHaveValue('20')
     await expect(second_launch.page.getByLabel('リトライ回数')).toHaveValue('3')
 
     await second_launch.page.getByRole('button', { name: 'API キーを削除' }).click()
-    await expect(second_launch.page.getByRole('status')).toHaveText('API キーを削除しました。')
+    await expect(second_launch.page.getByRole('status')).toContainText('API キーを削除しました。')
     await expect(second_launch.page.getByText('API キーの状態: 未設定')).toBeVisible()
 
-    await second_launch.page.getByRole('button', { name: '単語追加' }).click()
+    await open_page(second_launch.page, '単語追加', '新しい単語を追加')
     await second_launch.page.getByLabel('単語').fill('設定確認')
     await second_launch.page.getByRole('button', { name: '生成' }).click()
     await expect
@@ -589,7 +585,7 @@ test('error-handling: keeps input and shows japanese guidance for generate failu
       await open_word_add_page(launched.page)
       await launched.page.getByLabel('単語').fill('試験')
       await launched.page.getByRole('button', { name: '生成' }).click()
-      await expect(launched.page.getByRole('alert')).toHaveText(scenario.expected_message)
+      await expect(launched.page.getByRole('alert')).toContainText(scenario.expected_message)
       await expect(launched.page.getByLabel('単語')).toHaveValue('試験')
     } finally {
       await close_app(launched.electron_app)
@@ -607,7 +603,7 @@ test('error-handling: restores the latest backup and notifies the user in japane
       '復旧',
       '破損から戻したことを確認するための単語です。'
     )
-    await expect(first_launch.page.getByRole('status')).toHaveText('単語を保存しました')
+    await expect(first_launch.page.getByRole('status')).toContainText('単語を保存しました')
   } finally {
     await close_app(first_launch.electron_app)
   }
@@ -617,10 +613,10 @@ test('error-handling: restores the latest backup and notifies the user in japane
 
   const relaunched = await launch_app(user_data_dir)
   try {
-    await expect(relaunched.page.getByRole('alert')).toHaveText(
+    await expect(relaunched.page.getByRole('alert')).toContainText(
       '単語帳データの破損を検出したため、最新のバックアップから復元しました。'
     )
-    await relaunched.page.getByRole('button', { name: '単語帳' }).click()
+    await open_page(relaunched.page, '単語帳', '保存済み単語の管理')
     await expect(relaunched.page.locator('.library_item')).toContainText('復旧')
   } finally {
     await close_app(relaunched.electron_app)
