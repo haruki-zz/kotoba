@@ -1,12 +1,12 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 14；其后 `活動` heat map 已补充到最新交付状态并通过当前用户验证，最近一轮迭代新增了“`活動` 作为默认主界面”的入口调整。此后又新增了 `ui-plan.md`，并完成第 1 步与第 2 步：渲染层 `Tailwind CSS v4 + shadcn/ui` 基础设施接入，以及应用壳与通用组件落地。最新状态是 `ui-plan.md` 第 `3` 步已启动，并完成首个低风险页面 `設定` 的迁移。
-- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页默认主界面可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入 + UI 迁移前置基础设施已就绪 + 应用壳与共享 UI 组件已就绪 + `設定` 页面级迁移已完成”阶段。
+- 当前已完成实施计划步骤 14；其后 `活動` heat map 已补充到最新交付状态并通过当前用户验证，最近一轮迭代新增了“`活動` 作为默认主界面”的入口调整。此后又新增了 `ui-plan.md`，并完成第 1 步与第 2 步：渲染层 `Tailwind CSS v4 + shadcn/ui` 基础设施接入，以及应用壳与通用组件落地。最新状态是 `ui-plan.md` 第 `3` 步与第 `4` 步已完成，五个主页面均已迁移到独立 feature 组件。
+- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页默认主界面可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入 + UI 迁移前置基础设施已就绪 + 应用壳与共享 UI 组件已就绪 + 五个主页面已完成 feature 化迁移 + 页面级重构细则已完成”阶段。
 - 已具备主进程、预加载、渲染层、共享契约、单测与 E2E 的最小闭环。
 - 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路、`review_logs` 基础审计链路、启动恢复提示链路、设置页配置链路。
 - 若走产品主线，后续开发入口是 `plan.md` 的 `步骤 15（打包、回归与发布验收）`。
-- 若走 UI 重写专项，后续开发入口仍是 `ui-plan.md` 的第 `3` 步，但应从已完成的 `設定` 继续推进到下一项 `単語追加`。
+- 若走 UI 重写专项，后续开发入口是 `ui-plan.md` 的第 `5` 步：状态与组件边界整理。
 
 ## 2. 顶层文件结构与职责
 - `AGENTS.md`
@@ -186,8 +186,9 @@
     - `復習` 到期卡片、评分按钮 `0-5`、剩余/今日完成统计
     - `活動`：最近 `40` 周 heat map、总活动/新增/复习/活跃天数/连续天数摘要、固定 `1-5` 级记忆等级构成
     - `活動`：仅展示静态热力图与摘要，不显示 hover 详情弹窗或原生 tooltip
-    - `設定`：当前只保留 settings 状态、表单校验、按钮禁用条件与 IPC 调用接线
-    - `設定`：实际视图已委托给 `SettingsPage`
+    - 五个主页面视图均已委托给各自 feature 组件
+    - 当前仍保留各页面状态、表单校验、按钮禁用条件与 IPC 调用接线
+    - `単語帳` 删除流程已改为应用内确认弹窗，而不是原生 `window.confirm`
     - 生成/保存/编辑/删除状态与错误提示（日语）
     - 启动恢复/迁移时的顶部全局通知
 - `style.css`
@@ -216,6 +217,29 @@
   - 通用空态组件。
 - `components/shared/loading_state.tsx`
   - 通用加载态组件。
+- `components/shared/confirm_dialog.tsx`
+  - 通用确认弹窗组件。
+  - 使用 `alertdialog` 语义与 `Escape` 关闭逻辑。
+  - 当前用于 `単語帳` 页面删除确认。
+- `components/ui/card.tsx`
+  - 卡片基元。
+  - 当前包含 `Card / CardHeader / CardTitle / CardDescription / CardContent / CardFooter`。
+- `components/ui/button.tsx`
+  - 基础按钮组件。
+- `components/ui/input.tsx`
+  - 基础单行输入组件。
+- `components/ui/textarea.tsx`
+  - 基础多行输入组件。
+- `components/ui/badge.tsx`
+  - 基础标签组件。
+- `components/ui/alert.tsx`
+  - 警示型提示容器。
+- `components/ui/separator.tsx`
+  - 分隔线组件。
+- `components/ui/scroll_area.tsx`
+  - 滚动容器组件，当前供导航区使用。
+- `components/ui/tabs.tsx`
+  - 标签页组件，当前作为顶层导航的交互底座。
 - `features/settings/settings_page.tsx`
   - `設定` 页的页面级 feature 组件。
   - 负责 settings 视图结构，不直接持有 IPC 或业务状态。
@@ -227,6 +251,22 @@
     - `save_disabled / delete_disabled`
     - `on_field_change / on_save / on_delete_api_key`
   - 当前使用 `Card` 拆成“生成既定值”和“API キー管理”两个区域，并保留原有可访问标签与文案。
+- `features/word_add/word_add_page.tsx`
+  - `単語追加` 页的页面级 feature 组件。
+  - 负责输入区、生成结果区、操作按钮区与状态提示的布局。
+  - 保留草稿自动保存、生成、保存等行为所需的 props 接口，但自身不直接发起 IPC。
+- `features/library/library_page.tsx`
+  - `単語帳` 页的页面级 feature 组件。
+  - 负责搜索栏、统计摘要、词条列表、行内编辑表单与删除确认弹窗。
+  - 删除确认通过 `ConfirmDialog` 实现，避免依赖原生确认框。
+- `features/review/review_page.tsx`
+  - `復習` 页的页面级 feature 组件。
+  - 负责摘要卡、当前复习卡、评分按钮组、空态与状态提示。
+  - `review_due_stat / review_completed_stat` 等稳定类名同时服务当前 E2E 断言。
+- `features/activity/activity_page.tsx`
+  - `活動` 页的页面级 feature 组件。
+  - 负责摘要卡、记忆等级构成、heat map 外围布局与空态/错误态。
+  - heat map 本体继续使用自定义渲染，不依赖图表库。
 - `lib/utils.ts`
   - 渲染层共享工具。
   - 当前仅提供 `cn()`，用于组合 `clsx` 与 `tailwind-merge`，供后续 `shadcn/ui` 组件使用。
@@ -241,17 +281,17 @@
   - `@/*` 路径别名与 `cn()` 工具函数落地
   - `src/renderer/components/ui` 通用 primitives 落地
   - `AppShell`、主导航、标题区、共享状态组件落地
-  - `src/renderer/features/settings/settings_page.tsx` 落地
-  - `設定` 页面已完成 feature 化迁移，并通过当前用户验证
+  - `src/renderer/features/*` 五个页面级 feature 组件全部落地
+  - 页面级重构细则已完成，并通过当前用户验证
 - 尚未完成：
-  - 页面级 feature 的全面拆分
-  - `単語追加 / 単語帳 / 復習 / 活動` 的分阶段页面迁移
+  - `App` 内页面状态与编排边界的进一步下沉整理
+  - 旧样式清理与一致性收尾
 - 因此当前 UI 实际运行方式仍是：
   - 顶层壳层与共享控件已切到 `shadcn/ui` 风格
-  - 页面业务逻辑仍主要集中在 `src/renderer/app.tsx`
-  - 页面级 feature 拆分目前只完成了 `設定`
-  - 页面细节视觉仍有较大一部分依赖 `src/renderer/style.css`
-  - 因此不应误判为“页面迁移已经完成”
+  - 五个主页面的结构渲染已经拆到各自 feature 组件
+  - 页面业务状态、校验和 IPC 编排仍主要集中在 `src/renderer/app.tsx`
+  - 页面细节视觉与活动 heat map 特例样式仍有较大一部分依赖 `src/renderer/style.css`
+  - 因此不应误判为“UI 重写已经全部收尾”
 
 ## 4. 测试文件结构与职责
 ### 4.1 单元测试（Vitest）
@@ -302,7 +342,7 @@
     - `settings`：设置页保存、API Key 更新/删除、重启后回读
     - `i18n-ja`：主页面、标签、按钮、搜索占位、删除确认弹窗均为日语
     - `error-handling`：API Key 缺失/无效、网络失败、超时、损坏回退提示
-  - 当前额外包含一个显式切换到 `単語追加` 页的辅助函数，用于隔离“默认主界面是 `活動`”这一入口变化，避免 E2E 用例对初始页面产生隐式耦合。
+  - 当前额外包含一个基于 `tab` 导航的页面切换辅助函数，用于隔离“默认主界面是 `活動`”与新导航语义，避免 E2E 用例对初始页面和 DOM 角色产生隐式耦合。
   - 使用临时 `userData` 目录与 `KOTOBA_FAKE_KEYTAR_FILE`，避免污染本地真实数据与钥匙串。
 
 ## 5. 当前运行流程（步骤 14 完成后 + `活動` 主界面快照）
