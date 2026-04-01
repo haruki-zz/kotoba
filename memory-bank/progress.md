@@ -1,9 +1,9 @@
 ﻿# Kotoba 开发进度记录
 
 ## 1. 当前状态
-- 记录日期：`2026-03-30`
-- 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成，且其后活动 heat map 已完成用户验证通过的补充迭代；最新一轮迭代已将 `活動` 调整为默认主界面。此后已新增 `ui-plan.md`，并完成其中第 `1` 步、第 `2` 步，以及第 `3` 步和第 `4` 步：五个主页面均已切换到独立 feature 组件，并通过当前用户验证。
-- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页作为默认主界面 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入 + 渲染层已具备 Tailwind/shadcn 迁移前置条件 + 应用壳与共享 UI 组件已完成 + 五个主页面已完成 feature 化迁移 + 页面级重构细则已落地”阶段。
+- 记录日期：`2026-04-01`
+- 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成，且其后活动 heat map 已完成用户验证通过的补充迭代；最新一轮迭代已将 `活動` 调整为默认主界面。此后已新增 `ui-plan.md`，并完成其中第 `1` 步到第 `5` 步：已完成 `Tailwind CSS + shadcn/ui` 基础设施接入、应用壳与通用组件落地、五个主页面的 feature 化迁移、页面级重构细则，以及页面状态与 IPC 编排向各自 `*_feature.tsx` 下沉。
+- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页作为默认主界面 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入 + 渲染层已完成 Tailwind/shadcn 基础设施接入 + 应用壳与共享 UI 组件已完成 + 五个主页面已完成 feature 化迁移 + 页面级重构细则已落地 + 页面状态与 IPC 编排已完成 feature 边界整理”阶段。
 
 ## 2. 已完成事项
 ### 2.1 对应 plan.md 步骤 1（环境与版本基线冻结）
@@ -368,10 +368,32 @@
   - `pnpm test`
   - 用户已明确验证通过
 
+### 2.19 对应 ui-plan.md 第 5 步（状态与组件边界整理）
+- 已完成页面状态与编排边界下沉：
+  - `src/renderer/features/settings/settings_feature.tsx`
+    - 持有 `設定` 页的表单状态、加载/保存/删除状态、表单校验与设置 IPC。
+  - `src/renderer/features/word_add/word_add_feature.tsx`
+    - 持有 `単語追加` 页的草稿状态、自动保存、副作用编排、生成/保存 IPC。
+  - `src/renderer/features/library/library_feature.tsx`
+    - 持有 `単語帳` 页的查询、列表、编辑态、删除确认态与 CRUD IPC。
+  - `src/renderer/features/review/review_feature.tsx`
+    - 持有 `復習` 页的待复习队列、评分中状态与评分 IPC。
+  - `src/renderer/features/activity/activity_feature.tsx`
+    - 持有 `活動` 页的 heat map 加载状态与活动统计 IPC。
+- 已进一步收缩顶层 `App` 职责：
+  - `src/renderer/app.tsx`
+    - 当前仅保留应用壳、顶层导航、页面元信息、启动通知与页面切换。
+    - 不再持有五个业务页面的表单字段、校验规则或具体 IPC 调用。
+- 当前结果与第 5 步验收标准对齐：
+  - `App` 已只保留应用壳、页面切换与少量共享状态。
+  - 五个业务页面均具备独立维护能力，且 `feature -> page` 分层清晰。
+- 备注：
+  - 本轮主要是文档与状态认知同步，没有新增一轮自动化验证命令。
+
 ## 3. 下一步入口
 - 若继续产品主线交付，入口仍是 `plan.md` 的 `步骤 15（打包、回归与发布验收）`。
-- 若继续 UI 重写专项，入口是 `ui-plan.md` 的第 `5` 步：状态与组件边界整理。
-- 当前 `App` 仍持有大部分页面状态、表单校验与 IPC 编排；后续应优先整理边界，而不是再回到页面结构迁移。
+- 若继续 UI 重写专项，入口是 `ui-plan.md` 的第 `6` 步：旧样式清理与一致性收尾。
+- 当前 `App` 已基本收敛为应用壳；后续应优先清理 `src/renderer/style.css` 中仍服务 `単語帳 / 復習 / 活動` 的旧类名与兼容样式，而不是回退 feature 边界。
 - 结果：通过
 
 ### 3.2 步骤 9 验证（已通过用户验证）
@@ -491,11 +513,18 @@
 - 用户启动 App 后，默认首先进入 `活動` 页面；`単語追加` 仍是完整可用的录入入口，但不再是默认落地页。
 - 启动时若检测到词库恢复或迁移，页面顶部会显示全局日语通知。
 - 当前 `test:e2e` 会先执行 `pnpm build`，避免 E2E 误跑旧产物。
+- 当前页面状态、表单校验与 IPC 编排已下沉到各自 `src/renderer/features/*/*_feature.tsx`；`src/renderer/app.tsx` 仅承担应用壳职责。
+- 当前 `src/renderer/style.css` 仍保留一批页面级旧类名，主要集中在 `library_*`、`review_*` 与 `activity_*`，因此 UI 重写专项尚未收尾。
 
 ## 5. 下一步入口
 - 下一执行目标：`plan.md` 的 `步骤 15（打包、回归与发布验收）`。
 - 若后续继续调整首页信息架构，必须同步更新：
   - `src/renderer/app.tsx`
+  - `src/renderer/features/activity/activity_feature.tsx`
   - `e2e/word_add.spec.ts`
   - `memory-bank/design-doc.md`
   - `memory-bank/architecture.md`
+- 若后续继续 UI 重写专项，首要目标是 `ui-plan.md` 第 `6` 步：
+  - 逐步移除 `src/renderer/style.css` 中被 Tailwind utilities 与 `shadcn/ui` 组件替代的旧类名
+  - 保留全局 token、reset 与 heat map 等少量难以自然 utility 化的特例样式
+  - 清理过程中同步回归 `単語帳`、`復習`、`活動` 三页的布局与 E2E 断言

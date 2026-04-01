@@ -1,12 +1,12 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 14；其后 `活動` heat map 已补充到最新交付状态并通过当前用户验证，最近一轮迭代新增了“`活動` 作为默认主界面”的入口调整。此后又新增了 `ui-plan.md`，并完成第 1 步与第 2 步：渲染层 `Tailwind CSS v4 + shadcn/ui` 基础设施接入，以及应用壳与通用组件落地。最新状态是 `ui-plan.md` 第 `3` 步与第 `4` 步已完成，五个主页面均已迁移到独立 feature 组件。
-- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页默认主界面可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入 + UI 迁移前置基础设施已就绪 + 应用壳与共享 UI 组件已就绪 + 五个主页面已完成 feature 化迁移 + 页面级重构细则已完成”阶段。
+- 当前已完成实施计划步骤 14；其后 `活動` heat map 已补充到最新交付状态并通过当前用户验证，最近一轮迭代新增了“`活動` 作为默认主界面”的入口调整。此后又新增了 `ui-plan.md`，并完成第 1 步到第 5 步：渲染层 `Tailwind CSS v4 + shadcn/ui` 基础设施接入、应用壳与通用组件落地、五个主页面迁移到独立 feature 组件、页面级重构细则落地，以及页面状态与 IPC 编排向各自 `*_feature.tsx` 下沉。
+- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页默认主界面可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入 + UI 基础设施已就绪 + 应用壳与共享 UI 组件已就绪 + 五个主页面已完成 feature 化迁移 + 页面级重构细则已完成 + 页面状态与 IPC 编排边界已完成整理”阶段。
 - 已具备主进程、预加载、渲染层、共享契约、单测与 E2E 的最小闭环。
 - 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路、`review_logs` 基础审计链路、启动恢复提示链路、设置页配置链路。
 - 若走产品主线，后续开发入口是 `plan.md` 的 `步骤 15（打包、回归与发布验收）`。
-- 若走 UI 重写专项，后续开发入口是 `ui-plan.md` 的第 `5` 步：状态与组件边界整理。
+- 若走 UI 重写专项，后续开发入口是 `ui-plan.md` 的第 `6` 步：旧样式清理与一致性收尾。
 
 ## 2. 顶层文件结构与职责
 - `AGENTS.md`
@@ -179,25 +179,17 @@
     - 顶部标签页：`活動`、`単語帳`、`復習`、`単語追加`、`設定`
     - App 启动后默认进入 `活動` 主界面
     - 全局通知统一改为 `StatusMessage`
-    - 页面内加载态、空态、成功态、错误态已开始复用共享组件
-    - `単語追加` 输入/生成/编辑/保存流程
-    - 草稿机制：`800ms` 防抖自动保存、切页强制保存、`beforeunload` 强制保存、保存成功后清理
-    - `単語帳` 列表、搜索、行内编辑、删除确认
-    - `復習` 到期卡片、评分按钮 `0-5`、剩余/今日完成统计
-    - `活動`：最近 `40` 周 heat map、总活动/新增/复习/活跃天数/连续天数摘要、固定 `1-5` 级记忆等级构成
-    - `活動`：仅展示静态热力图与摘要，不显示 hover 详情弹窗或原生 tooltip
+    - 页面内加载态、空态、成功态、错误态统一复用共享组件
     - 五个主页面视图均已委托给各自 feature 组件
-    - 当前仍保留各页面状态、表单校验、按钮禁用条件与 IPC 调用接线
-    - `単語帳` 删除流程已改为应用内确认弹窗，而不是原生 `window.confirm`
-    - 生成/保存/编辑/删除状态与错误提示（日语）
-    - 启动恢复/迁移时的顶部全局通知
+    - 当前只保留页面切换、页面元信息、启动通知与少量壳层状态
+    - 不再持有五个业务页面的表单字段、页面级校验或具体 IPC 调用
 - `style.css`
   - 当前渲染层全局样式入口。
   - 已接入 `Tailwind CSS v4` 与 `tw-animate-css`。
   - 已定义 `@theme inline` 设计 token、CSS variables、颜色语义与基础 layer。
   - 第 2 步后已移除旧的应用壳、导航、按钮与通知样式。
-  - 仍保留现有页面样式（字段布局、列表、复习卡、活动 heat map 等），因为 UI 重写尚未进入页面级迁移阶段。
-  - `設定` 页已不再依赖专属旧类名；当前旧样式主要服务 `単語追加 / 単語帳 / 復習 / 活動`。
+  - 当前仍保留现有页面样式（字段布局、列表、复习卡、活动 heat map 等）作为兼容层；UI 重写尚未完成第 6 步的旧样式清理。
+  - `設定` 页已基本不再依赖专属旧类名；当前旧样式主要服务 `単語帳 / 復習 / 活動`，以及少量通用表单布局类。
   - `活動` 页 heat map 采用固定 `14px` 方格、固定列间距/行间距，通过横向增加周数保持与主界面接近的整体宽度。
   - 标签高亮、活动卡片、热力图格子与滚动容器样式也集中定义在这里。
 - `components/layout/app_shell.tsx`
@@ -251,22 +243,42 @@
     - `save_disabled / delete_disabled`
     - `on_field_change / on_save / on_delete_api_key`
   - 当前使用 `Card` 拆成“生成既定值”和“API キー管理”两个区域，并保留原有可访问标签与文案。
+- `features/settings/settings_feature.tsx`
+  - `設定` 页的容器组件。
+  - 持有设置表单状态、加载/保存/删除状态、本地整数校验与设置相关 IPC 编排。
+  - 负责把 `SettingsGetResult` 映射到页面表单结构，并将业务结果转换为日语状态提示。
 - `features/word_add/word_add_page.tsx`
   - `単語追加` 页的页面级 feature 组件。
   - 负责输入区、生成结果区、操作按钮区与状态提示的布局。
   - 保留草稿自动保存、生成、保存等行为所需的 props 接口，但自身不直接发起 IPC。
+- `features/word_add/word_add_feature.tsx`
+  - `単語追加` 页的容器组件。
+  - 持有草稿字段、生成/保存状态、草稿恢复状态与成功/错误提示。
+  - 负责 `800ms` 防抖自动保存、卸载前保存、`beforeunload` 保存、AI 生成 IPC 与保存后清理草稿。
 - `features/library/library_page.tsx`
   - `単語帳` 页的页面级 feature 组件。
   - 负责搜索栏、统计摘要、词条列表、行内编辑表单与删除确认弹窗。
   - 删除确认通过 `ConfirmDialog` 实现，避免依赖原生确认框。
+- `features/library/library_feature.tsx`
+  - `単語帳` 页的容器组件。
+  - 持有查询词、列表数据、编辑态、删除确认态、更新中状态与列表刷新逻辑。
+  - 负责 `library:list`、`library:update`、`library:delete` 的 IPC 编排与编辑/删除状态收口。
 - `features/review/review_page.tsx`
   - `復習` 页的页面级 feature 组件。
   - 负责摘要卡、当前复习卡、评分按钮组、空态与状态提示。
   - `review_due_stat / review_completed_stat` 等稳定类名同时服务当前 E2E 断言。
+- `features/review/review_feature.tsx`
+  - `復習` 页的容器组件。
+  - 持有待复习队列、今日完成统计、评分中状态与复习结果提示。
+  - 负责初始加载复习队列、发送评分 IPC，并在评分成功后刷新队列。
 - `features/activity/activity_page.tsx`
   - `活動` 页的页面级 feature 组件。
   - 负责摘要卡、记忆等级构成、heat map 外围布局与空态/错误态。
   - heat map 本体继续使用自定义渲染，不依赖图表库。
+- `features/activity/activity_feature.tsx`
+  - `活動` 页的容器组件。
+  - 持有 heat map 数据、加载态与错误态。
+  - 负责初次渲染后的 `activity:heatmap` IPC 调用与结果注入。
 - `lib/utils.ts`
   - 渲染层共享工具。
   - 当前仅提供 `cn()`，用于组合 `clsx` 与 `tailwind-merge`，供后续 `shadcn/ui` 组件使用。
@@ -283,13 +295,14 @@
   - `AppShell`、主导航、标题区、共享状态组件落地
   - `src/renderer/features/*` 五个页面级 feature 组件全部落地
   - 页面级重构细则已完成，并通过当前用户验证
+  - 页面状态、表单校验与 IPC 编排已下沉到各自 `*_feature.tsx`
+  - `src/renderer/app.tsx` 已收缩为应用壳与页面切换入口
 - 尚未完成：
-  - `App` 内页面状态与编排边界的进一步下沉整理
   - 旧样式清理与一致性收尾
 - 因此当前 UI 实际运行方式仍是：
   - 顶层壳层与共享控件已切到 `shadcn/ui` 风格
-  - 五个主页面的结构渲染已经拆到各自 feature 组件
-  - 页面业务状态、校验和 IPC 编排仍主要集中在 `src/renderer/app.tsx`
+  - 五个主页面的结构渲染与页面业务状态都已拆到各自 feature 组件
+  - `App` 只负责页面壳层、导航与启动通知
   - 页面细节视觉与活动 heat map 特例样式仍有较大一部分依赖 `src/renderer/style.css`
   - 因此不应误判为“UI 重写已经全部收尾”
 
@@ -355,20 +368,20 @@
    - 渲染层启动时读取该状态，并在页面顶部显示通知。
 5. 主界面入口流程：
    - `src/renderer/app.tsx` 初始 `active_page` 固定为 `activity`。
-   - `活動` 页在初次渲染后立即请求 `activity:heatmap`。
+   - `src/renderer/features/activity/activity_feature.tsx` 在初次渲染后立即请求 `activity:heatmap`。
    - 用户首次进入应用时优先看到活动摘要、heat map 与记忆等级构成，而不是 `単語追加` 表单。
 6. 生成流程：
-  - 若未配置 API Key，返回 `APP_API_KEY_MISSING`。
-  - 若 API Key 无效、网络失败、超时、429、解析失败，则返回日语错误提示，并保留当前输入。
-  - 若配置有效，调用 Gemini 生成并回填四字段。
+   - 若未配置 API Key，返回 `APP_API_KEY_MISSING`。
+   - 若 API Key 无效、网络失败、超时、429、解析失败，则返回日语错误提示，并保留当前输入。
+   - 若配置有效，`src/renderer/features/word_add/word_add_feature.tsx` 调用 Gemini 生成并回填四字段。
 7. 保存流程：
-  - 执行字段校验与日语校验。
-  - 按 `word(trim + NFKC)` 判重，命中则覆盖，否则新增。
-  - 成功后清理草稿文件。
+   - 执行字段校验与日语校验。
+   - 按 `word(trim + NFKC)` 判重，命中则覆盖，否则新增。
+   - 成功后由 `src/renderer/features/word_add/word_add_feature.tsx` 清理草稿文件。
 8. 词库管理流程：
-  - `library:list`：返回按 `updated_at` 倒序的词条列表，并按规范执行搜索标准化匹配。
-  - `library:update`：更新词条字段并保留 `review_state`，发生冲突返回可定位错误。
-  - `library:delete`：按 `word_id` 删除词条并更新 `updated_at`。
+   - `library:list`：返回按 `updated_at` 倒序的词条列表，并按规范执行搜索标准化匹配。
+   - `library:update`：更新词条字段并保留 `review_state`，发生冲突返回可定位错误。
+   - `library:delete`：按 `word_id` 删除词条并更新 `updated_at`，渲染层删除确认由 `LibraryFeature + ConfirmDialog` 承接。
 9. 设置流程：
   - `settings:get`：返回当前 `provider / model / timeout / retries` 与 `has_api_key`。
   - `settings:save`：保存非敏感设置；若提交了新的 API Key，则写入密钥存储且不回显。
@@ -384,20 +397,21 @@
   - 当前渲染不显示 hover 详情弹窗或原生 tooltip，以避免界面闪烁。
 
 ## 6. 当前交接重点
-- 当前已通过用户验证的最新一步是 `ui-plan.md` 第 `3` 步中的首个页面迁移：`設定`；若继续走 UI 重写，应从下一项 `単語追加` 开始。
-- 若当前目标是 UI 重写，不要直接大规模改 `src/renderer/app.tsx` 的业务逻辑；应沿着 `ui-plan.md` 延续当前做法，保持状态与 IPC 在 `App`，优先把页面视图逐步下沉到 `features/*`。
-- 当前 `Tailwind CSS v4 + shadcn/ui` 已完成基础设施接入和应用壳收口，但后续 AI 开发者不应把它误解为“页面迁移已完成”。
+- 当前已通过用户确认的最新 UI 状态是：`ui-plan.md` 第 `5` 步已经与代码现状对齐；若继续走 UI 重写，应从第 `6` 步的旧样式清理开始。
+- 若当前目标是 UI 重写，不要把页面状态、表单校验和 IPC 编排重新塞回 `src/renderer/app.tsx`；当前这些职责已经正式下沉到各自 `*_feature.tsx`。
+- 当前 `Tailwind CSS v4 + shadcn/ui` 已完成基础设施接入、应用壳收口、页面 feature 化以及页面状态边界整理，但后续 AI 开发者不应把它误解为“UI 重写已经全部完成”。
 - 当前 `src/renderer/components/ui`、`src/renderer/components/layout`、`src/renderer/components/shared` 已是后续 UI 重写的正式落点，新增通用控件应优先放入这些目录。
-- 当前 `src/renderer/features/settings/settings_page.tsx` 已是页面级 feature 的首个落点；后续迁移 `単語追加 / 単語帳 / 復習 / 活動` 时，应沿用相同的“先抽视图，暂不改 IPC 与状态语义”的策略。
+- 当前 `src/renderer/features/*` 已形成统一的 `feature + page` 分层；后续新增页面逻辑应优先写入 `*_feature.tsx`，纯展示结构写入 `*_page.tsx`。
 - 若后续修改 `単語帳`、IPC 契约、词库存储或搜索规则，必须同步更新对应单测、E2E 与 `memory-bank` 文档。
 - 当前 `単語帳` 已不是占位页，任何后续 AI 开发者都应将其视为已稳定实现的基础能力。
 - 当前 `復習` 页面已在不破坏既有评分与队列行为的前提下补齐 `review_logs` 基础记录。
 - 当前第 13 步新增的全局启动提示与日语错误提示不应在后续步骤中被回退。
 - 当前第 14 步新增的 `設定` 页面、设置 IPC 与 API Key 不回显规则不应在后续步骤中被回退；步骤 15 主要应聚焦打包与最终回归。
-- `設定` 页现在已经是独立视图组件；后续不要再把整页 JSX 回填进 `App`。
+- `設定` 页现在已经是 `SettingsFeature + SettingsPage` 双层结构；后续不要再把整页 JSX 或设置状态回填进 `App`。
 - 当前 `活動` 页面已确定采用“固定格子尺寸 + `40` 周跨度 + 无 hover 详情窗 + 固定 `1-5` 级记忆等级卡片”的实现方向，后续不应回退到原始 `repetition` 裸展示或会闪烁的浮层方案。
 - 当前首页信息架构也已确定为“先看 `活動`，再进入 `単語追加` / `復習` / `単語帳` 做操作”，后续若要调整必须同步修改 E2E 的初始页面假设。
 - 当前主导航采用 `Tabs` 语义；若后续维护 Playwright，用例选择器应优先匹配 `role=tab`，不要再默认导航项是 `button`。
+- 当前 `src/renderer/style.css` 仍含 `library_*`、`review_*`、`activity_*` 等页面级旧类名；第 `6` 步应以“删兼容层而不改业务语义”为原则推进。
 
 ## 7. 当前质量门禁流程
 1. 代码质量：`pnpm lint`、`pnpm format:check`、`pnpm typecheck`。
