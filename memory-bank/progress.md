@@ -2,8 +2,8 @@
 
 ## 1. 当前状态
 - 记录日期：`2026-04-01`
-- 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成，且其后活动 heat map 已完成用户验证通过的补充迭代；最新一轮迭代已将 `活動` 调整为默认主界面。此后已新增 `ui-plan.md`，并完成其中第 `1` 步到第 `5` 步：已完成 `Tailwind CSS + shadcn/ui` 基础设施接入、应用壳与通用组件落地、五个主页面的 feature 化迁移、页面级重构细则，以及页面状态与 IPC 编排向各自 `*_feature.tsx` 下沉。
-- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页作为默认主界面 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入 + 渲染层已完成 Tailwind/shadcn 基础设施接入 + 应用壳与共享 UI 组件已完成 + 五个主页面已完成 feature 化迁移 + 页面级重构细则已落地 + 页面状态与 IPC 编排已完成 feature 边界整理”阶段。
+- 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成，且其后活动 heat map 已完成用户验证通过的补充迭代；最新一轮迭代已将 `活動` 调整为默认主界面。此后新增 `ui-plan.md`，并已完成其中第 `1` 步到第 `6` 步：`Tailwind CSS + shadcn/ui` 基础设施接入、应用壳与通用组件落地、五个主页面的 feature 化迁移、页面级重构细则、页面状态与 IPC 编排向各自 `*_feature.tsx` 下沉，以及旧样式清理与一致性收尾。
+- 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页作为默认主界面 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入 + 渲染层已完成 Tailwind/shadcn 基础设施接入 + 应用壳与共享 UI 组件已完成 + 五个主页面已完成 feature 化迁移 + 页面级重构细则已落地 + 页面状态与 IPC 编排已完成 feature 边界整理 + 旧 CSS 已清理到仅剩全局样式层”阶段。
 
 ## 2. 已完成事项
 ### 2.1 对应 plan.md 步骤 1（环境与版本基线冻结）
@@ -390,10 +390,41 @@
 - 备注：
   - 本轮主要是文档与状态认知同步，没有新增一轮自动化验证命令。
 
+### 2.20 对应 ui-plan.md 第 6 步（旧样式清理与一致性收尾）
+- 已完成旧样式清理：
+  - `src/renderer/style.css`
+    - 从旧的页面级样式兼容层收缩到 `116` 行。
+    - 当前仅保留 `Tailwind CSS v4` 入口、主题 token、root variables、base layer 与全局 reset。
+    - 已移除原先承载 `library_* / review_* / activity_* / field / button_row` 的旧页面级类名样式。
+- 已完成页面级 utility 化：
+  - `src/renderer/features/library/library_page.tsx`
+    - `単語帳` 页的列表、词条卡片、说明块与摘要区已改为 utility class 驱动。
+    - 保留 `library_item` 作为 E2E 定位标记，但不再由 CSS 负责视觉样式。
+  - `src/renderer/features/review/review_page.tsx`
+    - `復習` 页的统计卡、复习卡、详情块和评分按钮区已改为 utility class 驱动。
+    - 保留 `review_due_stat / review_completed_stat / review_word` 作为 E2E 定位标记。
+  - `src/renderer/features/activity/activity_page.tsx`
+    - `活動` 页的摘要卡、记忆等级卡片和 heat map 外围布局已改为 utility class 驱动。
+    - heat map 强度颜色与格子尺寸改为组件内显式 class 组合，不再依赖 `style.css` 页面类名。
+    - 保留 `activity_summary_card / activity_memory_level_card` 作为 E2E 定位标记。
+  - `src/renderer/features/settings/settings_page.tsx`
+    - 补齐段落默认 margin 清理，避免依赖浏览器默认样式。
+  - `src/renderer/features/word_add/word_add_page.tsx`
+    - 补齐操作区段落默认 margin 清理，统一页面间距语义。
+- 第 6 步验证结果：
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test`
+  - `pnpm test:e2e`
+  - 以上均已通过
+- 备注：
+  - 当前环境 Node 版本为 `v25.2.1`，与仓库 `22.x` 基线不一致，因此命令输出包含 engine warning；未影响验证通过。
+  - 这一步完成后，`ui-plan.md` 第 `1-6` 步已全部完成。
+
 ## 3. 下一步入口
 - 若继续产品主线交付，入口仍是 `plan.md` 的 `步骤 15（打包、回归与发布验收）`。
-- 若继续 UI 重写专项，入口是 `ui-plan.md` 的第 `6` 步：旧样式清理与一致性收尾。
-- 当前 `App` 已基本收敛为应用壳；后续应优先清理 `src/renderer/style.css` 中仍服务 `単語帳 / 復習 / 活動` 的旧类名与兼容样式，而不是回退 feature 边界。
+- `ui-plan.md` 的第 `1-6` 步已全部完成；若后续继续做 UI 工作，应视为常规增量优化，而不是继续执行未完成的 UI 专项阶段。
+- 当前 `App` 已基本收敛为应用壳，`style.css` 也已收缩到全局样式层；后续不要重新引入页面级旧类名驱动的新样式分支。
 - 结果：通过
 
 ### 3.2 步骤 9 验证（已通过用户验证）
@@ -514,7 +545,8 @@
 - 启动时若检测到词库恢复或迁移，页面顶部会显示全局日语通知。
 - 当前 `test:e2e` 会先执行 `pnpm build`，避免 E2E 误跑旧产物。
 - 当前页面状态、表单校验与 IPC 编排已下沉到各自 `src/renderer/features/*/*_feature.tsx`；`src/renderer/app.tsx` 仅承担应用壳职责。
-- 当前 `src/renderer/style.css` 仍保留一批页面级旧类名，主要集中在 `library_*`、`review_*` 与 `activity_*`，因此 UI 重写专项尚未收尾。
+- 当前 `src/renderer/style.css` 已收缩为全局样式层，不再承载页面级视觉规则。
+- 当前少量 `library_item`、`review_word`、`activity_summary_card`、`activity_memory_level_card` 等类名仅用于 E2E 定位，不应再被当作样式来源重新扩展。
 
 ## 5. 下一步入口
 - 下一执行目标：`plan.md` 的 `步骤 15（打包、回归与发布验收）`。
@@ -524,7 +556,7 @@
   - `e2e/word_add.spec.ts`
   - `memory-bank/design-doc.md`
   - `memory-bank/architecture.md`
-- 若后续继续 UI 重写专项，首要目标是 `ui-plan.md` 第 `6` 步：
-  - 逐步移除 `src/renderer/style.css` 中被 Tailwind utilities 与 `shadcn/ui` 组件替代的旧类名
-  - 保留全局 token、reset 与 heat map 等少量难以自然 utility 化的特例样式
-  - 清理过程中同步回归 `単語帳`、`復習`、`活動` 三页的布局与 E2E 断言
+- 若后续继续做 UI 调整，默认约束：
+  - 优先在页面组件内使用 utility class 与 `shadcn/ui` primitives 组合
+  - `src/renderer/style.css` 只保留全局 token、base layer 和 reset
+  - 若新增测试定位类，避免同时让它承担视觉样式职责

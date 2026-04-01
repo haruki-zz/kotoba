@@ -1,12 +1,12 @@
 ﻿# Kotoba 仓库结构与职责说明（当前快照）
 
 ## 1. 架构阶段说明
-- 当前已完成实施计划步骤 14；其后 `活動` heat map 已补充到最新交付状态并通过当前用户验证，最近一轮迭代新增了“`活動` 作为默认主界面”的入口调整。此后又新增了 `ui-plan.md`，并完成第 1 步到第 5 步：渲染层 `Tailwind CSS v4 + shadcn/ui` 基础设施接入、应用壳与通用组件落地、五个主页面迁移到独立 feature 组件、页面级重构细则落地，以及页面状态与 IPC 编排向各自 `*_feature.tsx` 下沉。
-- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页默认主界面可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入 + UI 基础设施已就绪 + 应用壳与共享 UI 组件已就绪 + 五个主页面已完成 feature 化迁移 + 页面级重构细则已完成 + 页面状态与 IPC 编排边界已完成整理”阶段。
+- 当前已完成实施计划步骤 14；其后 `活動` heat map 已补充到最新交付状态并通过当前用户验证，最近一轮迭代新增了“`活動` 作为默认主界面”的入口调整。此后又新增了 `ui-plan.md`，并完成第 1 步到第 6 步：渲染层 `Tailwind CSS v4 + shadcn/ui` 基础设施接入、应用壳与通用组件落地、五个主页面迁移到独立 feature 组件、页面级重构细则落地、页面状态与 IPC 编排向各自 `*_feature.tsx` 下沉，以及旧样式清理与一致性收尾。
+- 仓库处于“新增单词闭环可用 + 草稿机制可用 + 词库管理 CRUD 可用 + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页默认主界面可用 + 全日语错误提示可用 + 启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入 + UI 基础设施已就绪 + 应用壳与共享 UI 组件已就绪 + 五个主页面已完成 feature 化迁移 + 页面级重构细则已完成 + 页面状态与 IPC 编排边界已完成整理 + 旧 CSS 已清理为全局样式层”阶段。
 - 已具备主进程、预加载、渲染层、共享契约、单测与 E2E 的最小闭环。
 - 已具备安全基线、JSON 原子写入、备份恢复、迁移、设置与密钥管理、AI Provider、单词新增链路、词库管理链路、复习链路、`review_logs` 基础审计链路、启动恢复提示链路、设置页配置链路。
 - 若走产品主线，后续开发入口是 `plan.md` 的 `步骤 15（打包、回归与发布验收）`。
-- 若走 UI 重写专项，后续开发入口是 `ui-plan.md` 的第 `6` 步：旧样式清理与一致性收尾。
+- `ui-plan.md` 的第 `1-6` 步已全部完成；若后续继续做 UI 工作，应按常规增量开发处理，而不是再按未完成专项阶段理解。
 
 ## 2. 顶层文件结构与职责
 - `AGENTS.md`
@@ -187,11 +187,9 @@
   - 当前渲染层全局样式入口。
   - 已接入 `Tailwind CSS v4` 与 `tw-animate-css`。
   - 已定义 `@theme inline` 设计 token、CSS variables、颜色语义与基础 layer。
-  - 第 2 步后已移除旧的应用壳、导航、按钮与通知样式。
-  - 当前仍保留现有页面样式（字段布局、列表、复习卡、活动 heat map 等）作为兼容层；UI 重写尚未完成第 6 步的旧样式清理。
-  - `設定` 页已基本不再依赖专属旧类名；当前旧样式主要服务 `単語帳 / 復習 / 活動`，以及少量通用表单布局类。
-  - `活動` 页 heat map 采用固定 `14px` 方格、固定列间距/行间距，通过横向增加周数保持与主界面接近的整体宽度。
-  - 标签高亮、活动卡片、热力图格子与滚动容器样式也集中定义在这里。
+  - 当前文件已收缩到 `116` 行。
+  - 仅保留全局 token、root variables、base layer 与 reset，不再承载页面级视觉规则。
+  - 后续若继续扩展样式，应优先使用 utility class；不要把页面局部布局重新回填到这里。
 - `components/layout/app_shell.tsx`
   - 应用壳组件。
   - 负责整体背景、页面最大宽度、头部区域、导航区域与内容区域的外层布局。
@@ -259,6 +257,7 @@
   - `単語帳` 页的页面级 feature 组件。
   - 负责搜索栏、统计摘要、词条列表、行内编辑表单与删除确认弹窗。
   - 删除确认通过 `ConfirmDialog` 实现，避免依赖原生确认框。
+  - 当前页面视觉已主要由 utility class 表达；`library_item` 仅作为 E2E 定位标记保留。
 - `features/library/library_feature.tsx`
   - `単語帳` 页的容器组件。
   - 持有查询词、列表数据、编辑态、删除确认态、更新中状态与列表刷新逻辑。
@@ -266,7 +265,8 @@
 - `features/review/review_page.tsx`
   - `復習` 页的页面级 feature 组件。
   - 负责摘要卡、当前复习卡、评分按钮组、空态与状态提示。
-  - `review_due_stat / review_completed_stat` 等稳定类名同时服务当前 E2E 断言。
+  - `review_due_stat / review_completed_stat / review_word` 等稳定类名仅服务当前 E2E 断言。
+  - 视觉层已主要改为 utility class + `shadcn/ui` primitives 组合。
 - `features/review/review_feature.tsx`
   - `復習` 页的容器组件。
   - 持有待复习队列、今日完成统计、评分中状态与复习结果提示。
@@ -275,6 +275,8 @@
   - `活動` 页的页面级 feature 组件。
   - 负责摘要卡、记忆等级构成、heat map 外围布局与空态/错误态。
   - heat map 本体继续使用自定义渲染，不依赖图表库。
+  - heat map 格子颜色、尺寸与布局现在由组件内显式 class 组合控制，不再依赖 `style.css` 页面级类名。
+  - `activity_summary_card / activity_memory_level_card` 仅作为 E2E 定位标记保留。
 - `features/activity/activity_feature.tsx`
   - `活動` 页的容器组件。
   - 持有 heat map 数据、加载态与错误态。
@@ -297,14 +299,15 @@
   - 页面级重构细则已完成，并通过当前用户验证
   - 页面状态、表单校验与 IPC 编排已下沉到各自 `*_feature.tsx`
   - `src/renderer/app.tsx` 已收缩为应用壳与页面切换入口
-- 尚未完成：
-  - 旧样式清理与一致性收尾
+  - 旧样式清理与一致性收尾已完成
+  - `src/renderer/style.css` 已缩减为全局样式层
 - 因此当前 UI 实际运行方式仍是：
   - 顶层壳层与共享控件已切到 `shadcn/ui` 风格
   - 五个主页面的结构渲染与页面业务状态都已拆到各自 feature 组件
   - `App` 只负责页面壳层、导航与启动通知
-  - 页面细节视觉与活动 heat map 特例样式仍有较大一部分依赖 `src/renderer/style.css`
-  - 因此不应误判为“UI 重写已经全部收尾”
+  - 页面细节视觉主要在各自页面组件内通过 utility class 表达
+  - 少量保留类名仅服务 E2E 断言，不再承担视觉样式职责
+  - 因此当前可以把 `ui-plan.md` 视为已完成
 
 ## 4. 测试文件结构与职责
 ### 4.1 单元测试（Vitest）
@@ -397,9 +400,9 @@
   - 当前渲染不显示 hover 详情弹窗或原生 tooltip，以避免界面闪烁。
 
 ## 6. 当前交接重点
-- 当前已通过用户确认的最新 UI 状态是：`ui-plan.md` 第 `5` 步已经与代码现状对齐；若继续走 UI 重写，应从第 `6` 步的旧样式清理开始。
+- 当前已通过用户确认的最新 UI 状态是：`ui-plan.md` 第 `6` 步已经完成并通过验证；`ui-plan.md` 的第 `1-6` 步均已完成。
 - 若当前目标是 UI 重写，不要把页面状态、表单校验和 IPC 编排重新塞回 `src/renderer/app.tsx`；当前这些职责已经正式下沉到各自 `*_feature.tsx`。
-- 当前 `Tailwind CSS v4 + shadcn/ui` 已完成基础设施接入、应用壳收口、页面 feature 化以及页面状态边界整理，但后续 AI 开发者不应把它误解为“UI 重写已经全部完成”。
+- 当前 `Tailwind CSS v4 + shadcn/ui` 已完成基础设施接入、应用壳收口、页面 feature 化、页面状态边界整理以及旧样式清理；后续工作不应再按“UI 重写专项未完成”来判断。
 - 当前 `src/renderer/components/ui`、`src/renderer/components/layout`、`src/renderer/components/shared` 已是后续 UI 重写的正式落点，新增通用控件应优先放入这些目录。
 - 当前 `src/renderer/features/*` 已形成统一的 `feature + page` 分层；后续新增页面逻辑应优先写入 `*_feature.tsx`，纯展示结构写入 `*_page.tsx`。
 - 若后续修改 `単語帳`、IPC 契约、词库存储或搜索规则，必须同步更新对应单测、E2E 与 `memory-bank` 文档。
@@ -411,7 +414,7 @@
 - 当前 `活動` 页面已确定采用“固定格子尺寸 + `40` 周跨度 + 无 hover 详情窗 + 固定 `1-5` 级记忆等级卡片”的实现方向，后续不应回退到原始 `repetition` 裸展示或会闪烁的浮层方案。
 - 当前首页信息架构也已确定为“先看 `活動`，再进入 `単語追加` / `復習` / `単語帳` 做操作”，后续若要调整必须同步修改 E2E 的初始页面假设。
 - 当前主导航采用 `Tabs` 语义；若后续维护 Playwright，用例选择器应优先匹配 `role=tab`，不要再默认导航项是 `button`。
-- 当前 `src/renderer/style.css` 仍含 `library_*`、`review_*`、`activity_*` 等页面级旧类名；第 `6` 步应以“删兼容层而不改业务语义”为原则推进。
+- 当前 `src/renderer/style.css` 不再包含页面级旧类名；若后续需要测试定位器，可保留稳定 class，但不要让这些 class 再次承担视觉样式职责。
 
 ## 7. 当前质量门禁流程
 1. 代码质量：`pnpm lint`、`pnpm format:check`、`pnpm typecheck`。
@@ -441,7 +444,7 @@
 - `src/renderer/components/shared/*.tsx`
   - 共享状态与通用展示层。
 - `src/renderer/style.css`
-  - 当前 Tailwind 全局入口与旧样式兼容层。
+  - 当前 Tailwind 全局入口与全局样式层。
 - `src/renderer/lib/utils.ts`
   - `cn()` 工具函数；后续所有 `shadcn/ui` 组件应复用此文件。
 

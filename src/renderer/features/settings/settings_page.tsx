@@ -99,10 +99,12 @@ export const SettingsPage = ({
       </div>
 
       <div className="rounded-xl border border-border/80 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-        <p className="font-medium text-foreground">
+        <p className="m-0 font-medium text-foreground">
           API キーの状態: {has_api_key ? '登録済み' : '未設定'}
         </p>
-        <p className="mt-1">API キー欄を空欄のまま保存すると、現在のキーをそのまま維持します。</p>
+        <p className="m-0 mt-1">
+          API キー欄を空欄のまま保存すると、現在のキーをそのまま維持します。
+        </p>
       </div>
 
       {is_loading ? <LoadingState message="設定を読み込み中..." /> : null}
@@ -163,13 +165,13 @@ export const SettingsPage = ({
           </CardHeader>
           <CardContent className="space-y-4 p-5 pt-0">
             <div className="rounded-lg border border-dashed border-border/80 bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
-              <p>
+              <p className="m-0">
                 現在の状態:{' '}
                 <span className="font-medium text-foreground">
                   {has_api_key ? '登録済み' : '未設定'}
                 </span>
               </p>
-              <p className="mt-1">
+              <p className="m-0 mt-1">
                 {has_api_key
                   ? '新しいキーを入力すると既存のキーを上書きします。'
                   : '生成を使うには API キーの登録が必要です。'}

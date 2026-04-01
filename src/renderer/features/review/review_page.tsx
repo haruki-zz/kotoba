@@ -26,10 +26,10 @@ type ReviewPageProps = {
 }
 
 const review_stat_card = (props: { label: string; value: string; class_name: string }) => (
-  <Card className={`${props.class_name} border-border/70 bg-background/90 shadow-none`}>
+  <Card className={cn(props.class_name, 'border-border/70 bg-background/90 shadow-none')}>
     <CardContent className="space-y-2 p-4 pt-4">
-      <p className="text-xs font-medium tracking-wide text-muted-foreground">{props.label}</p>
-      <p className="text-2xl font-semibold text-foreground">{props.value}</p>
+      <p className="m-0 text-xs font-medium tracking-wide text-muted-foreground">{props.label}</p>
+      <p className="m-0 text-2xl font-semibold text-foreground">{props.value}</p>
     </CardContent>
   </Card>
 )
@@ -75,7 +75,7 @@ export const ReviewPage = ({
     </CardHeader>
 
     <CardContent className="space-y-4 p-5 pt-0 sm:p-6 sm:pt-0">
-      <div className="review_stats grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         {review_stat_card({
           class_name: 'review_due_stat',
           label: '残り件数',
@@ -91,50 +91,56 @@ export const ReviewPage = ({
       {is_loading ? <LoadingState message="復習キューを読み込み中..." /> : null}
 
       {current_review_word ? (
-        <Card className="review_card border-border/70 bg-background/90 shadow-none">
+        <Card className="border-border/70 bg-background/90 shadow-none">
           <CardHeader className="p-5 pb-4">
             <div className="space-y-2">
-              <p className="review_word text-3xl font-semibold tracking-tight text-foreground">
+              <p className="review_word m-0 text-3xl font-semibold tracking-tight text-foreground">
                 {current_review_word.word}
               </p>
-              <p className="review_reading text-sm font-medium text-primary">
+              <p className="m-0 text-sm font-medium text-primary">
                 {current_review_word.reading_kana}
               </p>
             </div>
           </CardHeader>
           <CardContent className="space-y-4 p-5 pt-0">
-            <dl className="review_details grid gap-4">
+            <dl className="grid gap-4">
               <div className="rounded-lg border border-border/80 bg-muted/20 p-4">
-                <dt className="text-xs font-medium tracking-wide text-muted-foreground">意味</dt>
-                <dd className="mt-2 text-sm leading-6 text-foreground">
+                <dt className="m-0 text-xs font-medium tracking-wide text-muted-foreground">
+                  意味
+                </dt>
+                <dd className="m-0 mt-2 text-sm leading-6 text-foreground">
                   {current_review_word.meaning_ja}
                 </dd>
               </div>
               <div className="rounded-lg border border-border/80 bg-muted/20 p-4">
-                <dt className="text-xs font-medium tracking-wide text-muted-foreground">文脈</dt>
-                <dd className="mt-2 text-sm leading-6 text-foreground">
+                <dt className="m-0 text-xs font-medium tracking-wide text-muted-foreground">
+                  文脈
+                </dt>
+                <dd className="m-0 mt-2 text-sm leading-6 text-foreground">
                   {current_review_word.context_scene_ja}
                 </dd>
               </div>
               <div className="rounded-lg border border-border/80 bg-muted/20 p-4">
-                <dt className="text-xs font-medium tracking-wide text-muted-foreground">例文</dt>
-                <dd className="mt-2 text-sm leading-6 text-foreground">
+                <dt className="m-0 text-xs font-medium tracking-wide text-muted-foreground">
+                  例文
+                </dt>
+                <dd className="m-0 mt-2 text-sm leading-6 text-foreground">
                   {current_review_word.example_sentence_ja}
                 </dd>
               </div>
             </dl>
 
             <div className="rounded-xl border border-border/80 bg-muted/20 px-4 py-3">
-              <p className="review_hint text-sm text-muted-foreground">
+              <p className="m-0 text-sm text-muted-foreground">
                 評価を選ぶと次回の復習日時が更新されます。
               </p>
             </div>
 
-            <div className="review_grade_row flex flex-wrap gap-2" aria-label="復習評価">
+            <div className="flex flex-wrap gap-2" aria-label="復習評価">
               {REVIEW_GRADES.map((grade) => (
                 <Button
                   key={grade}
-                  className={cn('review_grade_button min-w-16', review_grade_class_name(grade))}
+                  className={cn('min-w-16', review_grade_class_name(grade))}
                   disabled={grading_word_id === current_review_word.id}
                   onClick={() => {
                     void on_grade(grade)

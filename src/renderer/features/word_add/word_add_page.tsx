@@ -85,8 +85,8 @@ export const WordAddPage = ({
       <Card className="border-border/70 bg-background/80 shadow-none">
         <CardContent className="flex flex-col gap-4 p-5 pt-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-foreground">操作</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="m-0 text-sm font-medium text-foreground">操作</p>
+            <p className="m-0 text-sm text-muted-foreground">
               生成後も内容は編集できます。保存すると対応する草稿は削除されます。
             </p>
           </div>

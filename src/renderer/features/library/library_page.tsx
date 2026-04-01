@@ -77,8 +77,8 @@ const field_block = (props: {
 const library_summary_card = (props: { label: string; value: string }) => (
   <Card className="border-border/70 bg-background/90 shadow-none">
     <CardContent className="space-y-2 p-4 pt-4">
-      <p className="text-xs font-medium tracking-wide text-muted-foreground">{props.label}</p>
-      <p className="text-2xl font-semibold text-foreground">{props.value}</p>
+      <p className="m-0 text-xs font-medium tracking-wide text-muted-foreground">{props.label}</p>
+      <p className="m-0 text-2xl font-semibold text-foreground">{props.value}</p>
     </CardContent>
   </Card>
 )
@@ -161,7 +161,7 @@ export const LibraryPage = ({
           />
         ) : null}
 
-        <ul className="library_list grid gap-4">
+        <ul className="m-0 grid list-none gap-4 p-0">
           {words.map((word) => {
             const is_editing = editing_word_id === word.id
             const is_deleting = deleting_word_id === word.id
@@ -239,12 +239,8 @@ export const LibraryPage = ({
                   <CardContent className="space-y-4 p-5 pt-5">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="space-y-2">
-                        <p className="library_word text-2xl font-semibold text-foreground">
-                          {word.word}
-                        </p>
-                        <p className="library_reading text-sm font-medium text-primary">
-                          {word.reading_kana}
-                        </p>
+                        <p className="m-0 text-2xl font-semibold text-foreground">{word.word}</p>
+                        <p className="m-0 text-sm font-medium text-primary">{word.reading_kana}</p>
                       </div>
                       <div className="flex flex-wrap gap-3">
                         <Button onClick={() => on_start_edit(word)} type="button">
@@ -263,26 +259,26 @@ export const LibraryPage = ({
 
                     <div className="grid gap-4 lg:grid-cols-2">
                       <div className="space-y-2 rounded-lg border border-border/80 bg-muted/20 p-4">
-                        <p className="text-xs font-medium tracking-wide text-muted-foreground">
+                        <p className="m-0 text-xs font-medium tracking-wide text-muted-foreground">
                           意味
                         </p>
-                        <p className="library_meaning text-sm leading-6 text-foreground">
-                          {word.meaning_ja}
-                        </p>
+                        <p className="m-0 text-sm leading-6 text-foreground">{word.meaning_ja}</p>
                       </div>
                       <div className="space-y-2 rounded-lg border border-border/80 bg-muted/20 p-4">
-                        <p className="text-xs font-medium tracking-wide text-muted-foreground">
+                        <p className="m-0 text-xs font-medium tracking-wide text-muted-foreground">
                           文脈
                         </p>
-                        <p className="text-sm leading-6 text-foreground">{word.context_scene_ja}</p>
+                        <p className="m-0 text-sm leading-6 text-foreground">
+                          {word.context_scene_ja}
+                        </p>
                       </div>
                     </div>
 
                     <div className="rounded-lg border border-border/80 bg-muted/20 p-4">
-                      <p className="text-xs font-medium tracking-wide text-muted-foreground">
+                      <p className="m-0 text-xs font-medium tracking-wide text-muted-foreground">
                         例文
                       </p>
-                      <p className="mt-2 text-sm leading-6 text-foreground">
+                      <p className="m-0 mt-2 text-sm leading-6 text-foreground">
                         {word.example_sentence_ja}
                       </p>
                     </div>
