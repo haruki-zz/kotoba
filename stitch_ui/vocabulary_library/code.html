@@ -1,0 +1,575 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'inverse-on-surface': '#9b9d9d',
+              'outline-variant': '#abb4b3',
+              'surface-container-high': '#e3e9e8',
+              'on-tertiary-fixed': '#404e31',
+              'on-background': '#2c3433',
+              'primary-dim': '#3b584d',
+              'tertiary-fixed': '#e9fad2',
+              'on-primary': '#dffff0',
+              background: '#f9f9f8',
+              'primary-container': '#c9eadb',
+              'on-secondary': '#f7f9f6',
+              'error-dim': '#4e0309',
+              'on-error': '#fff7f6',
+              'tertiary-fixed-dim': '#daebc4',
+              'on-error-container': '#752121',
+              'on-tertiary': '#eeffd7',
+              'tertiary-dim': '#49583a',
+              'on-tertiary-container': '#526042',
+              'on-primary-fixed-variant': '#446156',
+              'primary-fixed': '#c9eadb',
+              primary: '#476459',
+              'surface-variant': '#dce4e3',
+              'tertiary-container': '#e9fad2',
+              'on-secondary-container': '#4f5250',
+              error: '#9f403d',
+              'secondary-fixed-dim': '#d2d5d2',
+              'surface-container-highest': '#dce4e3',
+              'secondary-container': '#e1e3e0',
+              outline: '#747c7c',
+              'surface-container': '#eaefee',
+              'on-tertiary-fixed-variant': '#5c6b4c',
+              tertiary: '#556445',
+              'secondary-dim': '#505452',
+              'on-surface': '#2c3433',
+              'secondary-fixed': '#e1e3e0',
+              surface: '#f9f9f8',
+              'surface-dim': '#d2dcdb',
+              'surface-tint': '#476459',
+              'surface-container-lowest': '#ffffff',
+              'on-primary-container': '#3a584d',
+              'surface-bright': '#f9f9f8',
+              'surface-container-low': '#f1f4f3',
+              'inverse-primary': '#d7f8e9',
+              'primary-fixed-dim': '#bbdccd',
+              'on-secondary-fixed-variant': '#595c5a',
+              'on-surface-variant': '#586160',
+              'inverse-surface': '#0c0f0e',
+              'on-secondary-fixed': '#3d403e',
+              'error-container': '#fe8983',
+              'on-primary-fixed': '#28453b',
+              secondary: '#5c605d',
+            },
+            borderRadius: {
+              DEFAULT: '1rem',
+              lg: '2rem',
+              xl: '3rem',
+              full: '9999px',
+            },
+            fontFamily: {
+              headline: ['Manrope'],
+              body: ['Inter'],
+              label: ['Inter'],
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+      }
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(16px);
+      }
+      body {
+        background-color: #f9f9f8;
+        color: #2c3433;
+        font-family: 'Inter', sans-serif;
+      }
+      h1,
+      h2,
+      h3,
+      .headline {
+        font-family: 'Manrope', sans-serif;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen flex">
+    <!-- SideNavBar Anchor -->
+    <aside
+      class="hidden md:flex flex-col h-screen w-64 rounded-r-[3rem] sticky left-0 top-0 bg-[#f1f4f3] dark:bg-zinc-900 p-6 gap-8 font-['Manrope'] font-semibold tracking-wide"
+    >
+      <div class="flex items-center gap-3 px-2">
+        <div
+          class="w-10 h-10 rounded-full bg-[#476459] flex items-center justify-center text-white"
+        >
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1"
+            >spa</span
+          >
+        </div>
+        <div>
+          <h1 class="text-xl font-extrabold text-[#5D7B6F]">Kotoba</h1>
+          <p class="text-[10px] uppercase tracking-widest text-zinc-500">Digital Zen Garden</p>
+        </div>
+      </div>
+      <nav class="flex flex-col gap-2 mt-4">
+        <a
+          class="flex items-center gap-4 px-4 py-3 text-zinc-500 dark:text-zinc-400 hover:text-[#5D7B6F] hover:translate-x-1 transition-transform duration-300"
+          href="#"
+        >
+          <span class="material-symbols-outlined">dashboard</span>
+          <span>Dashboard</span>
+        </a>
+        <a
+          class="flex items-center gap-4 px-4 py-3 bg-white dark:bg-zinc-800 text-[#5D7B6F] dark:text-[#8ba89c] rounded-[1.5rem] shadow-sm"
+          href="#"
+        >
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1"
+            >menu_book</span
+          >
+          <span>Vocabulary</span>
+        </a>
+        <a
+          class="flex items-center gap-4 px-4 py-3 text-zinc-500 dark:text-zinc-400 hover:text-[#5D7B6F] hover:translate-x-1 transition-transform duration-300"
+          href="#"
+        >
+          <span class="material-symbols-outlined">school</span>
+          <span>Study</span>
+        </a>
+        <a
+          class="flex items-center gap-4 px-4 py-3 text-zinc-500 dark:text-zinc-400 hover:text-[#5D7B6F] hover:translate-x-1 transition-transform duration-300"
+          href="#"
+        >
+          <span class="material-symbols-outlined">settings</span>
+          <span>Settings</span>
+        </a>
+      </nav>
+      <div class="mt-auto flex flex-col gap-4">
+        <button
+          class="bg-gradient-to-br from-[#476459] to-[#3b584d] text-white rounded-[1.5rem] py-3 px-4 flex items-center justify-center gap-2 shadow-lg shadow-[#476459]/10 hover:scale-[1.02] transition-all"
+        >
+          <span class="material-symbols-outlined">add</span>
+          <span>Add Word</span>
+        </button>
+        <a
+          class="flex items-center gap-4 px-4 py-3 text-zinc-500 dark:text-zinc-400 hover:text-[#5D7B6F]"
+          href="#"
+        >
+          <span class="material-symbols-outlined">help</span>
+          <span>Help</span>
+        </a>
+      </div>
+    </aside>
+    <main class="flex-1 flex flex-col min-w-0">
+      <!-- TopNavBar Anchor -->
+      <header
+        class="flex justify-between items-center w-full px-8 py-6 max-w-full bg-[#f9f9f8] dark:bg-zinc-950 font-['Manrope'] tracking-[0.02em] font-bold text-on-surface"
+      >
+        <div class="flex items-center gap-8 flex-1">
+          <div class="relative w-full max-w-md">
+            <span
+              class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400"
+              >search</span
+            >
+            <input
+              class="w-full bg-surface-container-low border-none rounded-full py-3 pl-12 pr-6 focus:ring-2 focus:ring-primary/20 transition-all font-body font-normal text-on-surface-variant"
+              placeholder="Search your library..."
+              type="text"
+            />
+          </div>
+        </div>
+        <div class="flex items-center gap-6">
+          <button
+            class="flex items-center gap-2 text-[#5D7B6F] hover:bg-white/50 px-4 py-2 rounded-full transition-all active:scale-95 duration-200"
+          >
+            <span class="material-symbols-outlined">bolt</span>
+            <span>Quick Study</span>
+          </button>
+          <button class="text-zinc-500 hover:text-primary transition-colors">
+            <span class="material-symbols-outlined">notifications</span>
+          </button>
+          <div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container">
+            <img
+              alt="User profile avatar"
+              class="w-full h-full object-cover"
+              data-alt="close-up portrait of a thoughtful man with a neat beard in a minimalist neutral studio setting"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNINwnMk7mLumQ5OwYxDZHCkBD4A5SV97ZI38o7pmz7SHBJKUUQ8YraMzuXW2R1JCONxZe90Ai1nuDxCKwcVVloeG44UJtDMDPpN6UMWozOiEDJtPYT5Ic0hFE7y-C7soXRLYcarveandDXdqgDQ2bBfLOc53dYgL7ax8KNMy6DfVJHSxVb3VfFds8BKI0FP4S7hjpiNwAhXzDnZ8LImneQRXNCgn9FQg02ELjEemTKKmCFexc2eq4PWKKKJCkTefFgcyOjlNj8g"
+            />
+          </div>
+        </div>
+      </header>
+      <!-- Content Canvas -->
+      <section class="px-8 pb-12 flex-1 overflow-y-auto">
+        <div class="max-w-6xl mx-auto">
+          <!-- Page Title & Filters -->
+          <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+            <div>
+              <h2 class="text-4xl font-extrabold text-on-surface tracking-tight mb-2">
+                Vocabulary Library
+              </h2>
+              <p class="text-on-surface-variant font-body">
+                1,248 items in your personal zen garden
+              </p>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="flex bg-surface-container-low p-1 rounded-full">
+                <button
+                  class="px-4 py-2 rounded-full bg-white shadow-sm text-sm font-semibold text-primary"
+                >
+                  All
+                </button>
+                <button
+                  class="px-4 py-2 rounded-full text-sm font-medium text-on-surface-variant hover:text-on-surface"
+                >
+                  Mastered
+                </button>
+                <button
+                  class="px-4 py-2 rounded-full text-sm font-medium text-on-surface-variant hover:text-on-surface"
+                >
+                  Learning
+                </button>
+              </div>
+              <button
+                class="flex items-center gap-2 px-5 py-2.5 bg-surface-container-low rounded-full text-sm font-semibold text-on-surface hover:bg-surface-container-high transition-colors"
+              >
+                <span class="material-symbols-outlined text-lg">sort</span>
+                <span>Level</span>
+              </button>
+            </div>
+          </div>
+          <!-- Vocabulary List -->
+          <div class="space-y-4">
+            <!-- Word Card 1 -->
+            <div
+              class="group relative bg-surface-container-lowest rounded-xl p-6 flex flex-wrap md:flex-nowrap items-center gap-8 transition-all hover:translate-y-[-2px] hover:shadow-[0_40px_60px_-15px_rgba(44,52,51,0.05)] border border-transparent hover:border-primary/5"
+            >
+              <div class="flex-1 min-w-[200px]">
+                <div class="flex items-baseline gap-3 mb-1">
+                  <span class="text-3xl font-headline font-bold text-on-surface">木漏れ日</span>
+                  <span class="text-sm font-body text-on-surface-variant tracking-wider"
+                    >Komorebi</span
+                  >
+                </div>
+                <p class="text-on-surface-variant font-body">Sunlight filtering through trees</p>
+              </div>
+              <div class="flex items-center gap-12">
+                <div class="flex flex-col items-center">
+                  <span class="text-[10px] uppercase tracking-widest text-outline mb-2"
+                    >Mastery</span
+                  >
+                  <div class="flex gap-1">
+                    <div class="w-4 h-2 rounded-full bg-primary"></div>
+                    <div class="w-4 h-2 rounded-full bg-primary"></div>
+                    <div class="w-4 h-2 rounded-full bg-primary"></div>
+                    <div class="w-4 h-2 rounded-full bg-primary"></div>
+                    <div class="w-4 h-2 rounded-full bg-surface-container-highest"></div>
+                  </div>
+                </div>
+                <div class="text-center">
+                  <span class="text-[10px] uppercase tracking-widest text-outline mb-1 block"
+                    >Level</span
+                  >
+                  <span class="text-lg font-headline font-bold text-primary">04</span>
+                </div>
+              </div>
+              <div
+                class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <button
+                  class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-all"
+                >
+                  <span class="material-symbols-outlined text-xl">sync</span>
+                </button>
+                <button
+                  class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high transition-all"
+                >
+                  <span class="material-symbols-outlined text-xl">edit_note</span>
+                </button>
+                <button
+                  class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container/10 hover:text-error transition-all"
+                >
+                  <span class="material-symbols-outlined text-xl">delete_outline</span>
+                </button>
+              </div>
+            </div>
+            <!-- Word Card 2 -->
+            <div
+              class="group relative bg-surface-container-lowest rounded-xl p-6 flex flex-wrap md:flex-nowrap items-center gap-8 transition-all hover:translate-y-[-2px] hover:shadow-[0_40px_60px_-15px_rgba(44,52,51,0.05)] border border-transparent hover:border-primary/5"
+            >
+              <div class="flex-1 min-w-[200px]">
+                <div class="flex items-baseline gap-3 mb-1">
+                  <span class="text-3xl font-headline font-bold text-on-surface">懐かしい</span>
+                  <span class="text-sm font-body text-on-surface-variant tracking-wider"
+                    >Natsukashii</span
+                  >
+                </div>
+                <p class="text-on-surface-variant font-body">
+                  Nostalgic; a small thing that brings back memories
+                </p>
+              </div>
+              <div class="flex items-center gap-12">
+                <div class="flex flex-col items-center">
+                  <span class="text-[10px] uppercase tracking-widest text-outline mb-2"
+                    >Mastery</span
+                  >
+                  <div class="flex gap-1">
+                    <div class="w-4 h-2 rounded-full bg-primary"></div>
+                    <div class="w-4 h-2 rounded-full bg-primary"></div>
+                    <div class="w-4 h-2 rounded-full bg-primary"></div>
+                    <div class="w-4 h-2 rounded-full bg-primary"></div>
+                    <div class="w-4 h-2 rounded-full bg-primary"></div>
+                  </div>
+                </div>
+                <div class="text-center">
+                  <span class="text-[10px] uppercase tracking-widest text-outline mb-1 block"
+                    >Level</span
+                  >
+                  <span class="text-lg font-headline font-bold text-primary">05</span>
+                </div>
+              </div>
+              <div
+                class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <button
+                  class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-all"
+                >
+                  <span class="material-symbols-outlined text-xl">sync</span>
+                </button>
+                <button
+                  class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high transition-all"
+                >
+                  <span class="material-symbols-outlined text-xl">edit_note</span>
+                </button>
+                <button
+                  class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container/10 hover:text-error transition-all"
+                >
+                  <span class="material-symbols-outlined text-xl">delete_outline</span>
+                </button>
+              </div>
+            </div>
+            <!-- Word Card 3 -->
+            <div
+              class="group relative bg-surface-container-lowest rounded-xl p-6 flex flex-wrap md:flex-nowrap items-center gap-8 transition-all hover:translate-y-[-2px] hover:shadow-[0_40px_60px_-15px_rgba(44,52,51,0.05)] border border-transparent hover:border-primary/5"
+            >
+              <div class="flex-1 min-w-[200px]">
+                <div class="flex items-baseline gap-3 mb-1">
+                  <span class="text-3xl font-headline font-bold text-on-surface">幽玄</span>
+                  <span class="text-sm font-body text-on-surface-variant tracking-wider"
+                    >Yuugen</span
+                  >
+                </div>
+                <p class="text-on-surface-variant font-body">
+                  Mysterious, profound sense of the universe
+                </p>
+              </div>
+              <div class="flex items-center gap-12">
+                <div class="flex flex-col items-center">
+                  <span class="text-[10px] uppercase tracking-widest text-outline mb-2"
+                    >Mastery</span
+                  >
+                  <div class="flex gap-1">
+                    <div class="w-4 h-2 rounded-full bg-primary"></div>
+                    <div class="w-4 h-2 rounded-full bg-surface-container-highest"></div>
+                    <div class="w-4 h-2 rounded-full bg-surface-container-highest"></div>
+                    <div class="w-4 h-2 rounded-full bg-surface-container-highest"></div>
+                    <div class="w-4 h-2 rounded-full bg-surface-container-highest"></div>
+                  </div>
+                </div>
+                <div class="text-center">
+                  <span class="text-[10px] uppercase tracking-widest text-outline mb-1 block"
+                    >Level</span
+                  >
+                  <span class="text-lg font-headline font-bold text-primary">01</span>
+                </div>
+              </div>
+              <div
+                class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <button
+                  class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-all"
+                >
+                  <span class="material-symbols-outlined text-xl">sync</span>
+                </button>
+                <button
+                  class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high transition-all"
+                >
+                  <span class="material-symbols-outlined text-xl">edit_note</span>
+                </button>
+                <button
+                  class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container/10 hover:text-error transition-all"
+                >
+                  <span class="material-symbols-outlined text-xl">delete_outline</span>
+                </button>
+              </div>
+            </div>
+            <!-- Word Card 4 -->
+            <div
+              class="group relative bg-surface-container-lowest rounded-xl p-6 flex flex-wrap md:flex-nowrap items-center gap-8 transition-all hover:translate-y-[-2px] hover:shadow-[0_40px_60px_-15px_rgba(44,52,51,0.05)] border border-transparent hover:border-primary/5"
+            >
+              <div class="flex-1 min-w-[200px]">
+                <div class="flex items-baseline gap-3 mb-1">
+                  <span class="text-3xl font-headline font-bold text-on-surface">わびさび</span>
+                  <span class="text-sm font-body text-on-surface-variant tracking-wider"
+                    >Wabi-sabi</span
+                  >
+                </div>
+                <p class="text-on-surface-variant font-body">
+                  Finding beauty in imperfection and transience
+                </p>
+              </div>
+              <div class="flex items-center gap-12">
+                <div class="flex flex-col items-center">
+                  <span class="text-[10px] uppercase tracking-widest text-outline mb-2"
+                    >Mastery</span
+                  >
+                  <div class="flex gap-1">
+                    <div class="w-4 h-2 rounded-full bg-primary"></div>
+                    <div class="w-4 h-2 rounded-full bg-primary"></div>
+                    <div class="w-4 h-2 rounded-full bg-primary"></div>
+                    <div class="w-4 h-2 rounded-full bg-surface-container-highest"></div>
+                    <div class="w-4 h-2 rounded-full bg-surface-container-highest"></div>
+                  </div>
+                </div>
+                <div class="text-center">
+                  <span class="text-[10px] uppercase tracking-widest text-outline mb-1 block"
+                    >Level</span
+                  >
+                  <span class="text-lg font-headline font-bold text-primary">03</span>
+                </div>
+              </div>
+              <div
+                class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <button
+                  class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-all"
+                >
+                  <span class="material-symbols-outlined text-xl">sync</span>
+                </button>
+                <button
+                  class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high transition-all"
+                >
+                  <span class="material-symbols-outlined text-xl">edit_note</span>
+                </button>
+                <button
+                  class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container/10 hover:text-error transition-all"
+                >
+                  <span class="material-symbols-outlined text-xl">delete_outline</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- Pagination/Footer Actions -->
+          <div class="mt-16 flex flex-col items-center gap-8">
+            <div class="flex items-center gap-2">
+              <button
+                class="w-12 h-12 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant hover:bg-primary hover:text-white transition-all"
+              >
+                <span class="material-symbols-outlined">chevron_left</span>
+              </button>
+              <div class="flex items-center gap-1 px-4">
+                <span
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-white text-sm font-bold"
+                  >1</span
+                >
+                <span
+                  class="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant text-sm font-medium hover:bg-surface-container-high cursor-pointer transition-colors"
+                  >2</span
+                >
+                <span
+                  class="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant text-sm font-medium hover:bg-surface-container-high cursor-pointer transition-colors"
+                  >3</span
+                >
+                <span class="px-2 text-on-surface-variant">...</span>
+                <span
+                  class="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant text-sm font-medium hover:bg-surface-container-high cursor-pointer transition-colors"
+                  >12</span
+                >
+              </div>
+              <button
+                class="w-12 h-12 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant hover:bg-primary hover:text-white transition-all"
+              >
+                <span class="material-symbols-outlined">chevron_right</span>
+              </button>
+            </div>
+            <div
+              class="glass-panel py-4 px-8 rounded-full shadow-xl shadow-[#476459]/5 flex items-center gap-8"
+            >
+              <div class="flex items-center gap-3">
+                <span
+                  class="material-symbols-outlined text-primary"
+                  style="font-variation-settings: 'FILL' 1"
+                  >cloud_done</span
+                >
+                <span class="text-sm font-medium text-on-surface-variant">Library Synced</span>
+              </div>
+              <div class="h-4 w-[1px] bg-outline-variant/30"></div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-label font-semibold text-outline tracking-wider uppercase"
+                  >Export As</span
+                >
+                <div class="flex gap-1">
+                  <button
+                    class="px-3 py-1 rounded-md bg-surface-container-high text-[10px] font-bold text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-colors"
+                  >
+                    PDF
+                  </button>
+                  <button
+                    class="px-3 py-1 rounded-md bg-surface-container-high text-[10px] font-bold text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-colors"
+                  >
+                    CSV
+                  </button>
+                  <button
+                    class="px-3 py-1 rounded-md bg-surface-container-high text-[10px] font-bold text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-colors"
+                  >
+                    ANKI
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <!-- Mobile Navigation (Visible on small screens) -->
+    <nav
+      class="md:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-outline-variant/10 px-6 py-4 flex justify-around items-center z-50"
+    >
+      <button class="flex flex-col items-center gap-1 text-zinc-400">
+        <span class="material-symbols-outlined">dashboard</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 text-[#5D7B6F]">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1"
+          >menu_book</span
+        >
+      </button>
+      <button
+        class="w-12 h-12 -mt-10 bg-[#476459] rounded-full flex items-center justify-center text-white shadow-lg"
+      >
+        <span class="material-symbols-outlined">add</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 text-zinc-400">
+        <span class="material-symbols-outlined">school</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 text-zinc-400">
+        <span class="material-symbols-outlined">settings</span>
+      </button>
+    </nav>
+  </body>
+</html>

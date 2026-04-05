@@ -1,0 +1,310 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'inverse-on-surface': '#9b9d9d',
+              'outline-variant': '#abb4b3',
+              'surface-container-high': '#e3e9e8',
+              'on-tertiary-fixed': '#404e31',
+              'on-background': '#2c3433',
+              'primary-dim': '#3b584d',
+              'tertiary-fixed': '#e9fad2',
+              'on-primary': '#dffff0',
+              background: '#f9f9f8',
+              'primary-container': '#c9eadb',
+              'on-secondary': '#f7f9f6',
+              'error-dim': '#4e0309',
+              'on-error': '#fff7f6',
+              'tertiary-fixed-dim': '#daebc4',
+              'on-error-container': '#752121',
+              'on-tertiary': '#eeffd7',
+              'tertiary-dim': '#49583a',
+              'on-tertiary-container': '#526042',
+              'on-primary-fixed-variant': '#446156',
+              'primary-fixed': '#c9eadb',
+              primary: '#476459',
+              'surface-variant': '#dce4e3',
+              'tertiary-container': '#e9fad2',
+              'on-secondary-container': '#4f5250',
+              error: '#9f403d',
+              'secondary-fixed-dim': '#d2d5d2',
+              'surface-container-highest': '#dce4e3',
+              'secondary-container': '#e1e3e0',
+              outline: '#747c7c',
+              'surface-container': '#eaefee',
+              'on-tertiary-fixed-variant': '#5c6b4c',
+              tertiary: '#556445',
+              'secondary-dim': '#505452',
+              'on-surface': '#2c3433',
+              'secondary-fixed': '#e1e3e0',
+              surface: '#f9f9f8',
+              'surface-dim': '#d2dcdb',
+              'surface-tint': '#476459',
+              'surface-container-lowest': '#ffffff',
+              'on-primary-container': '#3a584d',
+              'surface-bright': '#f9f9f8',
+              'surface-container-low': '#f1f4f3',
+              'inverse-primary': '#d7f8e9',
+              'primary-fixed-dim': '#bbdccd',
+              'on-secondary-fixed-variant': '#595c5a',
+              'on-surface-variant': '#586160',
+              'inverse-surface': '#0c0f0e',
+              'on-secondary-fixed': '#3d403e',
+              'error-container': '#fe8983',
+              'on-primary-fixed': '#28453b',
+              secondary: '#5c605d',
+            },
+            borderRadius: {
+              DEFAULT: '1rem',
+              lg: '2rem',
+              xl: '3rem',
+              full: '9999px',
+            },
+            fontFamily: {
+              headline: ['Manrope'],
+              body: ['Inter'],
+              label: ['Inter'],
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+      }
+      .ambient-shadow {
+        box-shadow: 0 40px 60px -20px rgba(44, 52, 51, 0.06);
+      }
+      .primary-velvet-gradient {
+        background: linear-gradient(135deg, #476459 0%, #3b584d 100%);
+      }
+      .fluid-bg {
+        background: radial-gradient(circle at 0% 0%, #f1f4f3 0%, #f9f9f8 50%, #f1f4f3 100%);
+      }
+    </style>
+  </head>
+  <body
+    class="bg-background font-body text-on-surface selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col overflow-hidden"
+  >
+    <!-- Progress Header (Mandatory Suppression of Navigation for focused journey) -->
+    <header class="w-full h-1 flex bg-surface-container-low overflow-hidden">
+      <div class="h-full bg-primary w-[65%] rounded-r-full"></div>
+    </header>
+    <main class="flex-grow flex flex-col fluid-bg relative">
+      <!-- Top Controls / Exit Study -->
+      <div class="flex justify-between items-center w-full px-12 py-8">
+        <button
+          class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors group"
+        >
+          <span class="material-symbols-outlined text-[20px]" data-icon="close">close</span>
+          <span class="font-headline font-bold text-sm tracking-[0.02em]">End Session</span>
+        </button>
+        <div class="flex items-center gap-6">
+          <div class="flex flex-col items-end">
+            <span
+              class="text-[10px] font-bold tracking-[0.1em] uppercase text-on-surface-variant/60"
+              >New Words</span
+            >
+            <span class="font-headline font-bold text-primary">12 / 20</span>
+          </div>
+          <div
+            class="w-12 h-12 rounded-full glass-panel flex items-center justify-center ambient-shadow cursor-pointer hover:bg-white transition-all"
+          >
+            <span class="material-symbols-outlined text-primary" data-icon="settings"
+              >settings</span
+            >
+          </div>
+        </div>
+      </div>
+      <!-- Central Flashcard UI -->
+      <div class="flex-grow flex items-center justify-center px-6">
+        <div class="relative w-full max-w-3xl aspect-[4/3] flex flex-col items-center">
+          <!-- Main Card (xl corner radius = 48px) -->
+          <div
+            class="w-full h-full bg-surface-container-lowest rounded-xl ambient-shadow flex flex-col items-center justify-center p-16 relative overflow-hidden group cursor-pointer transition-transform duration-500 hover:scale-[1.01]"
+          >
+            <!-- Decorative subtle grain/noise layer would go here in a real build -->
+            <!-- Card Front Content -->
+            <div class="text-center">
+              <span
+                class="text-[14px] font-bold tracking-[0.15em] uppercase text-primary/40 mb-4 block"
+                >Vocabulary</span
+              >
+              <h1
+                class="font-headline text-[120px] font-extrabold leading-none text-on-surface mb-8 tracking-tighter"
+              >
+                木漏れ日
+              </h1>
+              <p class="text-on-surface-variant/60 font-medium tracking-[0.05em]">
+                Click or Space to reveal details
+              </p>
+            </div>
+            <!-- Card Back Content (Hidden State Visualization) -->
+            <!-- In this static HTML, we represent the 'hidden' state as a blur or simplified view to respect the prompt -->
+            <div
+              class="absolute inset-0 bg-surface-container-lowest flex flex-col items-center justify-center p-16 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+            >
+              <div class="w-full max-w-xl">
+                <div
+                  class="flex justify-between items-end border-b border-outline-variant/15 pb-6 mb-8"
+                >
+                  <div>
+                    <h2 class="font-headline text-4xl font-bold text-on-surface">Komorebi</h2>
+                    <p class="text-primary font-semibold text-lg">
+                      Sunlight filtering through trees
+                    </p>
+                  </div>
+                  <div class="bg-primary-container/30 px-4 py-2 rounded-lg">
+                    <span class="text-sm font-bold text-on-primary-container">Noun</span>
+                  </div>
+                </div>
+                <div class="space-y-6">
+                  <div>
+                    <label
+                      class="text-[10px] font-bold tracking-[0.1em] uppercase text-on-surface-variant/40 block mb-2"
+                      >Example Sentence</label
+                    >
+                    <p class="font-body text-lg leading-relaxed text-on-surface">
+                      森を歩いていると、美しい<span class="text-primary font-bold">木漏れ日</span
+                      >が見えた。
+                    </p>
+                    <p class="text-on-surface-variant text-sm mt-1 italic">
+                      While walking through the forest, I saw the beautiful sunlight filtering
+                      through the trees.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Floating SM-2 Control Panel (Glassmorphism) -->
+          <div
+            class="absolute -bottom-10 left-1/2 -translate-x-1/2 glass-panel p-4 rounded-xl ambient-shadow flex gap-3 min-w-[500px]"
+          >
+            <button
+              class="flex-1 flex flex-col items-center py-3 px-2 rounded-lg hover:bg-red-50 transition-all group"
+            >
+              <span
+                class="text-lg font-headline font-extrabold text-red-700/50 group-hover:text-red-700"
+                >0</span
+              >
+              <span class="text-[10px] font-bold tracking-wider uppercase text-red-700/40 mt-1"
+                >Forgot</span
+              >
+            </button>
+            <button
+              class="flex-1 flex flex-col items-center py-3 px-2 rounded-lg hover:bg-orange-50 transition-all group border-l border-outline-variant/10"
+            >
+              <span
+                class="text-lg font-headline font-extrabold text-orange-700/50 group-hover:text-orange-700"
+                >1</span
+              >
+              <span class="text-[10px] font-bold tracking-wider uppercase text-orange-700/40 mt-1"
+                >Hard</span
+              >
+            </button>
+            <button
+              class="flex-1 flex flex-col items-center py-3 px-2 rounded-lg hover:bg-yellow-50 transition-all group border-l border-outline-variant/10"
+            >
+              <span
+                class="text-lg font-headline font-extrabold text-yellow-700/50 group-hover:text-yellow-700"
+                >2</span
+              >
+              <span class="text-[10px] font-bold tracking-wider uppercase text-yellow-700/40 mt-1"
+                >Struggle</span
+              >
+            </button>
+            <button
+              class="flex-1 flex flex-col items-center py-3 px-2 rounded-lg hover:bg-secondary-container transition-all group border-l border-outline-variant/10"
+            >
+              <span
+                class="text-lg font-headline font-extrabold text-on-secondary-container/50 group-hover:text-on-secondary-container"
+                >3</span
+              >
+              <span
+                class="text-[10px] font-bold tracking-wider uppercase text-on-secondary-container/40 mt-1"
+                >Good</span
+              >
+            </button>
+            <button
+              class="flex-1 flex flex-col items-center py-3 px-2 rounded-lg hover:bg-primary-container transition-all group border-l border-outline-variant/10"
+            >
+              <span
+                class="text-lg font-headline font-extrabold text-primary/50 group-hover:text-primary"
+                >4</span
+              >
+              <span class="text-[10px] font-bold tracking-wider uppercase text-primary/40 mt-1"
+                >Easy</span
+              >
+            </button>
+            <button
+              class="flex-1 flex flex-col items-center py-3 px-4 rounded-lg bg-primary-container/30 hover:bg-primary-container transition-all group border-l border-outline-variant/10"
+            >
+              <span class="text-lg font-headline font-extrabold text-primary">5</span>
+              <span class="text-[10px] font-bold tracking-wider uppercase text-primary/60 mt-1"
+                >Perfect</span
+              >
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Footer / Shortcut Hint -->
+      <div class="w-full flex justify-center py-12">
+        <div class="flex items-center gap-8 text-on-surface-variant/40">
+          <div class="flex items-center gap-2">
+            <kbd
+              class="px-2 py-1 rounded bg-surface-container text-[10px] font-bold border border-outline-variant/20"
+              >SPACE</kbd
+            >
+            <span class="text-xs font-semibold">Reveal Answer</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <kbd
+              class="px-2 py-1 rounded bg-surface-container text-[10px] font-bold border border-outline-variant/20"
+              >0-5</kbd
+            >
+            <span class="text-xs font-semibold">Score Difficulty</span>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- Side Zen Visuals (Abstract Imagery) -->
+    <div class="fixed left-0 top-1/2 -translate-y-1/2 opacity-10 pointer-events-none">
+      <img
+        class="w-96 rounded-r-xl grayscale"
+        data-alt="soft focus photograph of green leaves with sunlight filtering through creating beautiful circular bokeh and lens flare effects"
+        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkesedo8yjYcPFhfX7wux-I6XD9dbSDG89sVZ31kz01naPlAdjpj6fo0Gd-3jT9IDBWirP9ZLY22IddNs4a8AFcmcJI8Bke6wE9yM9IHmyGn5ekZraysYXID9bwIj2Hz5vTP1A_dMiUyLiV3BUhg6NjWM3tZ4jcraGse4dld0NQhhj09Gmi26IqgWXvUG3ErhQ4_RvmQIY0c3a81-Ay-d77E1R39IJDBaj5UY9e_0HzALdSWmSvQbICfRzJARD3US-TRShiIa3aw"
+      />
+    </div>
+    <div class="fixed right-0 top-1/2 -translate-y-1/2 opacity-10 pointer-events-none">
+      <img
+        class="w-96 rounded-l-xl grayscale"
+        data-alt="abstract minimalist japanese zen garden with raked sand patterns and a single smooth stone under soft morning light"
+        src="https://lh3.googleusercontent.com/aida-public/AB6AXuApotlbRpgjqy_ztvkQ8r58hTpTGfr8H3uvAVSLkk_GX853TtrUgDuKvEHVW4n7I_BIrNIrjuC1ztlvdYZZ-89UTTyQ3AQDhDVhWtCWhtlGUHTQYz9i32vTiYduru31xjRp7RyYy_iwB1rwHrC-YyLkSy45Ze0oOVeR_z18whurKX6y8Fs9sYbu0TABo1KcjzaXX_pApCrEhU7i665U3rtp-xqIOsfM1frNrlM0gZcWj9PO2uMP6yZYY1K_DqdaqHwYbGhtI-Ga4w"
+      />
+    </div>
+  </body>
+</html>

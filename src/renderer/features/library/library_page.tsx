@@ -4,15 +4,10 @@ import { LoadingState } from '@/renderer/components/shared/loading_state'
 import { StatusMessage } from '@/renderer/components/shared/status_message'
 import { Badge } from '@/renderer/components/ui/badge'
 import { Button } from '@/renderer/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/renderer/components/ui/card'
+import { Card, CardContent } from '@/renderer/components/ui/card'
 import { Input } from '@/renderer/components/ui/input'
 import { Textarea } from '@/renderer/components/ui/textarea'
+import { cn } from '@/renderer/lib/utils'
 import type { LibraryWordItem } from '@/shared/ipc'
 
 type LibraryEditForm = {
@@ -56,7 +51,7 @@ const field_block = (props: {
   on_change: (value: string) => void
 }) => (
   <label className="space-y-2">
-    <span className="text-sm font-medium text-foreground">{props.label}</span>
+    <span className="text-sm font-semibold text-foreground">{props.label}</span>
     {props.multiline ? (
       <Textarea
         aria-label={props.aria_label}
@@ -74,11 +69,15 @@ const field_block = (props: {
   </label>
 )
 
-const library_summary_card = (props: { label: string; value: string }) => (
-  <Card className="border-border/70 bg-background/90 shadow-none">
-    <CardContent className="space-y-2 p-4 pt-4">
-      <p className="m-0 text-xs font-medium tracking-wide text-muted-foreground">{props.label}</p>
-      <p className="m-0 text-2xl font-semibold text-foreground">{props.value}</p>
+const library_summary_card = (props: { label: string; value: string; tone?: string }) => (
+  <Card className={cn('border-white/20 bg-white/60', props.tone)}>
+    <CardContent className="space-y-2 p-5 pt-5">
+      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+        {props.label}
+      </p>
+      <p className="font-headline text-3xl font-extrabold tracking-tight text-foreground">
+        {props.value}
+      </p>
     </CardContent>
   </Card>
 )
@@ -107,76 +106,101 @@ export const LibraryPage = ({
   on_confirm_delete,
 }: LibraryPageProps) => (
   <>
-    <Card className="border-border/80 bg-card/95">
-      <CardHeader className="space-y-4 p-5 sm:p-6">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-1">
-            <CardTitle>検索と管理</CardTitle>
-            <CardDescription>
-              単語、読み仮名、意味で検索し、その場で編集や削除ができます。
-            </CardDescription>
-          </div>
-          <Badge className="w-fit px-3 py-1" variant="outline">
-            検索はかな表記ゆれに対応
-          </Badge>
-        </div>
-      </CardHeader>
+    <div className="space-y-6">
+      <section className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
+        <Card className="overflow-hidden border-white/18 bg-linear-to-br from-white/78 via-white/62 to-[#f4ffe8]/88">
+          <CardContent className="relative space-y-5 p-6 pt-6 sm:p-8 sm:pt-8">
+            <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[#7efc00]/20 blur-3xl" />
+            <div className="relative space-y-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <Badge variant="secondary">かな表記ゆれ対応</Badge>
+                <Badge variant="outline">ローカル検索</Badge>
+              </div>
+              <div className="space-y-3">
+                <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-primary/70">
+                  単語ライブラリ
+                </p>
+                <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
+                  保存済みの単語を
+                  <br />
+                  静かに整える
+                </h2>
+                <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
+                  単語、読み仮名、意味で検索し、その場で編集や削除ができます。検索条件はかな表記ゆれと大文字小文字の差異を吸収します。
+                </p>
+              </div>
+            </div>
 
-      <CardContent className="space-y-4 p-5 pt-0 sm:p-6 sm:pt-0">
-        <Card className="border-border/70 bg-background/90 shadow-none">
-          <CardContent className="space-y-4 p-5 pt-5">
-            <label className="space-y-2">
-              <span className="text-sm font-medium text-foreground">検索</span>
+            <label className="relative block">
+              <span className="sr-only">単語帳検索</span>
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary/70">
+                search
+              </span>
               <Input
                 aria-label="単語帳検索"
+                className="h-[3.25rem] pl-12"
+                placeholder="単語・読み仮名・意味で検索"
                 value={query}
                 onChange={(event) => on_query_change(event.target.value)}
-                placeholder="単語・読み仮名・意味で検索"
               />
             </label>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              {library_summary_card({
-                label: '表示件数',
-                value: `${matched_count} 件`,
-              })}
-              {library_summary_card({
-                label: '全件数',
-                value: `${total_count} 件`,
-              })}
-              {library_summary_card({
-                label: '検索状態',
-                value: query.trim().length > 0 ? '絞り込み中' : '全件表示',
-              })}
-            </div>
           </CardContent>
         </Card>
 
-        {is_loading ? <LoadingState message="単語帳を読み込み中..." /> : null}
+        <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+          {library_summary_card({
+            label: '表示件数',
+            value: `${matched_count} 件`,
+            tone: 'bg-[#f7fff0]',
+          })}
+          {library_summary_card({
+            label: '全件数',
+            value: `${total_count} 件`,
+            tone: 'bg-[#effff9]',
+          })}
+          {library_summary_card({
+            label: '検索状態',
+            value: query.trim().length > 0 ? '絞り込み中' : '全件表示',
+            tone: 'bg-[#fffdf3]',
+          })}
+        </div>
+      </section>
 
-        {words.length === 0 && is_loading === false ? (
-          <EmptyState
-            title="該当する単語がありません。"
-            description="検索条件を変更してもう一度確認してください。"
-          />
-        ) : null}
+      {is_loading ? <LoadingState message="単語帳を読み込み中..." /> : null}
 
-        <ul className="m-0 grid list-none gap-4 p-0">
-          {words.map((word) => {
-            const is_editing = editing_word_id === word.id
-            const is_deleting = deleting_word_id === word.id
+      {words.length === 0 && is_loading === false ? (
+        <EmptyState
+          title="該当する単語がありません。"
+          description="検索条件を変更してもう一度確認してください。"
+        />
+      ) : null}
 
-            if (is_editing) {
-              return (
-                <li key={word.id} className="library_item">
-                  <Card className="border-border/70 bg-background/90 shadow-none">
-                    <CardHeader className="p-5 pb-4">
-                      <CardTitle className="text-base">単語を編集</CardTitle>
-                      <CardDescription>
-                        内容を更新すると既存の復習状態はそのまま保持されます。
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4 p-5 pt-0">
+      <ul className="m-0 grid list-none gap-5 p-0">
+        {words.map((word) => {
+          const is_editing = editing_word_id === word.id
+          const is_deleting = deleting_word_id === word.id
+
+          if (is_editing) {
+            return (
+              <li key={word.id}>
+                <Card className="border-white/20 bg-white/66">
+                  <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                      <div className="space-y-2">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
+                          編集モード
+                        </p>
+                        <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
+                          「{word.word}」を更新
+                        </h3>
+                        <p className="text-sm leading-7 text-muted-foreground">
+                          内容を更新しても既存の復習状態は保持されます。
+                        </p>
+                      </div>
+                      <Badge variant="outline">レビュー状態は維持</Badge>
+                    </div>
+
+                    <div className="grid gap-4 xl:grid-cols-2">
                       {field_block({
                         label: '単語',
                         aria_label: '編集単語',
@@ -193,7 +217,7 @@ export const LibraryPage = ({
                         label: '意味（日本語）',
                         aria_label: '編集意味',
                         value: edit_form.meaning_ja,
-                        rows: 3,
+                        rows: 4,
                         multiline: true,
                         on_change: (value) => on_edit_field('meaning_ja', value),
                       })}
@@ -201,104 +225,114 @@ export const LibraryPage = ({
                         label: '文脈',
                         aria_label: '編集文脈',
                         value: edit_form.context_scene_ja,
-                        rows: 3,
+                        rows: 4,
                         multiline: true,
                         on_change: (value) => on_edit_field('context_scene_ja', value),
                       })}
-                      {field_block({
-                        label: '例文',
-                        aria_label: '編集例文',
-                        value: edit_form.example_sentence_ja,
-                        rows: 2,
-                        multiline: true,
-                        on_change: (value) => on_edit_field('example_sentence_ja', value),
-                      })}
-                      <div className="flex flex-wrap gap-3">
-                        <Button
-                          disabled={update_disabled}
-                          onClick={() => {
-                            void on_update()
-                          }}
-                          type="button"
-                        >
-                          {is_updating ? '更新中...' : '更新'}
-                        </Button>
-                        <Button onClick={on_cancel_edit} type="button" variant="secondary">
-                          キャンセル
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </li>
-              )
-            }
-
-            return (
-              <li key={word.id} className="library_item">
-                <Card className="border-border/70 bg-background/90 shadow-none">
-                  <CardContent className="space-y-4 p-5 pt-5">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="space-y-2">
-                        <p className="m-0 text-2xl font-semibold text-foreground">{word.word}</p>
-                        <p className="m-0 text-sm font-medium text-primary">{word.reading_kana}</p>
-                      </div>
-                      <div className="flex flex-wrap gap-3">
-                        <Button onClick={() => on_start_edit(word)} type="button">
-                          編集
-                        </Button>
-                        <Button
-                          disabled={is_deleting}
-                          onClick={() => on_request_delete(word)}
-                          type="button"
-                          variant="destructive"
-                        >
-                          {is_deleting ? '削除中...' : '削除'}
-                        </Button>
-                      </div>
                     </div>
 
-                    <div className="grid gap-4 lg:grid-cols-2">
-                      <div className="space-y-2 rounded-lg border border-border/80 bg-muted/20 p-4">
-                        <p className="m-0 text-xs font-medium tracking-wide text-muted-foreground">
-                          意味
-                        </p>
-                        <p className="m-0 text-sm leading-6 text-foreground">{word.meaning_ja}</p>
-                      </div>
-                      <div className="space-y-2 rounded-lg border border-border/80 bg-muted/20 p-4">
-                        <p className="m-0 text-xs font-medium tracking-wide text-muted-foreground">
-                          文脈
-                        </p>
-                        <p className="m-0 text-sm leading-6 text-foreground">
-                          {word.context_scene_ja}
-                        </p>
-                      </div>
-                    </div>
+                    {field_block({
+                      label: '例文',
+                      aria_label: '編集例文',
+                      value: edit_form.example_sentence_ja,
+                      rows: 3,
+                      multiline: true,
+                      on_change: (value) => on_edit_field('example_sentence_ja', value),
+                    })}
 
-                    <div className="rounded-lg border border-border/80 bg-muted/20 p-4">
-                      <p className="m-0 text-xs font-medium tracking-wide text-muted-foreground">
-                        例文
-                      </p>
-                      <p className="m-0 mt-2 text-sm leading-6 text-foreground">
-                        {word.example_sentence_ja}
-                      </p>
+                    <div className="flex flex-wrap gap-3">
+                      <Button
+                        disabled={update_disabled}
+                        onClick={() => {
+                          void on_update()
+                        }}
+                        type="button"
+                      >
+                        {is_updating ? '更新中...' : '更新する'}
+                      </Button>
+                      <Button onClick={on_cancel_edit} type="button" variant="secondary">
+                        編集をやめる
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
               </li>
             )
-          })}
-        </ul>
+          }
 
-        <div className="space-y-3">
-          {status_message.length > 0 ? (
-            <StatusMessage message={status_message} kind="success" role="status" />
-          ) : null}
-          {error_message.length > 0 ? (
-            <StatusMessage message={error_message} kind="error" role="alert" />
-          ) : null}
-        </div>
-      </CardContent>
-    </Card>
+          return (
+            <li key={word.id}>
+              <Card className="border-white/18 bg-white/62">
+                <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h3 className="font-headline text-3xl font-extrabold tracking-tight text-foreground">
+                          {word.word}
+                        </h3>
+                        <Badge variant="outline">保存済み</Badge>
+                      </div>
+                      <p className="text-base font-semibold tracking-[0.03em] text-primary">
+                        {word.reading_kana}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                      <Button onClick={() => on_start_edit(word)} type="button">
+                        編集
+                      </Button>
+                      <Button
+                        disabled={is_deleting}
+                        onClick={() => on_request_delete(word)}
+                        type="button"
+                        variant="destructive"
+                      >
+                        {is_deleting ? '削除中...' : '削除'}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 xl:grid-cols-2">
+                    <div className="rounded-[1.75rem] bg-[#f7fff0] px-5 py-5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2)]">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+                        意味
+                      </p>
+                      <p className="mt-3 text-sm leading-7 text-foreground">{word.meaning_ja}</p>
+                    </div>
+                    <div className="rounded-[1.75rem] bg-[#effff9] px-5 py-5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2)]">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+                        文脈
+                      </p>
+                      <p className="mt-3 text-sm leading-7 text-foreground">
+                        {word.context_scene_ja}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-[1.75rem] bg-white/72 px-5 py-5 shadow-[inset_0_0_0_1px_rgba(48,104,0,0.06)]">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+                      例文
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-foreground">
+                      {word.example_sentence_ja}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </li>
+          )
+        })}
+      </ul>
+
+      <div className="space-y-3">
+        {status_message.length > 0 ? (
+          <StatusMessage message={status_message} kind="success" role="status" />
+        ) : null}
+        {error_message.length > 0 ? (
+          <StatusMessage message={error_message} kind="error" role="alert" />
+        ) : null}
+      </div>
+    </div>
 
     <ConfirmDialog
       cancel_label="削除しない"

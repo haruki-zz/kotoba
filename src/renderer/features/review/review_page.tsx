@@ -1,18 +1,18 @@
 import { EmptyState } from '@/renderer/components/shared/empty_state'
 import { LoadingState } from '@/renderer/components/shared/loading_state'
 import { StatusMessage } from '@/renderer/components/shared/status_message'
-import { Button } from '@/renderer/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/renderer/components/ui/card'
+import { Card, CardContent } from '@/renderer/components/ui/card'
 import { cn } from '@/renderer/lib/utils'
 import type { ReviewQueueWordItem } from '@/shared/ipc'
 
-const REVIEW_GRADES = [0, 1, 2, 3, 4, 5] as const
+const REVIEW_GRADES = [
+  { grade: 0, label: '忘れた', icon: 'close', tone: 'text-destructive bg-[#fff0eb]' },
+  { grade: 1, label: 'かなり難しい', icon: 'warning', tone: 'text-destructive bg-[#fff7f2]' },
+  { grade: 2, label: 'ぎりぎり', icon: 'history', tone: 'text-[#8b5c00] bg-[#fff6d9]' },
+  { grade: 3, label: '普通', icon: 'done', tone: 'text-[#296f1f] bg-[#f5ffe7]' },
+  { grade: 4, label: '良い', icon: 'check_circle', tone: 'text-primary bg-[#efffe0]' },
+  { grade: 5, label: '完璧', icon: 'stars', tone: 'text-primary bg-primary-container/72' },
+] as const
 
 type ReviewPageProps = {
   due_count: number
@@ -25,34 +25,18 @@ type ReviewPageProps = {
   on_grade: (grade: number) => Promise<void>
 }
 
-const review_stat_card = (props: { label: string; value: string; class_name: string }) => (
-  <Card className={cn(props.class_name, 'border-border/70 bg-background/90 shadow-none')}>
-    <CardContent className="space-y-2 p-4 pt-4">
-      <p className="m-0 text-xs font-medium tracking-wide text-muted-foreground">{props.label}</p>
-      <p className="m-0 text-2xl font-semibold text-foreground">{props.value}</p>
+const review_stat_card = (props: { label: string; value: string; tone?: string }) => (
+  <Card className={cn('border-white/20 bg-white/60', props.tone)}>
+    <CardContent className="space-y-2 p-5 pt-5">
+      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+        {props.label}
+      </p>
+      <p className="font-headline text-3xl font-extrabold tracking-tight text-foreground">
+        {props.value}
+      </p>
     </CardContent>
   </Card>
 )
-
-const review_grade_class_name = (grade: number): string => {
-  if (grade <= 1) {
-    return 'border-destructive/40 text-destructive hover:bg-destructive/10'
-  }
-
-  if (grade === 2) {
-    return 'border-chart-5/40 text-foreground hover:bg-chart-5/10'
-  }
-
-  if (grade === 3) {
-    return 'border-chart-4/40 text-foreground hover:bg-chart-4/10'
-  }
-
-  if (grade === 4) {
-    return 'border-primary/35 text-foreground hover:bg-primary/10'
-  }
-
-  return 'border-primary/45 bg-primary/6 text-foreground hover:bg-primary/12'
-}
 
 export const ReviewPage = ({
   due_count,
@@ -64,113 +48,170 @@ export const ReviewPage = ({
   grading_word_id,
   on_grade,
 }: ReviewPageProps) => (
-  <Card className="border-border/80 bg-card/95">
-    <CardHeader className="space-y-4 p-5 sm:p-6">
-      <div className="space-y-1">
-        <CardTitle>今日の復習</CardTitle>
-        <CardDescription>
-          いま復習すべき単語を 1 件ずつ確認し、評価に応じて次回予定を更新します。
-        </CardDescription>
-      </div>
-    </CardHeader>
-
-    <CardContent className="space-y-4 p-5 pt-0 sm:p-6 sm:pt-0">
-      <div className="grid gap-3 sm:grid-cols-2">
+  <div className="space-y-6">
+    <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
         {review_stat_card({
-          class_name: 'review_due_stat',
           label: '残り件数',
           value: `${due_count} 件`,
+          tone: 'bg-[#f7fff0]',
         })}
         {review_stat_card({
-          class_name: 'review_completed_stat',
           label: '今日完了',
           value: `${completed_today_count} 件`,
+          tone: 'bg-[#effff9]',
         })}
       </div>
 
-      {is_loading ? <LoadingState message="復習キューを読み込み中..." /> : null}
+      <Card className="overflow-hidden border-white/18 bg-linear-to-br from-white/78 via-white/62 to-[#f4ffe8]/88">
+        <CardContent className="relative space-y-5 p-6 pt-6 sm:p-8 sm:pt-8">
+          <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[#7efc00]/20 blur-3xl" />
+          <div className="relative space-y-3">
+            <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-primary/70">
+              今日の復習セッション
+            </p>
+            <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
+              今の集中で、
+              <br />
+              定着率を一段上げる
+            </h2>
+            <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
+              到期した単語を 1 件ずつ評価し、SM-2 に沿って次回の復習予定を更新します。
+            </p>
+          </div>
 
-      {current_review_word ? (
-        <Card className="border-border/70 bg-background/90 shadow-none">
-          <CardHeader className="p-5 pb-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="rounded-full bg-primary/92 px-5 py-2 text-sm font-bold text-primary-foreground shadow-[0_20px_44px_-28px_rgba(48,104,0,0.9)]">
+              復習対象 {due_count} 件
+            </div>
+            <div className="rounded-full bg-white/70 px-5 py-2 text-sm text-muted-foreground">
+              今日の完了 {completed_today_count} 件
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </section>
+
+    {is_loading ? <LoadingState message="復習キューを読み込み中..." /> : null}
+
+    {current_review_word ? (
+      <Card className="overflow-hidden border-white/18 bg-white/66">
+        <CardContent className="space-y-8 p-6 pt-6 sm:p-8 sm:pt-8">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="space-y-2">
-              <p className="review_word m-0 text-3xl font-semibold tracking-tight text-foreground">
-                {current_review_word.word}
+              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
+                フラッシュカード
               </p>
-              <p className="m-0 text-sm font-medium text-primary">
-                {current_review_word.reading_kana}
-              </p>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4 p-5 pt-0">
-            <dl className="grid gap-4">
-              <div className="rounded-lg border border-border/80 bg-muted/20 p-4">
-                <dt className="m-0 text-xs font-medium tracking-wide text-muted-foreground">
-                  意味
-                </dt>
-                <dd className="m-0 mt-2 text-sm leading-6 text-foreground">
-                  {current_review_word.meaning_ja}
-                </dd>
-              </div>
-              <div className="rounded-lg border border-border/80 bg-muted/20 p-4">
-                <dt className="m-0 text-xs font-medium tracking-wide text-muted-foreground">
-                  文脈
-                </dt>
-                <dd className="m-0 mt-2 text-sm leading-6 text-foreground">
-                  {current_review_word.context_scene_ja}
-                </dd>
-              </div>
-              <div className="rounded-lg border border-border/80 bg-muted/20 p-4">
-                <dt className="m-0 text-xs font-medium tracking-wide text-muted-foreground">
-                  例文
-                </dt>
-                <dd className="m-0 mt-2 text-sm leading-6 text-foreground">
-                  {current_review_word.example_sentence_ja}
-                </dd>
-              </div>
-            </dl>
-
-            <div className="rounded-xl border border-border/80 bg-muted/20 px-4 py-3">
-              <p className="m-0 text-sm text-muted-foreground">
-                評価を選ぶと次回の復習日時が更新されます。
+              <p className="text-sm leading-7 text-muted-foreground">
+                意味と文脈を確認したら、思い出しやすさに近い評価を選んでください。
               </p>
             </div>
+            <div className="rounded-full bg-white/72 px-5 py-2 text-sm text-muted-foreground">
+              評価すると次回日時を更新します
+            </div>
+          </div>
 
-            <div className="flex flex-wrap gap-2" aria-label="復習評価">
-              {REVIEW_GRADES.map((grade) => (
-                <Button
-                  key={grade}
-                  className={cn('min-w-16', review_grade_class_name(grade))}
-                  disabled={grading_word_id === current_review_word.id}
+          <div className="relative mx-auto w-full max-w-4xl">
+            <div className="absolute inset-0 translate-x-4 translate-y-4 rounded-[2rem] bg-primary-container/18" />
+            <div className="absolute inset-0 -translate-x-2 translate-y-2 rounded-[2rem] bg-white/70" />
+            <div className="relative rounded-[2.5rem] bg-white/88 px-6 py-8 shadow-[0_40px_90px_-52px_rgba(48,104,0,0.5)] sm:px-10 sm:py-12">
+              <div className="mb-8 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
+                    単語
+                  </p>
+                  <p className="mt-2 text-base font-semibold tracking-[0.03em] text-primary">
+                    {current_review_word.reading_kana}
+                  </p>
+                </div>
+                <span className="rounded-full bg-[#f4ffe8] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-primary">
+                  復習中
+                </span>
+              </div>
+
+              <div className="space-y-8 text-center">
+                <h3 className="font-headline text-6xl font-extrabold tracking-tight text-foreground sm:text-[5.5rem]">
+                  {current_review_word.word}
+                </h3>
+                <div className="grid gap-4 text-left lg:grid-cols-3">
+                  <div className="rounded-[1.75rem] bg-[#f7fff0] px-5 py-5">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+                      意味
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-foreground">
+                      {current_review_word.meaning_ja}
+                    </p>
+                  </div>
+                  <div className="rounded-[1.75rem] bg-[#effff9] px-5 py-5">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+                      文脈
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-foreground">
+                      {current_review_word.context_scene_ja}
+                    </p>
+                  </div>
+                  <div className="rounded-[1.75rem] bg-white/72 px-5 py-5 shadow-[inset_0_0_0_1px_rgba(48,104,0,0.06)]">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+                      例文
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-foreground">
+                      {current_review_word.example_sentence_ja}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div aria-label="復習評価" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+            {REVIEW_GRADES.map((item) => {
+              const is_submitting = grading_word_id === current_review_word.id
+
+              return (
+                <button
+                  key={item.grade}
+                  className={cn(
+                    'group rounded-[2rem] px-4 py-5 text-center shadow-[0_20px_44px_-34px_rgba(14,54,27,0.4)] transition-all duration-200 hover:-translate-y-1 disabled:translate-y-0 disabled:opacity-60',
+                    item.tone,
+                    item.grade === 5 ? 'scale-[1.03]' : 'bg-white/70'
+                  )}
+                  disabled={is_submitting}
                   onClick={() => {
-                    void on_grade(grade)
+                    void on_grade(item.grade)
                   }}
                   type="button"
-                  variant="outline"
                 >
-                  {grading_word_id === current_review_word.id ? '送信中...' : grade}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
+                  <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/72 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.26)]">
+                    <span className="material-symbols-outlined text-[30px]">{item.icon}</span>
+                  </span>
+                  <p className="mt-4 font-headline text-2xl font-extrabold tracking-tight">
+                    {is_submitting ? '...' : item.grade}
+                  </p>
+                  <p className="mt-1 text-xs font-bold tracking-[0.18em] text-foreground/75">
+                    {is_submitting ? '送信中' : item.label}
+                  </p>
+                </button>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    ) : null}
 
-      {current_review_word === null && is_loading === false ? (
-        <EmptyState
-          title="今日の復習は完了しました。"
-          description="新しく到期した単語がある場合は、このページに自動で表示されます。"
-        />
-      ) : null}
+    {current_review_word === null && is_loading === false ? (
+      <EmptyState
+        title="今日の復習は完了しました。"
+        description="新しく到期した単語がある場合は、このページに自動で表示されます。"
+      />
+    ) : null}
 
-      <div className="space-y-3">
-        {status_message.length > 0 ? (
-          <StatusMessage message={status_message} kind="success" role="status" />
-        ) : null}
-        {error_message.length > 0 ? (
-          <StatusMessage message={error_message} kind="error" role="alert" />
-        ) : null}
-      </div>
-    </CardContent>
-  </Card>
+    <div className="space-y-3">
+      {status_message.length > 0 ? (
+        <StatusMessage message={status_message} kind="success" role="status" />
+      ) : null}
+      {error_message.length > 0 ? (
+        <StatusMessage message={error_message} kind="error" role="alert" />
+      ) : null}
+    </div>
+  </div>
 )

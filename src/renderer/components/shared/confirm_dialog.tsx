@@ -61,7 +61,7 @@ export const ConfirmDialog = ({
         className="w-full max-w-md"
         role="alertdialog"
       >
-        <Card className="border-border/90 bg-card shadow-xl">
+        <Card className="border-white/28 bg-white/82 shadow-[0_36px_80px_-42px_rgba(14,54,27,0.55)]">
           <CardHeader>
             <CardTitle id="confirm-dialog-title">{title}</CardTitle>
             <CardDescription id="confirm-dialog-description">{description}</CardDescription>

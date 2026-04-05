@@ -1,0 +1,428 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'inverse-on-surface': '#9b9d9d',
+              'outline-variant': '#abb4b3',
+              'surface-container-high': '#e3e9e8',
+              'on-tertiary-fixed': '#404e31',
+              'on-background': '#2c3433',
+              'primary-dim': '#3b584d',
+              'tertiary-fixed': '#e9fad2',
+              'on-primary': '#dffff0',
+              background: '#f9f9f8',
+              'primary-container': '#c9eadb',
+              'on-secondary': '#f7f9f6',
+              'error-dim': '#4e0309',
+              'on-error': '#fff7f6',
+              'tertiary-fixed-dim': '#daebc4',
+              'on-error-container': '#752121',
+              'on-tertiary': '#eeffd7',
+              'tertiary-dim': '#49583a',
+              'on-tertiary-container': '#526042',
+              'on-primary-fixed-variant': '#446156',
+              'primary-fixed': '#c9eadb',
+              primary: '#476459',
+              'surface-variant': '#dce4e3',
+              'tertiary-container': '#e9fad2',
+              'on-secondary-container': '#4f5250',
+              error: '#9f403d',
+              'secondary-fixed-dim': '#d2d5d2',
+              'surface-container-highest': '#dce4e3',
+              'secondary-container': '#e1e3e0',
+              outline: '#747c7c',
+              'surface-container': '#eaefee',
+              'on-tertiary-fixed-variant': '#5c6b4c',
+              tertiary: '#556445',
+              'secondary-dim': '#505452',
+              'on-surface': '#2c3433',
+              'secondary-fixed': '#e1e3e0',
+              surface: '#f9f9f8',
+              'surface-dim': '#d2dcdb',
+              'surface-tint': '#476459',
+              'surface-container-lowest': '#ffffff',
+              'on-primary-container': '#3a584d',
+              'surface-bright': '#f9f9f8',
+              'surface-container-low': '#f1f4f3',
+              'inverse-primary': '#d7f8e9',
+              'primary-fixed-dim': '#bbdccd',
+              'on-secondary-fixed-variant': '#595c5a',
+              'on-surface-variant': '#586160',
+              'inverse-surface': '#0c0f0e',
+              'on-secondary-fixed': '#3d403e',
+              'error-container': '#fe8983',
+              'on-primary-fixed': '#28453b',
+              secondary: '#5c605d',
+            },
+            borderRadius: {
+              DEFAULT: '1rem',
+              lg: '2rem',
+              xl: '3rem',
+              full: '9999px',
+            },
+            fontFamily: {
+              headline: ['Manrope'],
+              body: ['Inter'],
+              label: ['Inter'],
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+      }
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+      }
+    </style>
+  </head>
+  <body class="bg-background text-on-surface font-body min-h-screen flex overflow-hidden">
+    <!-- Predicted SideNavBar -->
+    <nav
+      class="h-screen w-64 rounded-r-xl sticky left-0 top-0 bg-[#f1f4f3] dark:bg-zinc-900 flex flex-col p-6 gap-8 z-50"
+    >
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary"
+          >
+            <span class="material-symbols-outlined" data-icon="spa">spa</span>
+          </div>
+          <h1 class="text-xl font-extrabold text-[#5D7B6F] font-headline">Kotoba</h1>
+        </div>
+        <p class="text-[10px] uppercase tracking-widest text-on-surface-variant ml-1">
+          Digital Zen Garden
+        </p>
+      </div>
+      <div class="flex flex-col gap-2 mt-4">
+        <a
+          class="flex items-center gap-4 px-4 py-3 text-zinc-500 dark:text-zinc-400 font-semibold font-headline tracking-wide hover:translate-x-1 transition-transform duration-300"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+          <span>Dashboard</span>
+        </a>
+        <a
+          class="flex items-center gap-4 px-4 py-3 text-zinc-500 dark:text-zinc-400 font-semibold font-headline tracking-wide hover:translate-x-1 transition-transform duration-300"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+          <span>Vocabulary</span>
+        </a>
+        <a
+          class="flex items-center gap-4 px-4 py-3 text-zinc-500 dark:text-zinc-400 font-semibold font-headline tracking-wide hover:translate-x-1 transition-transform duration-300"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="school">school</span>
+          <span>Study</span>
+        </a>
+        <a
+          class="flex items-center gap-4 px-4 py-3 bg-white dark:bg-zinc-800 text-[#5D7B6F] dark:text-[#8ba89c] rounded-[1.5rem] shadow-sm font-semibold font-headline tracking-wide hover:translate-x-1 transition-transform duration-300"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="settings">settings</span>
+          <span>Settings</span>
+        </a>
+      </div>
+      <div class="mt-auto flex flex-col gap-2">
+        <button
+          class="w-full bg-gradient-to-br from-primary to-primary-dim text-white py-3 px-6 rounded-full font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all"
+        >
+          <span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+          Add Word
+        </button>
+        <a
+          class="flex items-center gap-4 px-4 py-3 text-zinc-500 dark:text-zinc-400 font-semibold font-headline tracking-wide hover:translate-x-1 transition-transform duration-300"
+          href="#"
+        >
+          <span class="material-symbols-outlined" data-icon="help">help</span>
+          <span>Help</span>
+        </a>
+      </div>
+    </nav>
+    <main class="flex-1 overflow-y-auto relative">
+      <!-- Predicted TopNavBar -->
+      <header
+        class="flex justify-between items-center w-full px-8 py-4 max-w-full bg-[#f9f9f8] dark:bg-zinc-950 sticky top-0 z-40"
+      >
+        <div class="flex items-center gap-4">
+          <div class="relative group">
+            <span
+              class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant"
+              data-icon="search"
+              >search</span
+            >
+            <input
+              class="pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full w-64 focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all text-sm font-medium"
+              placeholder="Search settings..."
+              type="text"
+            />
+          </div>
+        </div>
+        <div class="flex items-center gap-6">
+          <button
+            class="text-sm font-bold tracking-[0.02em] font-headline text-[#5D7B6F] px-4 py-2 rounded-full hover:bg-white/50 transition-all active:scale-95"
+          >
+            Quick Study
+          </button>
+          <div class="flex items-center gap-4">
+            <button
+              class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors"
+              data-icon="notifications"
+            >
+              notifications
+            </button>
+            <img
+              alt="User profile avatar"
+              class="w-8 h-8 rounded-full object-cover"
+              data-alt="Portrait of a creative professional woman with a minimalist background, soft warm studio lighting, modern clean aesthetic"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3OdvEEEJ4LPVoDUuoh9n3MPu1kLgthNlNl__Yq6vUiEqY2LKr-UngetrC3hqufnyPjtzjMOKCmW167XGaHMDdgZrt4Cbg5pU-9brA_Pn5dyehD7ktuWwhkAodwNLqbo_kc_DbmrvHPnxOJuh3N-NeQ3v7oVkQqVoWbrY2leKvN8WwImIcALOD1GdsN_vkrqiLVDp1sqV6bnaouAhdFweBle22zeA_Avy2gjbhdwKWU90ErTJPADjzMmi3eJJFShwLLLZwFWkEbg"
+            />
+          </div>
+        </div>
+      </header>
+      <div class="p-12 max-w-5xl mx-auto">
+        <div class="mb-12">
+          <h2 class="text-4xl font-extrabold font-headline tracking-tight text-on-surface mb-2">
+            Settings
+          </h2>
+          <p class="text-on-surface-variant font-medium">
+            Configure your digital zen garden for optimal learning.
+          </p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+          <!-- Gemini API Configuration Card -->
+          <section
+            class="md:col-span-8 bg-surface-container-low rounded-lg p-8 relative overflow-hidden group"
+          >
+            <div class="relative z-10">
+              <div class="flex items-center gap-3 mb-8">
+                <span class="material-symbols-outlined text-primary" data-icon="api">api</span>
+                <h3 class="text-xl font-bold font-headline">Gemini API Configuration</h3>
+              </div>
+              <div class="space-y-6">
+                <div class="space-y-2">
+                  <label
+                    class="text-xs font-bold uppercase tracking-wider text-on-surface-variant ml-1"
+                    >API Key</label
+                  >
+                  <div class="relative">
+                    <input
+                      class="w-full bg-surface-container-lowest border-none rounded-md px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all font-mono text-sm"
+                      type="password"
+                      value="••••••••••••••••••••••••••••••"
+                    />
+                    <button
+                      class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant"
+                      data-icon="visibility"
+                    >
+                      visibility
+                    </button>
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div class="space-y-2">
+                    <label
+                      class="text-xs font-bold uppercase tracking-wider text-on-surface-variant ml-1"
+                      >Model Selection</label
+                    >
+                    <select
+                      class="w-full bg-surface-container-lowest border-none rounded-md px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium appearance-none cursor-pointer"
+                    >
+                      <option selected="">gemini-1.5-flash</option>
+                      <option>gemini-1.5-pro</option>
+                      <option>gemini-1.0-pro</option>
+                    </select>
+                  </div>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                      <label
+                        class="text-xs font-bold uppercase tracking-wider text-on-surface-variant ml-1"
+                        >Timeout (s)</label
+                      >
+                      <input
+                        class="w-full bg-surface-container-lowest border-none rounded-md px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium"
+                        type="number"
+                        value="15"
+                      />
+                    </div>
+                    <div class="space-y-2">
+                      <label
+                        class="text-xs font-bold uppercase tracking-wider text-on-surface-variant ml-1"
+                        >Retries</label
+                      >
+                      <input
+                        class="w-full bg-surface-container-lowest border-none rounded-md px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all text-sm font-medium"
+                        type="number"
+                        value="2"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          <!-- General Settings Card -->
+          <section
+            class="md:col-span-4 bg-surface-container-lowest rounded-lg p-8 shadow-sm border border-outline-variant/10"
+          >
+            <div class="flex items-center gap-3 mb-8">
+              <span class="material-symbols-outlined text-primary" data-icon="tune">tune</span>
+              <h3 class="text-xl font-bold font-headline">General</h3>
+            </div>
+            <div class="space-y-8">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="font-bold text-sm">Theme Mode</p>
+                  <p class="text-xs text-on-surface-variant">Switch between light and dark</p>
+                </div>
+                <button
+                  class="w-12 h-6 bg-primary-container rounded-full relative p-1 transition-colors group"
+                >
+                  <div class="w-4 h-4 bg-primary rounded-full absolute right-1 top-1"></div>
+                </button>
+              </div>
+              <div class="space-y-2">
+                <label
+                  class="text-xs font-bold uppercase tracking-wider text-on-surface-variant ml-1"
+                  >Default Language</label
+                >
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    class="px-4 py-2 rounded-full bg-primary-container text-on-primary-container text-xs font-bold border-2 border-primary/20"
+                  >
+                    Japanese
+                  </button>
+                  <button
+                    class="px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant text-xs font-bold border-2 border-transparent hover:border-outline-variant/30 transition-all"
+                  >
+                    English
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+          <!-- Backup & Export Bento -->
+          <section class="md:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+            <div
+              class="bg-surface-container-low rounded-lg p-8 flex items-center justify-between group hover:bg-surface-container-high transition-colors"
+            >
+              <div class="flex items-center gap-6">
+                <div
+                  class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-primary shadow-sm"
+                >
+                  <span class="material-symbols-outlined text-3xl" data-icon="cloud_upload"
+                    >cloud_upload</span
+                  >
+                </div>
+                <div>
+                  <h4 class="text-lg font-bold font-headline">Backup Data</h4>
+                  <p class="text-sm text-on-surface-variant">Sync your vocabulary to the cloud</p>
+                </div>
+              </div>
+              <button
+                class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-all group-hover:translate-x-1"
+                data-icon="chevron_right"
+              >
+                chevron_right
+              </button>
+            </div>
+            <div
+              class="bg-surface-container-low rounded-lg p-8 flex items-center justify-between group hover:bg-surface-container-high transition-colors"
+            >
+              <div class="flex items-center gap-6">
+                <div
+                  class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-primary shadow-sm"
+                >
+                  <span class="material-symbols-outlined text-3xl" data-icon="terminal"
+                    >terminal</span
+                  >
+                </div>
+                <div>
+                  <h4 class="text-lg font-bold font-headline">Export to JSON</h4>
+                  <p class="text-sm text-on-surface-variant">Download raw data for offline use</p>
+                </div>
+              </div>
+              <button
+                class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-all group-hover:translate-x-1"
+                data-icon="download"
+              >
+                download
+              </button>
+            </div>
+          </section>
+          <!-- Danger Zone (Asymmetric Content) -->
+          <section class="md:col-span-12 mt-12 pt-12 border-t border-outline-variant/10">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div class="max-w-md">
+                <h3 class="text-lg font-bold text-error font-headline mb-1">Delete Account</h3>
+                <p class="text-sm text-on-surface-variant">
+                  Permanently remove all your learning progress, vocabulary lists, and account
+                  settings. This action cannot be undone.
+                </p>
+              </div>
+              <button
+                class="px-8 py-3 rounded-full bg-error/10 text-error font-bold hover:bg-error hover:text-white transition-all text-sm active:scale-95 self-start md:self-center"
+              >
+                Delete Everything
+              </button>
+            </div>
+          </section>
+        </div>
+        <!-- Toast Notification (Glassmorphism Example) -->
+        <div
+          class="fixed bottom-12 right-12 glass-panel border border-white/40 shadow-2xl rounded-lg px-6 py-4 flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 z-50"
+        >
+          <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+            <span
+              class="material-symbols-outlined text-white text-sm"
+              data-icon="check"
+              data-weight="fill"
+              style="font-variation-settings: 'FILL' 1"
+              >check</span
+            >
+          </div>
+          <p class="text-sm font-bold text-on-surface">Settings saved successfully</p>
+          <button
+            class="material-symbols-outlined text-on-surface-variant text-sm ml-4"
+            data-icon="close"
+          >
+            close
+          </button>
+        </div>
+      </div>
+    </main>
+    <!-- Decorative Zen Background Element -->
+    <div
+      class="fixed top-[-10%] right-[-5%] w-[40%] h-[60%] bg-primary/5 blur-[120px] rounded-full -z-10"
+    ></div>
+    <div
+      class="fixed bottom-[-5%] left-[20%] w-[30%] h-[40%] bg-primary/3 blur-[100px] rounded-full -z-10"
+    ></div>
+  </body>
+</html>

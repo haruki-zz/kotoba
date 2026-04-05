@@ -1,0 +1,419 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Kotoba Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'inverse-on-surface': '#9b9d9d',
+              'outline-variant': '#abb4b3',
+              'surface-container-high': '#e3e9e8',
+              'on-tertiary-fixed': '#404e31',
+              'on-background': '#2c3433',
+              'primary-dim': '#3b584d',
+              'tertiary-fixed': '#e9fad2',
+              'on-primary': '#dffff0',
+              background: '#f9f9f8',
+              'primary-container': '#c9eadb',
+              'on-secondary': '#f7f9f6',
+              'error-dim': '#4e0309',
+              'on-error': '#fff7f6',
+              'tertiary-fixed-dim': '#daebc4',
+              'on-error-container': '#752121',
+              'on-tertiary': '#eeffd7',
+              'tertiary-dim': '#49583a',
+              'on-tertiary-container': '#526042',
+              'on-primary-fixed-variant': '#446156',
+              'primary-fixed': '#c9eadb',
+              primary: '#476459',
+              'surface-variant': '#dce4e3',
+              'tertiary-container': '#e9fad2',
+              'on-secondary-container': '#4f5250',
+              error: '#9f403d',
+              'secondary-fixed-dim': '#d2d5d2',
+              'surface-container-highest': '#dce4e3',
+              'secondary-container': '#e1e3e0',
+              outline: '#747c7c',
+              'surface-container': '#eaefee',
+              'on-tertiary-fixed-variant': '#5c6b4c',
+              tertiary: '#556445',
+              'secondary-dim': '#505452',
+              'on-surface': '#2c3433',
+              'secondary-fixed': '#e1e3e0',
+              surface: '#f9f9f8',
+              'surface-dim': '#d2dcdb',
+              'surface-tint': '#476459',
+              'surface-container-lowest': '#ffffff',
+              'on-primary-container': '#3a584d',
+              'surface-bright': '#f9f9f8',
+              'surface-container-low': '#f1f4f3',
+              'inverse-primary': '#d7f8e9',
+              'primary-fixed-dim': '#bbdccd',
+              'on-secondary-fixed-variant': '#595c5a',
+              'on-surface-variant': '#586160',
+              'inverse-surface': '#0c0f0e',
+              'on-secondary-fixed': '#3d403e',
+              'error-container': '#fe8983',
+              'on-primary-fixed': '#28453b',
+              secondary: '#5c605d',
+            },
+            borderRadius: {
+              DEFAULT: '1rem',
+              lg: '2rem',
+              xl: '3rem',
+              full: '9999px',
+            },
+            fontFamily: {
+              headline: ['Manrope'],
+              body: ['Inter'],
+              label: ['Inter'],
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+      }
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(16px);
+      }
+      .gradient-mesh {
+        background-color: #f9f9f8;
+        background-image:
+          radial-gradient(at 0% 0%, #f1f4f3 0px, transparent 50%),
+          radial-gradient(at 100% 0%, #c9eadb 0px, transparent 50%),
+          radial-gradient(at 100% 100%, #f1f4f3 0px, transparent 50%),
+          radial-gradient(at 0% 100%, #e9fad2 0px, transparent 50%);
+        background-attachment: fixed;
+      }
+    </style>
+  </head>
+  <body class="font-body text-on-surface gradient-mesh min-h-screen flex">
+    <!-- SideNavBar Anchor -->
+    <aside
+      class="hidden md:flex flex-col h-screen w-64 rounded-r-xl sticky left-0 top-0 bg-[#f1f4f3] dark:bg-zinc-900 p-6 gap-8 z-50"
+    >
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-on-primary"
+        >
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1"
+            >spa</span
+          >
+        </div>
+        <div>
+          <h1 class="font-headline font-extrabold text-xl text-[#5D7B6F]">Kotoba</h1>
+          <p class="text-[10px] uppercase tracking-widest text-on-surface-variant/70 font-bold">
+            Digital Zen Garden
+          </p>
+        </div>
+      </div>
+      <nav class="flex flex-col gap-2 flex-grow">
+        <a
+          class="flex items-center gap-4 px-4 py-3 bg-white dark:bg-zinc-800 text-[#5D7B6F] dark:text-[#8ba89c] rounded-lg shadow-sm font-headline font-semibold tracking-wide transition-all scale-95 duration-200"
+          href="#"
+        >
+          <span class="material-symbols-outlined">dashboard</span>
+          <span>Dashboard</span>
+        </a>
+        <a
+          class="flex items-center gap-4 px-4 py-3 text-zinc-500 dark:text-zinc-400 hover:text-[#5D7B6F] hover:translate-x-1 transition-transform duration-300 font-headline font-semibold tracking-wide"
+          href="#"
+        >
+          <span class="material-symbols-outlined">menu_book</span>
+          <span>Vocabulary</span>
+        </a>
+        <a
+          class="flex items-center gap-4 px-4 py-3 text-zinc-500 dark:text-zinc-400 hover:text-[#5D7B6F] hover:translate-x-1 transition-transform duration-300 font-headline font-semibold tracking-wide"
+          href="#"
+        >
+          <span class="material-symbols-outlined">school</span>
+          <span>Study</span>
+        </a>
+        <a
+          class="flex items-center gap-4 px-4 py-3 text-zinc-500 dark:text-zinc-400 hover:text-[#5D7B6F] hover:translate-x-1 transition-transform duration-300 font-headline font-semibold tracking-wide"
+          href="#"
+        >
+          <span class="material-symbols-outlined">settings</span>
+          <span>Settings</span>
+        </a>
+      </nav>
+      <div class="mt-auto flex flex-col gap-4">
+        <button
+          class="bg-primary text-white py-4 px-6 rounded-lg font-headline font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all"
+        >
+          <span class="material-symbols-outlined">add</span>
+          Add Word
+        </button>
+        <a
+          class="flex items-center gap-4 px-4 py-3 text-zinc-500 dark:text-zinc-400 hover:text-[#5D7B6F] font-headline font-semibold tracking-wide"
+          href="#"
+        >
+          <span class="material-symbols-outlined">help</span>
+          <span>Help</span>
+        </a>
+      </div>
+    </aside>
+    <!-- Main Content Canvas -->
+    <main class="flex-grow p-8 md:p-12 max-w-7xl mx-auto w-full">
+      <!-- Top Navigation (Shell Integrated) -->
+      <header class="flex justify-between items-center w-full mb-12">
+        <div class="space-y-1">
+          <h2 class="text-4xl font-headline font-extrabold tracking-tight text-on-surface">
+            Okaeri, Alex.
+          </h2>
+          <p class="text-on-surface-variant font-medium">Continue your path to Japanese mastery.</p>
+        </div>
+        <div class="flex items-center gap-6">
+          <div class="hidden lg:flex items-center bg-surface-container-low px-4 py-2 rounded-full">
+            <span class="material-symbols-outlined text-outline">search</span>
+            <input
+              class="bg-transparent border-none focus:ring-0 text-sm font-medium w-48"
+              placeholder="Search dictionary..."
+              type="text"
+            />
+          </div>
+          <button
+            class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors"
+          >
+            <span class="material-symbols-outlined">notifications</span>
+          </button>
+          <div class="w-12 h-12 rounded-full overflow-hidden ring-4 ring-white shadow-sm">
+            <img
+              class="w-full h-full object-cover"
+              data-alt="Portrait of a young man with a peaceful expression in a bright minimalist setting with natural light"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYeJ-jS15QIuKdWc9J0STCWGr8wszyt5oJzdMoFlD_767eGGwhfhdzRIk6q-mMd6bBlsCgkdfSjHiWZIADOzHp1NmmtD_IWhtQn9hgtYRP9ukIv8FLsonKmKvv4-aA07SjbpCZsx1D9ZUOG3uu3R4kjYeqhlbnWVvM2juwT_iWAhIEu9r_wcuE7cA__9tx2emg4GVsk1kndK_tOk7qoz4N8nsTjWWfxQacwSXlpzim3auBWSuEcXiFaJmtOsDRfK8Mm6tk82vPUg"
+            />
+          </div>
+        </div>
+      </header>
+      <!-- Bento Grid Layout -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+        <!-- Spaced Repetition Hero Card -->
+        <section
+          class="md:col-span-8 bg-surface-container-lowest rounded-xl p-10 flex flex-col justify-between min-h-[340px] relative overflow-hidden group"
+        >
+          <div
+            class="absolute top-0 right-0 w-64 h-64 bg-primary-container/20 rounded-full -mr-20 -mt-20 blur-3xl transition-all group-hover:bg-primary-container/30"
+          ></div>
+          <div class="z-10">
+            <span
+              class="inline-block px-4 py-1.5 rounded-full bg-primary-container text-on-primary-container font-headline text-xs font-bold tracking-widest uppercase mb-6"
+              >SM-2 Spaced Repetition</span
+            >
+            <h3 class="text-5xl font-headline font-bold text-on-surface mb-4">
+              Ready for review: <span class="text-primary">12 words</span>
+            </h3>
+            <p class="text-on-surface-variant text-lg max-w-md leading-relaxed">
+              Your neural connections are at their peak. Reinforce these terms now for long-term
+              retention.
+            </p>
+          </div>
+          <div class="z-10 flex items-center gap-4 mt-8">
+            <button
+              class="px-8 py-4 bg-primary text-on-primary rounded-lg font-headline font-bold text-lg shadow-xl shadow-primary/25 hover:scale-105 active:scale-95 transition-all"
+            >
+              Start Session
+            </button>
+            <div class="flex flex-col">
+              <span class="text-sm font-bold text-on-surface">New words added: 45</span>
+              <span class="text-xs text-on-surface-variant">Scheduled for tomorrow</span>
+            </div>
+          </div>
+        </section>
+        <!-- AI Quick Action Card -->
+        <section
+          class="md:col-span-4 bg-surface-container-lowest rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-sm border border-outline-variant/10 hover:border-primary/20 transition-all group"
+        >
+          <div
+            class="w-20 h-20 rounded-xl bg-gradient-to-br from-primary to-primary-dim flex items-center justify-center mb-6 shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform"
+          >
+            <span
+              class="material-symbols-outlined text-white text-4xl"
+              style="font-variation-settings: 'FILL' 1"
+              >auto_awesome</span
+            >
+          </div>
+          <h4 class="text-2xl font-headline font-bold text-on-surface mb-3">
+            AI Generate Word Card
+          </h4>
+          <p class="text-on-surface-variant text-sm mb-8 leading-relaxed">
+            Powered by Gemini. Instantly create context-rich cards from any text or image.
+          </p>
+          <button
+            class="w-full py-4 bg-surface-container-low text-primary font-headline font-bold rounded-lg hover:bg-primary hover:text-white transition-all"
+          >
+            Open Generator
+          </button>
+        </section>
+        <!-- Heatmap Section (Full Width) -->
+        <section class="md:col-span-12 bg-surface-container-low rounded-xl p-10">
+          <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"
+          >
+            <div>
+              <h4 class="text-2xl font-headline font-bold text-on-surface">Learning Activity</h4>
+              <p class="text-on-surface-variant text-sm">You have maintained a 14-day streak.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider"
+                >Less</span
+              >
+              <div class="flex gap-1.5">
+                <div class="w-4 h-4 rounded-sm bg-surface-container-highest"></div>
+                <div class="w-4 h-4 rounded-sm bg-primary-container"></div>
+                <div class="w-4 h-4 rounded-sm bg-[#8ba89c]"></div>
+                <div class="w-4 h-4 rounded-sm bg-[#5D7B6F]"></div>
+                <div class="w-4 h-4 rounded-sm bg-primary"></div>
+              </div>
+              <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider"
+                >More</span
+              >
+            </div>
+          </div>
+          <!-- GitHub Style Minimal Heatmap -->
+          <div class="overflow-x-auto">
+            <div class="flex gap-2 min-w-[800px]">
+              <!-- Column per week -->
+              <div class="flex flex-col gap-2">
+                <div class="w-6 h-6 rounded-sm bg-surface-container-highest"></div>
+                <div class="w-6 h-6 rounded-sm bg-primary-container"></div>
+                <div class="w-6 h-6 rounded-sm bg-surface-container-highest"></div>
+                <div class="w-6 h-6 rounded-sm bg-[#8ba89c]"></div>
+                <div class="w-6 h-6 rounded-sm bg-primary-container"></div>
+                <div class="w-6 h-6 rounded-sm bg-surface-container-highest"></div>
+                <div class="w-6 h-6 rounded-sm bg-surface-container-highest"></div>
+              </div>
+              <!-- Repeat for visualization -->
+              <script>
+                const heatmap = document.querySelector('.flex.gap-2.min-w-\\[800px\\]')
+                const colors = [
+                  'bg-surface-container-highest',
+                  'bg-primary-container',
+                  'bg-[#8ba89c]',
+                  'bg-[#5D7B6F]',
+                  'bg-primary',
+                ]
+                for (let i = 0; i < 24; i++) {
+                  let col = document.createElement('div')
+                  col.className = 'flex flex-col gap-2'
+                  for (let j = 0; j < 7; j++) {
+                    let cell = document.createElement('div')
+                    const randomColor = colors[Math.floor(Math.random() * colors.length)]
+                    cell.className = `w-6 h-6 rounded-sm ${Math.random() > 0.4 ? randomColor : 'bg-surface-container-highest'}`
+                    col.appendChild(cell)
+                  }
+                  heatmap.appendChild(col)
+                }
+              </script>
+            </div>
+          </div>
+        </section>
+        <!-- Secondary Detail Cards -->
+        <div
+          class="md:col-span-6 bg-surface-container-lowest rounded-xl p-8 flex items-center gap-6 shadow-sm border border-outline-variant/5"
+        >
+          <div
+            class="w-16 h-16 rounded-full bg-tertiary-container flex items-center justify-center text-on-tertiary-container"
+          >
+            <span class="material-symbols-outlined text-3xl">trending_up</span>
+          </div>
+          <div>
+            <h5 class="font-headline font-bold text-xl">Vocabulary Growth</h5>
+            <p class="text-on-surface-variant text-sm">+24% from last month</p>
+          </div>
+        </div>
+        <div
+          class="md:col-span-6 bg-surface-container-lowest rounded-xl p-8 flex items-center gap-6 shadow-sm border border-outline-variant/5"
+        >
+          <div
+            class="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container"
+          >
+            <span class="material-symbols-outlined text-3xl">timer</span>
+          </div>
+          <div>
+            <h5 class="font-headline font-bold text-xl">Study Time</h5>
+            <p class="text-on-surface-variant text-sm">12.5 hours total this week</p>
+          </div>
+        </div>
+      </div>
+      <!-- Desktop Footer Info -->
+      <footer
+        class="mt-16 pt-8 flex justify-between items-center text-on-surface-variant/40 text-[10px] font-bold tracking-[0.1em] uppercase"
+      >
+        <div>© 2024 Kotoba Digital Zen Garden</div>
+        <div class="flex gap-8">
+          <a class="hover:text-primary transition-colors" href="#">Privacy</a>
+          <a class="hover:text-primary transition-colors" href="#">Manifesto</a>
+          <a class="hover:text-primary transition-colors" href="#">Support</a>
+        </div>
+      </footer>
+    </main>
+    <!-- Mobile Navigation Shell -->
+    <nav
+      class="md:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-outline-variant/10 px-8 py-4 flex justify-between items-center z-50"
+    >
+      <button class="flex flex-col items-center gap-1 text-primary">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1"
+          >dashboard</span
+        >
+        <span class="text-[10px] font-bold">Home</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 text-on-surface-variant">
+        <span class="material-symbols-outlined">menu_book</span>
+        <span class="text-[10px] font-bold">Vocabulary</span>
+      </button>
+      <div class="relative -top-8">
+        <button
+          class="w-14 h-14 bg-primary rounded-full shadow-lg shadow-primary/30 flex items-center justify-center text-white"
+        >
+          <span class="material-symbols-outlined text-3xl">add</span>
+        </button>
+      </div>
+      <button class="flex flex-col items-center gap-1 text-on-surface-variant">
+        <span class="material-symbols-outlined">school</span>
+        <span class="text-[10px] font-bold">Study</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 text-on-surface-variant">
+        <span class="material-symbols-outlined">settings</span>
+        <span class="text-[10px] font-bold">Settings</span>
+      </button>
+    </nav>
+    <!-- Floating Action for Quick Study -->
+    <button
+      class="hidden lg:flex fixed bottom-12 right-12 bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-xl shadow-2xl items-center gap-4 group hover:bg-white/20 transition-all cursor-pointer"
+    >
+      <div class="w-12 h-12 bg-primary rounded-lg flex items-center justify-center text-white">
+        <span class="material-symbols-outlined">play_arrow</span>
+      </div>
+      <div class="text-left">
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-primary">
+          Quick Study
+        </div>
+        <div class="text-on-surface font-headline font-bold">Resume N2 Kanji</div>
+      </div>
+    </button>
+  </body>
+</html>

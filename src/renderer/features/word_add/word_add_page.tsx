@@ -2,15 +2,10 @@ import { LoadingState } from '@/renderer/components/shared/loading_state'
 import { StatusMessage } from '@/renderer/components/shared/status_message'
 import { Badge } from '@/renderer/components/ui/badge'
 import { Button } from '@/renderer/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/renderer/components/ui/card'
+import { Card, CardContent } from '@/renderer/components/ui/card'
 import { Input } from '@/renderer/components/ui/input'
 import { Textarea } from '@/renderer/components/ui/textarea'
+import { cn } from '@/renderer/lib/utils'
 import type { WordAddDraftPayload } from '@/shared/ipc'
 
 type WordAddPageProps = {
@@ -35,7 +30,7 @@ const form_field = (props: {
   on_change: (value: string) => void
 }) => (
   <label className="space-y-2">
-    <span className="text-sm font-medium text-foreground">{props.label}</span>
+    <span className="text-sm font-semibold text-foreground">{props.label}</span>
     {props.multiline ? (
       <Textarea
         aria-label={props.aria_label}
@@ -55,6 +50,19 @@ const form_field = (props: {
   </label>
 )
 
+const workbench_card = (props: { label: string; value: string; tone?: string }) => (
+  <Card className={cn('border-white/20 bg-white/60', props.tone)}>
+    <CardContent className="space-y-2 p-5 pt-5">
+      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+        {props.label}
+      </p>
+      <p className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
+        {props.value}
+      </p>
+    </CardContent>
+  </Card>
+)
+
 export const WordAddPage = ({
   draft,
   status_message,
@@ -66,80 +74,135 @@ export const WordAddPage = ({
   on_generate,
   on_save,
 }: WordAddPageProps) => (
-  <Card className="border-border/80 bg-card/95">
-    <CardHeader className="space-y-4 p-5 sm:p-6">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div className="space-y-1">
-          <CardTitle>追加フロー</CardTitle>
-          <CardDescription>
-            単語を入力し、AI の生成結果を確認してから単語帳へ保存します。
-          </CardDescription>
-        </div>
-        <Badge className="w-fit px-3 py-1" variant="outline">
-          草稿は自動保存されます
-        </Badge>
-      </div>
-    </CardHeader>
-
-    <CardContent className="space-y-4 p-5 pt-0 sm:p-6 sm:pt-0">
-      <Card className="border-border/70 bg-background/80 shadow-none">
-        <CardContent className="flex flex-col gap-4 p-5 pt-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <p className="m-0 text-sm font-medium text-foreground">操作</p>
-            <p className="m-0 text-sm text-muted-foreground">
-              生成後も内容は編集できます。保存すると対応する草稿は削除されます。
-            </p>
+  <div className="space-y-6">
+    <section className="grid gap-6 xl:grid-cols-[1.2fr_0.95fr]">
+      <Card className="overflow-hidden border-white/18 bg-linear-to-br from-white/78 via-white/62 to-[#f4ffe8]/88">
+        <CardContent className="relative space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
+          <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[#7efc00]/20 blur-3xl" />
+          <div className="relative space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge variant="secondary">草稿は自動保存</Badge>
+              <Badge variant="outline">AI 生成</Badge>
+            </div>
+            <div className="space-y-3">
+              <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-primary/70">
+                単語追加ワークベンチ
+              </p>
+              <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
+                単語を入力して、
+                <br />
+                すぐにカード化する
+              </h2>
+              <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
+                読み、意味、文脈、例文を AI で生成し、必要に応じて整えてから単語帳へ保存します。
+              </p>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Button
-              disabled={is_generating}
-              onClick={() => {
-                void on_generate()
-              }}
-              type="button"
-            >
-              {is_generating ? '生成中...' : '生成'}
-            </Button>
-            <Button
-              disabled={save_disabled}
-              onClick={() => {
-                void on_save()
-              }}
-              type="button"
-            >
-              {is_saving ? '保存中...' : '保存'}
-            </Button>
+
+          <div className="relative rounded-[2rem] bg-white/66 p-5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.24)]">
+            <label className="space-y-2">
+              <span className="text-sm font-semibold text-foreground">単語</span>
+              <Input
+                aria-label="単語"
+                className="h-[3.25rem]"
+                placeholder="例: 食べる"
+                value={draft.word}
+                onChange={(event) => on_field_change('word', event.target.value)}
+              />
+            </label>
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button
+                disabled={is_generating}
+                onClick={() => {
+                  void on_generate()
+                }}
+                type="button"
+              >
+                {is_generating ? '生成中...' : '生成する'}
+              </Button>
+              <Button
+                disabled={save_disabled}
+                onClick={() => {
+                  void on_save()
+                }}
+                type="button"
+                variant="secondary"
+              >
+                {is_saving ? '保存中...' : '単語帳へ保存'}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {is_generating ? <LoadingState message="生成結果を読み込み中..." /> : null}
+      <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+        {workbench_card({
+          label: '入力状態',
+          value: draft.word.trim().length > 0 ? '準備完了' : '入力待ち',
+          tone: 'bg-[#f7fff0]',
+        })}
+        {workbench_card({
+          label: '生成結果',
+          value:
+            draft.reading_kana.trim().length > 0 ||
+            draft.meaning_ja.trim().length > 0 ||
+            draft.context_scene_ja.trim().length > 0 ||
+            draft.example_sentence_ja.trim().length > 0
+              ? '編集中'
+              : '未生成',
+          tone: 'bg-[#effff9]',
+        })}
+        {workbench_card({
+          label: '保存条件',
+          value: save_disabled ? '未充足' : '保存可能',
+          tone: 'bg-[#fffdf3]',
+        })}
+      </div>
+    </section>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-        <Card className="border-border/70 bg-background/90 shadow-none">
-          <CardHeader className="p-5 pb-4">
-            <CardTitle className="text-base">入力</CardTitle>
-            <CardDescription>AI に渡す単語を入力します。</CardDescription>
-          </CardHeader>
-          <CardContent className="p-5 pt-0">
-            {form_field({
-              label: '単語',
-              aria_label: '単語',
-              value: draft.word,
-              placeholder: '例: 食べる',
-              on_change: (value) => on_field_change('word', value),
-            })}
-          </CardContent>
-        </Card>
+    {is_generating ? <LoadingState message="生成結果を読み込み中..." /> : null}
 
-        <Card className="border-border/70 bg-background/90 shadow-none">
-          <CardHeader className="p-5 pb-4">
-            <CardTitle className="text-base">生成結果</CardTitle>
-            <CardDescription>
-              読み、意味、文脈、例文を確認し、必要に応じて編集します。
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 p-5 pt-0">
+    <section className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+      <Card className="border-white/20 bg-white/64">
+        <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
+          <div className="space-y-2">
+            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
+              入力
+            </p>
+            <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
+              生成の起点
+            </h3>
+            <p className="text-sm leading-7 text-muted-foreground">
+              まず単語を入力します。保存までの間は草稿として自動保存されます。
+            </p>
+          </div>
+
+          {form_field({
+            label: '単語',
+            aria_label: '単語',
+            value: draft.word,
+            placeholder: '例: 食べる',
+            on_change: (value) => on_field_change('word', value),
+          })}
+        </CardContent>
+      </Card>
+
+      <Card className="border-white/20 bg-white/60">
+        <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
+          <div className="space-y-2">
+            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
+              生成結果
+            </p>
+            <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
+              内容を整えて保存
+            </h3>
+            <p className="text-sm leading-7 text-muted-foreground">
+              読み、意味、文脈、例文を確認し、必要に応じて編集してから保存します。
+            </p>
+          </div>
+
+          <div className="grid gap-4">
             {form_field({
               label: '読み仮名',
               aria_label: '読み仮名',
@@ -150,7 +213,7 @@ export const WordAddPage = ({
               label: '意味（日本語）',
               aria_label: '意味',
               value: draft.meaning_ja,
-              rows: 3,
+              rows: 4,
               multiline: true,
               on_change: (value) => on_field_change('meaning_ja', value),
             })}
@@ -158,7 +221,7 @@ export const WordAddPage = ({
               label: '文脈',
               aria_label: '文脈',
               value: draft.context_scene_ja,
-              rows: 3,
+              rows: 4,
               multiline: true,
               on_change: (value) => on_field_change('context_scene_ja', value),
             })}
@@ -166,22 +229,22 @@ export const WordAddPage = ({
               label: '例文',
               aria_label: '例文',
               value: draft.example_sentence_ja,
-              rows: 2,
+              rows: 3,
               multiline: true,
               on_change: (value) => on_field_change('example_sentence_ja', value),
             })}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
+    </section>
 
-      <div className="space-y-3">
-        {status_message.length > 0 ? (
-          <StatusMessage message={status_message} kind="success" role="status" />
-        ) : null}
-        {error_message.length > 0 ? (
-          <StatusMessage message={error_message} kind="error" role="alert" />
-        ) : null}
-      </div>
-    </CardContent>
-  </Card>
+    <div className="space-y-3">
+      {status_message.length > 0 ? (
+        <StatusMessage message={status_message} kind="success" role="status" />
+      ) : null}
+      {error_message.length > 0 ? (
+        <StatusMessage message={error_message} kind="error" role="alert" />
+      ) : null}
+    </div>
+  </div>
 )

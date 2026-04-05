@@ -1,0 +1,502 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Kotoba | Vocabulary Library</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'on-secondary-fixed-variant': '#5a5c57',
+              'error-dim': '#b92902',
+              primary: '#306800',
+              'surface-container-highest': '#aeebb8',
+              'on-error': '#ffefec',
+              'tertiary-fixed': '#19edfd',
+              'on-error-container': '#520c00',
+              surface: '#deffe0',
+              'on-primary-fixed': '#1f4700',
+              'secondary-container': '#e3e3dc',
+              'surface-container-lowest': '#ffffff',
+              'surface-container-low': '#ccfdd1',
+              'inverse-surface': '#001204',
+              'surface-dim': '#a3e3ae',
+              'on-surface': '#0e361b',
+              'surface-tint': '#306800',
+              'surface-variant': '#aeebb8',
+              'inverse-on-surface': '#7da783',
+              'primary-container': '#7efc00',
+              secondary: '#5a5c57',
+              'tertiary-dim': '#00595f',
+              'on-secondary': '#f3f3ec',
+              'on-secondary-container': '#51524d',
+              background: '#deffe0',
+              'primary-fixed': '#7efc00',
+              'primary-dim': '#295b00',
+              'tertiary-container': '#19edfd',
+              'on-tertiary': '#d0faff',
+              'primary-fixed-dim': '#75ec00',
+              'on-primary': '#d6ffb5',
+              'error-container': '#f95630',
+              error: '#b02500',
+              'on-primary-container': '#2a5b00',
+              'tertiary-fixed-dim': '#00deed',
+              'on-primary-fixed-variant': '#2f6600',
+              'on-tertiary-fixed-variant': '#005e65',
+              'on-tertiary-fixed': '#003f44',
+              'surface-bright': '#deffe0',
+              'inverse-primary': '#7efc00',
+              'on-secondary-fixed': '#3e403b',
+              tertiary: '#00666d',
+              outline: '#58805f',
+              'surface-container-high': '#b7f0bf',
+              'on-background': '#0e361b',
+              'on-tertiary-container': '#00535a',
+              'surface-container': '#c0f5c7',
+              'on-surface-variant': '#3d6445',
+              'outline-variant': '#8db793',
+              'secondary-dim': '#4e504b',
+              'secondary-fixed-dim': '#d4d5ce',
+              'secondary-fixed': '#e3e3dc',
+            },
+            borderRadius: {
+              DEFAULT: '1rem',
+              lg: '2rem',
+              xl: '3rem',
+              full: '9999px',
+            },
+            fontFamily: {
+              headline: ['Manrope'],
+              body: ['Manrope'],
+              label: ['Manrope'],
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+      }
+      body {
+        font-family: 'Manrope', sans-serif;
+      }
+      .tonal-shift {
+        background: linear-gradient(180deg, #deffe0 0%, #ccfdd1 100%);
+      }
+      .liquid-cta {
+        background: linear-gradient(135deg, #306800 0%, #7efc00 100%);
+      }
+    </style>
+  </head>
+  <body class="bg-surface text-on-surface antialiased min-h-screen">
+    <!-- TopNavBar -->
+    <header
+      class="fixed top-0 w-full z-50 bg-[#deffe0]/80 dark:bg-emerald-950/80 backdrop-blur-xl shadow-xl shadow-[#0e361b]/5 flex justify-between items-center px-8 py-4 w-full"
+    >
+      <div class="flex items-center gap-8">
+        <span class="text-2xl font-black text-[#306800] dark:text-[#7efc00] tracking-tighter"
+          >Kotoba</span
+        >
+        <div class="hidden md:flex gap-6 font-manrope text-sm tracking-wide">
+          <a
+            class="text-[#0e361b] dark:text-[#deffe0] opacity-70 hover:scale-105 transition-transform duration-200"
+            href="#"
+            >Dashboard</a
+          >
+          <a
+            class="text-[#306800] dark:text-[#7efc00] font-bold hover:scale-105 transition-transform duration-200"
+            href="#"
+            >Vocabulary</a
+          >
+          <a
+            class="text-[#0e361b] dark:text-[#deffe0] opacity-70 hover:scale-105 transition-transform duration-200"
+            href="#"
+            >Study</a
+          >
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <button
+          class="material-symbols-outlined text-[#306800] dark:text-[#7efc00] p-2 hover:scale-105 transition-transform duration-200"
+          data-icon="notifications"
+        >
+          notifications
+        </button>
+        <button
+          class="material-symbols-outlined text-[#306800] dark:text-[#7efc00] p-2 hover:scale-105 transition-transform duration-200"
+          data-icon="account_circle"
+        >
+          account_circle
+        </button>
+      </div>
+    </header>
+    <div class="flex pt-20">
+      <!-- SideNavBar -->
+      <aside
+        class="hidden lg:flex flex-col gap-4 p-6 h-screen w-64 rounded-r-3xl bg-[#deffe0] dark:bg-emerald-950 fixed left-0"
+      >
+        <div class="mb-8">
+          <h2 class="text-xl font-black text-[#306800] dark:text-[#7efc00]">Kotoba Learning</h2>
+          <p class="text-xs font-semibold opacity-60">Active Session</p>
+        </div>
+        <nav class="flex flex-col gap-2">
+          <a
+            class="text-[#0e361b] dark:text-[#deffe0] px-6 py-3 flex items-center gap-3 hover:translate-x-2 transition-transform duration-300"
+            href="#"
+          >
+            <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+            <span class="font-manrope font-semibold">Dashboard</span>
+          </a>
+          <a
+            class="bg-[#7efc00] text-[#0e361b] rounded-full px-6 py-3 flex items-center gap-3 shadow-lg shadow-[#7efc00]/20 hover:translate-x-2 transition-transform duration-300"
+            href="#"
+          >
+            <span
+              class="material-symbols-outlined"
+              data-icon="menu_book"
+              style="font-variation-settings: 'FILL' 1"
+              >menu_book</span
+            >
+            <span class="font-manrope font-semibold">Vocabulary</span>
+          </a>
+          <a
+            class="text-[#0e361b] dark:text-[#deffe0] px-6 py-3 flex items-center gap-3 hover:translate-x-2 transition-transform duration-300"
+            href="#"
+          >
+            <span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+            <span class="font-manrope font-semibold">Study</span>
+          </a>
+          <a
+            class="text-[#0e361b] dark:text-[#deffe0] px-6 py-3 flex items-center gap-3 hover:translate-x-2 transition-transform duration-300"
+            href="#"
+          >
+            <span class="material-symbols-outlined" data-icon="settings">settings</span>
+            <span class="font-manrope font-semibold">Settings</span>
+          </a>
+        </nav>
+        <div class="mt-auto p-4 bg-surface-container-low rounded-xl">
+          <button
+            class="w-full liquid-cta text-on-primary-container font-bold py-3 rounded-full hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/10"
+          >
+            Start Daily Quiz
+          </button>
+        </div>
+      </aside>
+      <!-- Main Content Canvas -->
+      <main class="flex-1 lg:ml-64 p-8">
+        <header class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h1 class="text-6xl font-black text-on-surface tracking-tighter leading-[1.1] mb-2">
+              Lexicon
+            </h1>
+            <p class="text-lg font-medium text-on-surface-variant max-w-md opacity-80">
+              Your sanctuary of words, organized by mastery and kinetic growth.
+            </p>
+          </div>
+          <button
+            class="liquid-cta text-on-primary-container px-8 py-4 rounded-full flex items-center gap-3 font-bold hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary/20"
+          >
+            <span class="material-symbols-outlined" data-icon="add">add</span>
+            Add New Word
+          </button>
+        </header>
+        <!-- Quick Stats Bento Grid -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div class="bg-surface-container-high p-8 rounded-xl flex flex-col justify-between">
+            <span class="material-symbols-outlined text-primary text-4xl mb-4" data-icon="bolt"
+              >bolt</span
+            >
+            <div>
+              <h3 class="text-4xl font-black text-on-surface leading-none">1,284</h3>
+              <p
+                class="text-sm font-bold uppercase tracking-widest text-on-surface-variant opacity-60"
+              >
+                Words Mastered
+              </p>
+            </div>
+          </div>
+          <div class="bg-surface-container-low p-8 rounded-xl flex flex-col justify-between">
+            <span
+              class="material-symbols-outlined text-tertiary text-4xl mb-4"
+              data-icon="trending_up"
+              >trending_up</span
+            >
+            <div>
+              <h3 class="text-4xl font-black text-on-surface leading-none">84%</h3>
+              <p
+                class="text-sm font-bold uppercase tracking-widest text-on-surface-variant opacity-60"
+              >
+                Retention Rate
+              </p>
+            </div>
+          </div>
+          <div class="bg-primary-container p-8 rounded-xl flex flex-col justify-between">
+            <span
+              class="material-symbols-outlined text-on-primary-container text-4xl mb-4"
+              data-icon="auto_awesome"
+              >auto_awesome</span
+            >
+            <div>
+              <h3 class="text-4xl font-black text-on-primary-container leading-none">Day 42</h3>
+              <p
+                class="text-sm font-bold uppercase tracking-widest text-on-primary-container opacity-60"
+              >
+                Learning Streak
+              </p>
+            </div>
+          </div>
+        </section>
+        <!-- Vocabulary List -->
+        <div class="flex flex-col gap-4">
+          <!-- Word Card 1 -->
+          <div
+            class="bg-surface-container-lowest rounded-full px-8 py-6 flex items-center justify-between group hover:scale-[1.01] transition-all duration-300 shadow-sm border border-outline-variant/10"
+          >
+            <div class="flex items-center gap-12">
+              <div class="min-w-[140px]">
+                <h2 class="text-2xl font-black text-on-surface tracking-tight">Komorebi</h2>
+                <p class="text-sm font-semibold text-on-surface-variant">木漏れ日</p>
+              </div>
+              <div class="hidden md:block max-w-sm">
+                <p class="text-on-surface italic opacity-80 line-clamp-1">
+                  "Sunlight filtering through the leaves of trees."
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-8">
+              <div class="flex flex-col items-end gap-1">
+                <span class="text-[10px] font-black uppercase tracking-tighter text-primary"
+                  >Mastery Level 4</span
+                >
+                <div class="w-32 h-2 bg-surface-container-high rounded-full overflow-hidden">
+                  <div class="bg-primary-container h-full w-[85%] rounded-full"></div>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <span
+                  class="px-4 py-1.5 bg-tertiary-container text-on-tertiary-container text-xs font-bold rounded-full"
+                  >Nature</span
+                >
+                <span
+                  class="px-4 py-1.5 bg-surface-container-high text-on-surface-variant text-xs font-bold rounded-full"
+                  >N2</span
+                >
+              </div>
+              <button
+                class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors"
+                data-icon="more_vert"
+              >
+                more_vert
+              </button>
+            </div>
+          </div>
+          <!-- Word Card 2 -->
+          <div
+            class="bg-surface-container-lowest rounded-full px-8 py-6 flex items-center justify-between group hover:scale-[1.01] transition-all duration-300 shadow-sm border border-outline-variant/10"
+          >
+            <div class="flex items-center gap-12">
+              <div class="min-w-[140px]">
+                <h2 class="text-2xl font-black text-on-surface tracking-tight">Ikigai</h2>
+                <p class="text-sm font-semibold text-on-surface-variant">生き甲斐</p>
+              </div>
+              <div class="hidden md:block max-w-sm">
+                <p class="text-on-surface italic opacity-80 line-clamp-1">
+                  "A reason for being; the thing that gets you up in the morning."
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-8">
+              <div class="flex flex-col items-end gap-1">
+                <span class="text-[10px] font-black uppercase tracking-tighter text-primary"
+                  >Mastery Level 5</span
+                >
+                <div class="w-32 h-2 bg-surface-container-high rounded-full overflow-hidden">
+                  <div class="bg-primary-container h-full w-full rounded-full"></div>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <span
+                  class="px-4 py-1.5 bg-tertiary-container text-on-tertiary-container text-xs font-bold rounded-full"
+                  >Philosophy</span
+                >
+                <span
+                  class="px-4 py-1.5 bg-surface-container-high text-on-surface-variant text-xs font-bold rounded-full"
+                  >N3</span
+                >
+              </div>
+              <button
+                class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors"
+                data-icon="more_vert"
+              >
+                more_vert
+              </button>
+            </div>
+          </div>
+          <!-- Word Card 3 -->
+          <div
+            class="bg-surface-container-lowest rounded-full px-8 py-6 flex items-center justify-between group hover:scale-[1.01] transition-all duration-300 shadow-sm border border-outline-variant/10"
+          >
+            <div class="flex items-center gap-12">
+              <div class="min-w-[140px]">
+                <h2 class="text-2xl font-black text-on-surface tracking-tight">Mono no aware</h2>
+                <p class="text-sm font-semibold text-on-surface-variant">物の哀れ</p>
+              </div>
+              <div class="hidden md:block max-w-sm">
+                <p class="text-on-surface italic opacity-80 line-clamp-1">
+                  "An empathy toward things; sensitivity to ephemera."
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-8">
+              <div class="flex flex-col items-end gap-1">
+                <span class="text-[10px] font-black uppercase tracking-tighter text-primary"
+                  >Mastery Level 2</span
+                >
+                <div class="w-32 h-2 bg-surface-container-high rounded-full overflow-hidden">
+                  <div class="bg-primary-container h-full w-[40%] rounded-full"></div>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <span
+                  class="px-4 py-1.5 bg-tertiary-container text-on-tertiary-container text-xs font-bold rounded-full"
+                  >Art</span
+                >
+                <span
+                  class="px-4 py-1.5 bg-surface-container-high text-on-surface-variant text-xs font-bold rounded-full"
+                  >N1</span
+                >
+              </div>
+              <button
+                class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors"
+                data-icon="more_vert"
+              >
+                more_vert
+              </button>
+            </div>
+          </div>
+          <!-- Word Card 4 -->
+          <div
+            class="bg-surface-container-lowest rounded-full px-8 py-6 flex items-center justify-between group hover:scale-[1.01] transition-all duration-300 shadow-sm border border-outline-variant/10"
+          >
+            <div class="flex items-center gap-12">
+              <div class="min-w-[140px]">
+                <h2 class="text-2xl font-black text-on-surface tracking-tight">Wabi-sabi</h2>
+                <p class="text-sm font-semibold text-on-surface-variant">侘寂</p>
+              </div>
+              <div class="hidden md:block max-w-sm">
+                <p class="text-on-surface italic opacity-80 line-clamp-1">
+                  "Acceptance of transience and imperfection."
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-8">
+              <div class="flex flex-col items-end gap-1">
+                <span class="text-[10px] font-black uppercase tracking-tighter text-primary"
+                  >Mastery Level 3</span
+                >
+                <div class="w-32 h-2 bg-surface-container-high rounded-full overflow-hidden">
+                  <div class="bg-primary-container h-full w-[65%] rounded-full"></div>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <span
+                  class="px-4 py-1.5 bg-tertiary-container text-on-tertiary-container text-xs font-bold rounded-full"
+                  >Aesthetics</span
+                >
+                <span
+                  class="px-4 py-1.5 bg-surface-container-high text-on-surface-variant text-xs font-bold rounded-full"
+                  >N2</span
+                >
+              </div>
+              <button
+                class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors"
+                data-icon="more_vert"
+              >
+                more_vert
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Asymmetric Focus Area -->
+        <section class="mt-16 flex flex-col lg:flex-row gap-8">
+          <div class="lg:w-2/3 bg-surface-container-high p-12 rounded-xl relative overflow-hidden">
+            <div class="relative z-10">
+              <h3 class="text-3xl font-black text-on-surface mb-4">Focus Session: Ephemerality</h3>
+              <p class="text-on-surface-variant mb-8 max-w-md">
+                You haven't reviewed terms related to 'Time' and 'Nature' in over 3 days. Ready for
+                a quick retention blast?
+              </p>
+              <button
+                class="bg-on-surface text-surface px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform"
+              >
+                Begin Review
+              </button>
+            </div>
+            <div
+              class="absolute -right-20 -bottom-20 w-80 h-80 bg-primary-container/20 rounded-full blur-3xl"
+            ></div>
+          </div>
+          <div
+            class="lg:w-1/3 bg-tertiary-dim p-8 rounded-xl text-on-tertiary flex flex-col justify-center items-center text-center"
+          >
+            <span class="material-symbols-outlined text-5xl mb-4" data-icon="psychology"
+              >psychology</span
+            >
+            <h4 class="text-xl font-black mb-2">Algorithm Insight</h4>
+            <p class="text-sm opacity-80">
+              "Komorebi" is entering long-term memory. Your spacing interval is now 14 days.
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+    <!-- Mobile Bottom Navigation -->
+    <nav
+      class="md:hidden fixed bottom-0 left-0 right-0 bg-surface/90 backdrop-blur-xl px-6 py-4 flex justify-between items-center z-50"
+    >
+      <button class="flex flex-col items-center gap-1 text-on-surface opacity-60">
+        <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+        <span class="text-[10px] font-bold">Home</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 text-primary">
+        <span
+          class="material-symbols-outlined"
+          data-icon="menu_book"
+          style="font-variation-settings: 'FILL' 1"
+          >menu_book</span
+        >
+        <span class="text-[10px] font-bold">Library</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 text-on-surface opacity-60">
+        <span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+        <span class="text-[10px] font-bold">Study</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 text-on-surface opacity-60">
+        <span class="material-symbols-outlined" data-icon="settings">settings</span>
+        <span class="text-[10px] font-bold">Settings</span>
+      </button>
+    </nav>
+  </body>
+</html>

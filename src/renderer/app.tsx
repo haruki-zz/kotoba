@@ -9,7 +9,6 @@ import { LibraryFeature } from '@/renderer/features/library/library_feature'
 import { ReviewFeature } from '@/renderer/features/review/review_feature'
 import { SettingsFeature } from '@/renderer/features/settings/settings_feature'
 import { WordAddFeature } from '@/renderer/features/word_add/word_add_feature'
-import { Separator } from '@/renderer/components/ui/separator'
 import { type AppStartupStatusResult, IPC_CHANNELS, type IpcResponse } from '../shared/ipc'
 
 type AppPage = 'word-add' | 'library' | 'review' | 'activity' | 'settings'
@@ -17,11 +16,11 @@ type AppPage = 'word-add' | 'library' | 'review' | 'activity' | 'settings'
 const APP_NAME = 'Kotoba'
 
 const APP_NAVIGATION_ITEMS: AppNavigationItem<AppPage>[] = [
-  { value: 'activity', label: '活動' },
-  { value: 'library', label: '単語帳' },
-  { value: 'review', label: '復習' },
-  { value: 'word-add', label: '単語追加' },
-  { value: 'settings', label: '設定' },
+  { value: 'activity', label: '活動', icon: 'dashboard' },
+  { value: 'library', label: '単語帳', icon: 'menu_book' },
+  { value: 'review', label: '復習', icon: 'psychology' },
+  { value: 'word-add', label: '単語追加', icon: 'auto_awesome' },
+  { value: 'settings', label: '設定', icon: 'settings' },
 ]
 
 const APP_PAGE_META: Record<AppPage, { label: string; title: string; description: string }> = {
@@ -103,15 +102,12 @@ export const App = () => {
         ) : null
       }
       navigation={
-        <div className="space-y-4">
-          <AppNavigation
-            aria_label="メインページ"
-            items={APP_NAVIGATION_ITEMS}
-            value={active_page}
-            on_value_change={set_active_page}
-          />
-          <Separator />
-        </div>
+        <AppNavigation
+          aria_label="メインページ"
+          items={APP_NAVIGATION_ITEMS}
+          value={active_page}
+          on_value_change={set_active_page}
+        />
       }
     >
       {active_page === 'word-add' ? <WordAddFeature /> : null}

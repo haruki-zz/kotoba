@@ -4,8 +4,8 @@ type EmptyStateProps = {
 }
 
 export const EmptyState = ({ title, description }: EmptyStateProps) => (
-  <div className="rounded-xl border border-dashed border-border bg-muted/35 px-4 py-5 text-sm">
-    <p className="font-medium text-foreground">{title}</p>
-    <p className="mt-1 leading-6 text-muted-foreground">{description}</p>
+  <div className="rounded-[2rem] bg-white/52 px-6 py-6 text-sm shadow-[inset_0_0_0_1px_rgba(255,255,255,0.28)] backdrop-blur-xl">
+    <p className="font-headline text-lg font-extrabold text-foreground">{title}</p>
+    <p className="mt-2 leading-7 text-muted-foreground">{description}</p>
   </div>
 )

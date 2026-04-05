@@ -1,0 +1,350 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'on-secondary-fixed-variant': '#5a5c57',
+              'error-dim': '#b92902',
+              primary: '#306800',
+              'surface-container-highest': '#aeebb8',
+              'on-error': '#ffefec',
+              'tertiary-fixed': '#19edfd',
+              'on-error-container': '#520c00',
+              surface: '#deffe0',
+              'on-primary-fixed': '#1f4700',
+              'secondary-container': '#e3e3dc',
+              'surface-container-lowest': '#ffffff',
+              'surface-container-low': '#ccfdd1',
+              'inverse-surface': '#001204',
+              'surface-dim': '#a3e3ae',
+              'on-surface': '#0e361b',
+              'surface-tint': '#306800',
+              'surface-variant': '#aeebb8',
+              'inverse-on-surface': '#7da783',
+              'primary-container': '#7efc00',
+              secondary: '#5a5c57',
+              'tertiary-dim': '#00595f',
+              'on-secondary': '#f3f3ec',
+              'on-secondary-container': '#51524d',
+              background: '#deffe0',
+              'primary-fixed': '#7efc00',
+              'primary-dim': '#295b00',
+              'tertiary-container': '#19edfd',
+              'on-tertiary': '#d0faff',
+              'primary-fixed-dim': '#75ec00',
+              'on-primary': '#d6ffb5',
+              'error-container': '#f95630',
+              error: '#b02500',
+              'on-primary-container': '#2a5b00',
+              'tertiary-fixed-dim': '#00deed',
+              'on-primary-fixed-variant': '#2f6600',
+              'on-tertiary-fixed-variant': '#005e65',
+              'on-tertiary-fixed': '#003f44',
+              'surface-bright': '#deffe0',
+              'inverse-primary': '#7efc00',
+              'on-secondary-fixed': '#3e403b',
+              tertiary: '#00666d',
+              outline: '#58805f',
+              'surface-container-high': '#b7f0bf',
+              'on-background': '#0e361b',
+              'on-tertiary-container': '#00535a',
+              'surface-container': '#c0f5c7',
+              'on-surface-variant': '#3d6445',
+              'outline-variant': '#8db793',
+              'secondary-dim': '#4e504b',
+              'secondary-fixed-dim': '#d4d5ce',
+              'secondary-fixed': '#e3e3dc',
+            },
+            borderRadius: {
+              DEFAULT: '1rem',
+              lg: '2rem',
+              xl: '3rem',
+              full: '9999px',
+            },
+            fontFamily: {
+              headline: ['Manrope'],
+              body: ['Manrope'],
+              label: ['Manrope'],
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+      }
+      .text-shadow-pulse {
+        text-shadow: 0 0 20px rgba(126, 252, 0, 0.4);
+      }
+    </style>
+  </head>
+  <body class="bg-surface font-body text-on-surface overflow-hidden">
+    <!-- TopNavBar -->
+    <header
+      class="bg-[#deffe0]/80 dark:bg-emerald-950/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-xl shadow-[#0e361b]/5 flex justify-between items-center px-8 py-4 w-full"
+    >
+      <div class="flex items-center gap-8">
+        <h1 class="text-2xl font-black text-[#306800] dark:text-[#7efc00] tracking-tighter">
+          Kotoba
+        </h1>
+        <nav class="hidden md:flex gap-6 items-center">
+          <a
+            class="text-[#0e361b] dark:text-[#deffe0] opacity-70 font-manrope text-sm tracking-wide hover:scale-105 transition-transform duration-200"
+            href="#"
+            >Dashboard</a
+          >
+          <a
+            class="text-[#0e361b] dark:text-[#deffe0] opacity-70 font-manrope text-sm tracking-wide hover:scale-105 transition-transform duration-200"
+            href="#"
+            >Vocabulary</a
+          >
+          <a
+            class="text-[#306800] dark:text-[#7efc00] font-bold font-manrope text-sm tracking-wide hover:scale-105 transition-transform duration-200"
+            href="#"
+            >Study</a
+          >
+          <a
+            class="text-[#0e361b] dark:text-[#deffe0] opacity-70 font-manrope text-sm tracking-wide hover:scale-105 transition-transform duration-200"
+            href="#"
+            >Settings</a
+          >
+        </nav>
+      </div>
+      <div class="flex items-center gap-4">
+        <button
+          class="material-symbols-outlined text-[#306800] dark:text-[#7efc00] p-2 hover:scale-105 transition-transform"
+        >
+          notifications
+        </button>
+        <button
+          class="material-symbols-outlined text-[#306800] dark:text-[#7efc00] p-2 hover:scale-105 transition-transform"
+        >
+          account_circle
+        </button>
+      </div>
+    </header>
+    <div class="flex h-screen pt-20">
+      <!-- SideNavBar (Desktop) -->
+      <aside
+        class="hidden md:flex flex-col gap-4 p-6 bg-[#deffe0] dark:bg-emerald-950 h-screen w-64 rounded-r-3xl font-manrope font-semibold"
+      >
+        <div class="flex items-center gap-3 mb-8">
+          <div
+            class="w-12 h-12 rounded-full overflow-hidden bg-primary-container flex items-center justify-center"
+          >
+            <img
+              alt="User Profile"
+              class="w-full h-full object-cover"
+              data-alt="close up professional portrait of a smiling young person with bright green hair and glasses in a creative office"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBb5GYg8TT0z8-Q3s-hIb31ySMEJQemDR2fkWuRhrnNAhK2r7QgvLSAGSgdgnUU5dF_BHZWX8U5lk-DQrkU0gNgmzFdqhApqB3Ka6fUxKkE5tUmU0Ie4Wsiju-rG-5ls6Bm35WULTOBFYUryn8mv55ujwsFA0SGTUFIzn888Zu7jbMk0onHow5hHOfeLkTGe6O2zi_CsIcgdn3utK2kzJKhf-y3o60TSXbhJcJdyzQtjlLY8TNf-WsdCSYiS25ds5yESXWod2zyhw"
+            />
+          </div>
+          <div>
+            <p class="text-xs opacity-60">Active Session</p>
+            <h3 class="text-on-surface font-bold">Kotoba Learning</h3>
+          </div>
+        </div>
+        <nav class="flex flex-col gap-2">
+          <a
+            class="text-[#0e361b] dark:text-[#deffe0] px-6 py-3 flex items-center gap-3 hover:bg-[#deffe0]/50 hover:translate-x-2 transition-transform duration-300"
+            href="#"
+          >
+            <span class="material-symbols-outlined">dashboard</span>
+            Dashboard
+          </a>
+          <a
+            class="text-[#0e361b] dark:text-[#deffe0] px-6 py-3 flex items-center gap-3 hover:bg-[#deffe0]/50 hover:translate-x-2 transition-transform duration-300"
+            href="#"
+          >
+            <span class="material-symbols-outlined">menu_book</span>
+            Vocabulary
+          </a>
+          <a
+            class="bg-[#7efc00] text-[#0e361b] rounded-full px-6 py-3 flex items-center gap-3 shadow-lg shadow-[#7efc00]/20 hover:translate-x-2 transition-transform duration-300"
+            href="#"
+          >
+            <span class="material-symbols-outlined">psychology</span>
+            Study
+          </a>
+          <a
+            class="text-[#0e361b] dark:text-[#deffe0] px-6 py-3 flex items-center gap-3 hover:bg-[#deffe0]/50 hover:translate-x-2 transition-transform duration-300"
+            href="#"
+          >
+            <span class="material-symbols-outlined">settings</span>
+            Settings
+          </a>
+        </nav>
+        <div class="mt-auto">
+          <button
+            class="w-full bg-primary text-on-primary rounded-full py-4 font-bold hover:scale-105 transition-all active:scale-95"
+          >
+            Start Daily Quiz
+          </button>
+        </div>
+      </aside>
+      <!-- Main Content Canvas -->
+      <main class="flex-1 p-8 md:p-12 overflow-y-auto">
+        <div class="max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[819px]">
+          <!-- Progress Header -->
+          <div class="w-full flex justify-between items-end mb-12">
+            <div class="flex flex-col gap-1">
+              <p class="uppercase tracking-widest text-xs font-bold text-primary opacity-60">
+                Session Progress
+              </p>
+              <h2 class="text-4xl font-black tracking-tight text-on-surface">Daily Review</h2>
+            </div>
+            <div class="flex items-center gap-4 text-right">
+              <span class="text-3xl font-black text-primary-dim"
+                >14<span class="text-on-surface/30">/25</span></span
+              >
+              <div class="w-48 h-3 bg-surface-container-high rounded-full overflow-hidden">
+                <div
+                  class="w-[56%] h-full bg-gradient-to-r from-primary to-primary-container"
+                ></div>
+              </div>
+            </div>
+          </div>
+          <!-- Flashcard Stage (Asymmetric layout principle) -->
+          <div class="relative w-full max-w-2xl aspect-[4/3] group">
+            <!-- Decorative back layers -->
+            <div
+              class="absolute inset-0 bg-primary-container/10 rounded-xl rotate-3 translate-x-4 translate-y-4"
+            ></div>
+            <div
+              class="absolute inset-0 bg-surface-container-high rounded-xl -rotate-2 -translate-x-2 translate-y-2"
+            ></div>
+            <!-- Main Card -->
+            <div
+              class="relative h-full w-full bg-surface-container-lowest rounded-xl shadow-2xl shadow-primary/10 flex flex-col items-center justify-center p-12 overflow-hidden"
+            >
+              <!-- Card Tag -->
+              <div class="absolute top-8 left-8 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                <span class="text-xs font-bold tracking-widest uppercase opacity-40"
+                  >JLPT N2 • KANJI</span
+                >
+              </div>
+              <!-- Main Kanji -->
+              <div class="text-center space-y-6">
+                <h3
+                  class="text-[8rem] font-bold tracking-tighter text-on-surface leading-none select-none"
+                >
+                  覚醒
+                </h3>
+                <div class="flex flex-col items-center gap-4">
+                  <p class="text-lg font-medium text-on-surface-variant opacity-80">かくせい</p>
+                  <!-- The "Reveal" Moment (Active State Instruction) -->
+                  <div
+                    class="bg-primary-container text-on-primary-container px-8 py-3 rounded-full font-black text-xl shadow-xl shadow-primary-container/30"
+                  >
+                    AWAKENING
+                  </div>
+                </div>
+              </div>
+              <!-- Audio Button -->
+              <button
+                class="absolute bottom-8 right-8 w-14 h-14 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:scale-110 transition-transform"
+              >
+                <span class="material-symbols-outlined text-3xl">volume_up</span>
+              </button>
+            </div>
+          </div>
+          <!-- Grading Controls (High Contrast & Kinetic) -->
+          <div class="mt-16 w-full flex flex-wrap justify-center gap-6">
+            <button class="flex flex-col items-center gap-3 group">
+              <div
+                class="w-20 h-20 rounded-full bg-surface-container-highest flex items-center justify-center text-error border-4 border-transparent group-hover:border-error transition-all group-hover:scale-110"
+              >
+                <span class="material-symbols-outlined text-4xl">close</span>
+              </div>
+              <span class="text-xs font-bold tracking-widest uppercase opacity-40">Forgot</span>
+            </button>
+            <button class="flex flex-col items-center gap-3 group">
+              <div
+                class="w-20 h-20 rounded-full bg-surface-container-highest flex items-center justify-center text-secondary border-4 border-transparent group-hover:border-secondary transition-all group-hover:scale-110"
+              >
+                <span class="material-symbols-outlined text-4xl">history</span>
+              </div>
+              <span class="text-xs font-bold tracking-widest uppercase opacity-40">Hard</span>
+            </button>
+            <button class="flex flex-col items-center gap-3 group">
+              <div
+                class="w-20 h-20 rounded-full bg-surface-container-highest flex items-center justify-center text-tertiary border-4 border-transparent group-hover:border-tertiary transition-all group-hover:scale-110"
+              >
+                <span class="material-symbols-outlined text-4xl">check</span>
+              </div>
+              <span class="text-xs font-bold tracking-widest uppercase opacity-40">Good</span>
+            </button>
+            <!-- Perfect Score Button (Primary Focus Instruction) -->
+            <button class="flex flex-col items-center gap-3 group">
+              <div
+                class="w-24 h-24 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container shadow-2xl shadow-primary-container/40 border-4 border-white transition-all scale-110 group-hover:scale-125"
+              >
+                <span
+                  class="material-symbols-outlined text-5xl"
+                  style="font-variation-settings: 'FILL' 1"
+                  >star</span
+                >
+              </div>
+              <span class="text-xs font-black tracking-widest uppercase text-primary">Perfect</span>
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+    <!-- BottomNavBar (Mobile Only) -->
+    <nav
+      class="md:hidden fixed bottom-0 left-0 right-0 bg-[#deffe0]/90 backdrop-blur-xl flex justify-around items-center py-4 px-6 z-50"
+    >
+      <button class="flex flex-col items-center gap-1 text-[#0e361b] opacity-70">
+        <span class="material-symbols-outlined">dashboard</span>
+        <span class="text-[10px] font-bold uppercase tracking-tighter">Dash</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 text-[#0e361b] opacity-70">
+        <span class="material-symbols-outlined">menu_book</span>
+        <span class="text-[10px] font-bold uppercase tracking-tighter">Vocab</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 text-[#306800] font-bold">
+        <span class="material-symbols-outlined">psychology</span>
+        <span class="text-[10px] font-bold uppercase tracking-tighter">Study</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 text-[#0e361b] opacity-70">
+        <span class="material-symbols-outlined">settings</span>
+        <span class="text-[10px] font-bold uppercase tracking-tighter">Set</span>
+      </button>
+    </nav>
+    <!-- Side Decoration (Editorial Element) -->
+    <div
+      class="hidden xl:block fixed top-1/2 -right-24 -translate-y-1/2 rotate-90 pointer-events-none"
+    >
+      <span class="text-8xl font-black text-on-surface/[0.03] uppercase tracking-[2rem] select-none"
+        >FOCUS</span
+      >
+    </div>
+  </body>
+</html>
