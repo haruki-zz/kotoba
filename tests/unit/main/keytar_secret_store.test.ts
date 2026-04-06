@@ -38,17 +38,21 @@ const create_memory_keytar_client = (): KeytarClient => {
 }
 
 describe('keytar_secret_store', () => {
-  it('stores, reads and deletes api key through keytar adapter', async () => {
+  it('stores, reads and deletes api key through keytar adapter per provider', async () => {
     const keytar_client = create_memory_keytar_client()
     const secret_store = create_keytar_secret_store(keytar_client)
 
-    expect(await secret_store.get_api_key()).toBeNull()
+    expect(await secret_store.get_api_key('gemini')).toBeNull()
+    expect(await secret_store.get_api_key('openai')).toBeNull()
 
-    await secret_store.set_api_key('  sample-api-key  ')
-    expect(await secret_store.get_api_key()).toBe('sample-api-key')
+    await secret_store.set_api_key('gemini', '  sample-gemini-key  ')
+    await secret_store.set_api_key('openai', '  sample-openai-key  ')
+    expect(await secret_store.get_api_key('gemini')).toBe('sample-gemini-key')
+    expect(await secret_store.get_api_key('openai')).toBe('sample-openai-key')
 
-    await secret_store.delete_api_key()
-    expect(await secret_store.get_api_key()).toBeNull()
+    await secret_store.delete_api_key('openai')
+    expect(await secret_store.get_api_key('gemini')).toBe('sample-gemini-key')
+    expect(await secret_store.get_api_key('openai')).toBeNull()
   })
 
   it('stores api key in a test file store when requested', async () => {
@@ -58,16 +62,24 @@ describe('keytar_secret_store', () => {
     const secret_file_path = join(workspace, 'secret.txt')
     const secret_store = create_file_secret_store(secret_file_path)
 
-    expect(await secret_store.get_api_key()).toBeNull()
+    expect(await secret_store.get_api_key('gemini')).toBeNull()
+    expect(await secret_store.get_api_key('anthropic')).toBeNull()
 
-    await secret_store.set_api_key('  file-store-key  ')
-    expect(await secret_store.get_api_key()).toBe('file-store-key')
+    await secret_store.set_api_key('gemini', '  gemini-file-store-key  ')
+    await secret_store.set_api_key('anthropic', '  anthropic-file-store-key  ')
+    expect(await secret_store.get_api_key('gemini')).toBe('gemini-file-store-key')
+    expect(await secret_store.get_api_key('anthropic')).toBe('anthropic-file-store-key')
 
     const secret_raw = await readFile(secret_file_path, 'utf8')
-    expect(secret_raw).toContain('file-store-key')
+    expect(secret_raw).toContain('gemini-file-store-key')
 
-    await secret_store.delete_api_key()
-    expect(await secret_store.get_api_key()).toBeNull()
+    const anthropic_secret_raw = await readFile(`${secret_file_path}.anthropic`, 'utf8')
+    expect(anthropic_secret_raw).toContain('anthropic-file-store-key')
+
+    await secret_store.delete_api_key('gemini')
+    await secret_store.delete_api_key('anthropic')
+    expect(await secret_store.get_api_key('gemini')).toBeNull()
+    expect(await secret_store.get_api_key('anthropic')).toBeNull()
   })
 
   it('keeps api key out of settings and library json files', async () => {
@@ -95,7 +107,7 @@ describe('keytar_secret_store', () => {
 
     const keytar_client = create_memory_keytar_client()
     const secret_store = create_keytar_secret_store(keytar_client)
-    await secret_store.set_api_key(api_key)
+    await secret_store.set_api_key('openai', api_key)
 
     const settings_raw = await readFile(settings_file_path, 'utf8')
     const library_raw = await readFile(library_file_path, 'utf8')

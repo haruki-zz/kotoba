@@ -34,7 +34,7 @@
 ### 3.2 主流程（MVP）
 0. 用户启动 App 后，默认进入展示统计数据与 heat map 的 `活動` 主界面。
 1. 用户输入一个日语单词。
-2. App 调用 AI provider（默认 Gemini）生成结构化内容（日语）。
+2. App 调用 AI provider 生成结构化内容（日语），默认 provider 为 `Gemini`，并允许在设置页切换到 `OpenAI` 或 `Anthropic (Claude)`。
 3. 用户预览并可手动修改内容。
 4. 用户保存，形成词条并写入本地 JSON 词库文件。
 5. 用户在复习页面完成当日到期词条复习。
@@ -257,6 +257,15 @@ interface AIProvider {
 4. 最后写入 `last_review_at`、`next_review_at`、`last_grade` 并持久化。
 
 ## 9. AI 生成策略
+### 9.0 Provider 与模型选择
+- 默认 provider：`Gemini`
+- 设置页允许选择的 provider：
+  - `Gemini`
+  - `OpenAI`
+  - `Anthropic (Claude)`
+- 设置页中的模型字段使用下拉菜单，只展示当前 provider 的常用模型选项。
+- API Key 以 provider 为粒度分别管理，不写入 JSON 设置文件。
+
 ### 9.1 Prompt 约束
 要求 Gemini 返回 JSON，不允许额外文本；并且所有内容字段使用日语。
 
@@ -288,7 +297,7 @@ interface AIProvider {
 - 画面 3：`復習`
   - 当日カード、評価ボタン（0-5）、進捗
 - 画面 4：`設定`
-  - Provider、API Key、モデルパラメータ
+  - Provider 下拉、模型下拉、API Key、模型参数
 
 说明：以上页面名称与控件文案在实际产品中全部使用日语显示。
 
@@ -315,7 +324,7 @@ interface AIProvider {
 
 ### M3：体验优化（1 周）
 - 快捷键、批量导入导出（CSV/JSON）
-- 多 provider 插件化
+- 多 provider 深化扩展
 
 ## 13. 验收标准（MVP）
 - 用户可在 Windows 和 macOS 启动并使用应用

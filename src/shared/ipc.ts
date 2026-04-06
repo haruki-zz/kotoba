@@ -1,3 +1,5 @@
+import type { AiProviderName } from './ai_catalog'
+
 export const IPC_BRIDGE_CHANNEL = 'kotoba:invoke' as const
 
 export const IPC_CHANNELS = {
@@ -83,14 +85,15 @@ export interface ActivityHeatmapResult {
 }
 
 export interface SettingsGetResult {
-  provider: 'gemini'
+  provider: AiProviderName
   model: string
   timeout_seconds: number
   retries: number
-  has_api_key: boolean
+  api_key_status_by_provider: Record<AiProviderName, boolean>
 }
 
 export interface SettingsSavePayload {
+  provider: AiProviderName
   model: string
   timeout_seconds: number
   retries: number
@@ -285,6 +288,9 @@ export const is_settings_save_payload = (value: unknown): value is SettingsSaveP
 
   const maybe_payload = value as Partial<SettingsSavePayload>
   return (
+    (maybe_payload.provider === 'gemini' ||
+      maybe_payload.provider === 'openai' ||
+      maybe_payload.provider === 'anthropic') &&
     typeof maybe_payload.model === 'string' &&
     typeof maybe_payload.timeout_seconds === 'number' &&
     Number.isInteger(maybe_payload.timeout_seconds) &&

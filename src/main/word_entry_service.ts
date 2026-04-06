@@ -7,8 +7,10 @@ import {
   type AiProvider,
   type GeneratedWordCard,
 } from './ai_provider'
+import { AnthropicProvider } from './anthropic_provider'
 import { GeminiProvider } from './gemini_provider'
 import { type LibraryRepository } from './library_repository'
+import { OpenAIProvider } from './openai_provider'
 import {
   load_ai_runtime_settings,
   SettingsApiKeyMissingError,
@@ -100,6 +102,8 @@ export class WordEntryService {
     ensure_generated_word_card_is_japanese(generated)
 
     const now_iso = this.now().toISOString()
+    const source_provider = (await this.settings_service_deps.settings_repository.read_settings())
+      .provider
     let updated_existing = false
     let saved_word_id = ''
 
@@ -118,7 +122,7 @@ export class WordEntryService {
           meaning_ja: generated.meaning_ja,
           context_scene_ja: generated.context_scene_ja,
           example_sentence_ja: generated.example_sentence_ja,
-          source_provider: 'gemini' as const,
+          source_provider,
           updated_at: now_iso,
         }
 
@@ -140,7 +144,7 @@ export class WordEntryService {
         meaning_ja: generated.meaning_ja,
         context_scene_ja: generated.context_scene_ja,
         example_sentence_ja: generated.example_sentence_ja,
-        source_provider: 'gemini' as const,
+        source_provider,
         review_state: {
           repetition: 0,
           interval_days: 0,
@@ -171,13 +175,32 @@ export class WordEntryService {
 
 export { SettingsApiKeyMissingError }
 
-const create_default_provider = (runtime_settings: AiRuntimeSettings): AiProvider =>
-  new GeminiProvider({
+const create_default_provider = (runtime_settings: AiRuntimeSettings): AiProvider => {
+  if (runtime_settings.provider === 'gemini') {
+    return new GeminiProvider({
+      api_key: runtime_settings.api_key,
+      model: runtime_settings.model,
+      timeout_seconds: runtime_settings.timeout_seconds,
+      retries: runtime_settings.retries,
+    })
+  }
+
+  if (runtime_settings.provider === 'openai') {
+    return new OpenAIProvider({
+      api_key: runtime_settings.api_key,
+      model: runtime_settings.model,
+      timeout_seconds: runtime_settings.timeout_seconds,
+      retries: runtime_settings.retries,
+    })
+  }
+
+  return new AnthropicProvider({
     api_key: runtime_settings.api_key,
     model: runtime_settings.model,
     timeout_seconds: runtime_settings.timeout_seconds,
     retries: runtime_settings.retries,
   })
+}
 
 const validate_generated_fields = (fields: GeneratedWordCard): GeneratedWordCard => {
   const parsed = generated_word_card_schema.safeParse(fields)

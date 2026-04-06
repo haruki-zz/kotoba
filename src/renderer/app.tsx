@@ -46,8 +46,8 @@ const APP_PAGE_META: Record<AppPage, { label: string; title: string; description
   },
   settings: {
     label: '設定',
-    title: 'Gemini 設定の管理',
-    description: 'API キーとモデル設定を更新し、生成時の既定値を調整できます。',
+    title: 'AI 設定の管理',
+    description: 'プロバイダー、モデル、API キーと生成時の既定値を調整できます。',
   },
 }
 

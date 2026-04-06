@@ -137,6 +137,7 @@ describe('library_root_schema', () => {
 describe('settings_schema', () => {
   it('accepts default settings', () => {
     const parsed = settings_schema.parse(DEFAULT_SETTINGS)
+    expect(parsed.provider).toBe('gemini')
     expect(parsed.model).toBe('gemini-2.5-flash')
     expect(parsed.timeout_seconds).toBe(15)
     expect(parsed.retries).toBe(2)
@@ -146,6 +147,15 @@ describe('settings_schema', () => {
     const result = settings_schema.safeParse({
       ...DEFAULT_SETTINGS,
       retries: '2',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects models that do not belong to the selected provider', () => {
+    const result = settings_schema.safeParse({
+      ...DEFAULT_SETTINGS,
+      provider: 'openai',
+      model: 'gemini-2.5-flash',
     })
     expect(result.success).toBe(false)
   })

@@ -122,6 +122,25 @@ export const ensure_generated_word_card_is_japanese = (card: GeneratedWordCard):
   }
 }
 
+export const build_generation_prompt = (word: string): string =>
+  `
+次の日本語単語に対して、必ず JSON のみを返してください。Markdown や説明文は不要です。
+
+単語: ${word}
+
+出力要件:
+1. JSON のキーは次の4つのみ:
+   - reading_kana
+   - meaning_ja
+   - context_scene_ja
+   - example_sentence_ja
+2. すべて日本語で出力すること。
+3. example_sentence_ja は1文にすること。
+4. null は使わないこと。
+`
+    .trim()
+    .replace(/\n {2,}/g, '\n')
+
 const KANA_TEXT_REGEX = /^[\p{Script=Hiragana}\p{Script=Katakana}ー・\s]+$/u
 const HAS_JAPANESE_CHAR_REGEX = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u
 const HAS_ASCII_LETTER_REGEX = /[A-Za-z]/

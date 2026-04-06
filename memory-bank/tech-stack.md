@@ -18,7 +18,7 @@
 | 构建/打包 | Electron Forge（Vite 插件） | 官方路线，配置清晰，Windows/macOS 打包流程稳定。 |
 | 本地数据存储 | JSON 文件 + `write-file-atomic` + `zod` | 满足“非数据库”；原子写入防损坏；schema 校验防脏数据。 |
 | 密钥存储 | `keytar` | API Key 存系统钥匙串/凭据管理器，安全且跨平台。 |
-| AI SDK | `@google/genai`（Gemini） | 官方 SDK，直接满足默认 Gemini provider。 |
+| AI SDK / API | `@google/genai`（Gemini）+ 原生 `fetch`（OpenAI / Anthropic） | 默认 Gemini 走官方 SDK；OpenAI 与 Claude 走官方 HTTP API，保持依赖最小。 |
 | 日志 | `pino`（文件滚动可后续补） | 轻量且结构化，便于排查线上问题。 |
 | 测试 | Vitest + Playwright（Electron） | 单测覆盖 SM-2/存储；端到端保障核心流程。 |
 | 代码质量 | ESLint + Prettier + Husky + lint-staged | 在提交前阻断明显问题，保持风格一致。 |
@@ -44,11 +44,16 @@
 
 ## 4. 默认值快照（与 `design-doc.md` v0.5 同步）
 - Provider 默认值：
+  - provider: `gemini`
   - model: `gemini-2.5-flash`
   - timeout: `15s`
   - retries: `2`
   - backoff: `500ms -> 1500ms`（jitter）
   - retry-on: 网络错误、超时、`429`、`5xx`、JSON 解析失败、非日语输出
+  - 设置页允许在下拉中选择：
+  - `gemini`: `gemini-2.5-flash` / `gemini-2.5-pro`
+  - `openai`: `gpt-4.1-mini` / `gpt-4.1` / `gpt-4o-mini` / `gpt-4o`
+  - `anthropic`: `claude-sonnet-4-6` / `claude-haiku-4-5` / `claude-opus-4-6`
 - 词条判重与搜索：
   - 去重主键：`word`（忽略 `reading_kana` 差异）
   - 标准化：`trim + Unicode NFKC`

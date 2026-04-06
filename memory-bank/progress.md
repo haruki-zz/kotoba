@@ -1,9 +1,44 @@
 ﻿# Kotoba 开发进度记录
 
 ## 1. 当前状态
-- 记录日期：`2026-04-01`
+- 记录日期：`2026-04-06`
 - 当前阶段：实施计划 `步骤 1` 到 `步骤 14` 已完成，且其后活动 heat map 已完成用户验证通过的补充迭代；最新一轮迭代已将 `活動` 调整为默认主界面。此后新增 `ui-plan.md`，并已完成其中第 `1` 步到第 `6` 步：`Tailwind CSS + shadcn/ui` 基础设施接入、应用壳与通用组件落地、五个主页面的 feature 化迁移、页面级重构细则、页面状态与 IPC 编排向各自 `*_feature.tsx` 下沉，以及旧样式清理与一致性收尾。
 - 项目形态：已从“可运行壳工程”推进到“可新增单词并持久化 + 草稿自动保存 + 词库管理 CRUD + 复习闭环可用 + review_logs 基础记录可用 + 活动 heat map 可用且已扩展到 `40` 周跨度 + 活动页固定 `1-5` 级记忆等级统计可用 + 活动页作为默认主界面 + 全日语错误提示与启动恢复提示可用 + 设置页/API Key 管理可用 + E2E 回归已接入 + 渲染层已完成 Tailwind/shadcn 基础设施接入 + 应用壳与共享 UI 组件已完成 + 五个主页面已完成 feature 化迁移 + 页面级重构细则已落地 + 页面状态与 IPC 编排已完成 feature 边界整理 + 旧 CSS 已清理到仅剩全局样式层”阶段。
+
+### 2.21 设置页多 provider / 模型下拉扩展
+- 已扩展共享 AI 目录：
+  - `src/shared/ai_catalog.ts`
+  - 统一维护 `gemini / openai / anthropic` provider 枚举、各 provider 常用模型列表与默认模型。
+- 已扩展主进程设置与生成链路：
+  - `src/main/settings_service.ts`
+    - 设置保存时新增 `provider` 校验，并限制模型必须属于当前 provider。
+    - API Key 按 provider 粒度分别管理，并向设置页返回 `api_key_status_by_provider`。
+  - `src/main/keytar_secret_store.ts`
+    - keytar / 文件型测试桩都已改为按 provider 分开存储 API Key。
+  - `src/main/word_entry_service.ts`
+    - AI 生成按当前设置的 provider 分发。
+  - 新增：
+    - `src/main/openai_provider.ts`
+    - `src/main/anthropic_provider.ts`
+    - OpenAI 与 Claude 已接入主进程生成实现。
+- 已改造渲染层设置页：
+  - `src/renderer/features/settings/settings_page.tsx`
+    - `プロバイダー` 与 `モデル` 均改为下拉选择。
+    - 模型列表会随 provider 切换而联动更新。
+    - API Key 状态说明改为跟随当前 provider 切换。
+  - `src/renderer/features/settings/settings_feature.tsx`
+    - 保存 payload 新增 `provider`，并处理 provider 切换时的默认模型联动。
+  - `src/renderer/app.tsx`
+    - `設定` 页标题改为通用的 `AI 設定の管理`。
+- 已补充回归覆盖：
+  - 新增单测：
+    - `tests/unit/main/openai_provider.test.ts`
+    - `tests/unit/main/anthropic_provider.test.ts`
+  - 已更新：
+    - `tests/unit/main/settings_repository.test.ts`
+    - `tests/unit/main/keytar_secret_store.test.ts`
+    - `tests/unit/shared/domain_schema.test.ts`
+    - `e2e/word_add.spec.ts`
 
 ## 2. 已完成事项
 ### 2.1 对应 plan.md 步骤 1（环境与版本基线冻结）
@@ -279,7 +314,7 @@
     - `単語帳` 删除流程改为显式的请求删除 / 取消删除 / 确认删除三段式状态流。
 - 已同步 E2E 到当前 UI 语义：
   - `e2e/word_add.spec.ts`
-    - 顶部导航选择器改为 `tab`
+    - 顶部导航选择器改为导航按钮
     - 页面标题断言改为新的 `PageHeader` 文案
     - 词库删除断言改为应用内 `alertdialog`
 - 第 4 步验证结果：

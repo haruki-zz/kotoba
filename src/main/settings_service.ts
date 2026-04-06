@@ -1,3 +1,8 @@
+import {
+  AI_PROVIDERS,
+  is_supported_model_for_provider,
+  type AiProviderName,
+} from '../shared/ai_catalog'
 import { settings_schema, type Settings } from '../shared/domain_schema'
 import type { ApiKeySecretStore } from './keytar_secret_store'
 import type { SettingsRepository } from './settings_repository'
@@ -20,7 +25,7 @@ export interface AiRuntimeSettings extends Settings {
 }
 
 export interface SettingsOverview extends Settings {
-  has_api_key: boolean
+  api_key_status_by_provider: Record<AiProviderName, boolean>
 }
 
 export interface SettingsServiceDeps {
@@ -29,6 +34,7 @@ export interface SettingsServiceDeps {
 }
 
 export interface SaveSettingsInput {
+  provider: AiProviderName
   model: string
   timeout_seconds: number
   retries: number
@@ -54,7 +60,7 @@ export const load_ai_runtime_settings = async (
   deps: SettingsServiceDeps
 ): Promise<AiRuntimeSettings> => {
   const settings = await deps.settings_repository.read_settings()
-  const api_key = await deps.api_key_secret_store.get_api_key()
+  const api_key = await deps.api_key_secret_store.get_api_key(settings.provider)
 
   if (api_key === null) {
     throw new SettingsApiKeyMissingError()
@@ -83,7 +89,7 @@ export const save_settings = async (
   const normalized_api_key = normalize_api_key(input.api_key)
   let api_key_updated = false
   if (normalized_api_key !== null) {
-    await deps.api_key_secret_store.set_api_key(normalized_api_key)
+    await deps.api_key_secret_store.set_api_key(saved_settings.provider, normalized_api_key)
     api_key_updated = true
   }
 
@@ -95,11 +101,12 @@ export const save_settings = async (
 }
 
 export const delete_api_key = async (deps: SettingsServiceDeps): Promise<DeleteApiKeyResult> => {
-  await deps.api_key_secret_store.delete_api_key()
   const settings = await deps.settings_repository.read_settings()
+  await deps.api_key_secret_store.delete_api_key(settings.provider)
+  const api_key_status_by_provider = await load_api_key_status_by_provider(deps)
   return {
     ...settings,
-    has_api_key: false,
+    api_key_status_by_provider,
     message_ja: 'API キーを削除しました。',
   }
 }
@@ -109,17 +116,25 @@ const to_settings_overview = async (
   settings: Settings
 ): Promise<SettingsOverview> => ({
   ...settings,
-  has_api_key: (await deps.api_key_secret_store.get_api_key()) !== null,
+  api_key_status_by_provider: await load_api_key_status_by_provider(deps),
 })
 
 const validate_settings_input = (input: SaveSettingsInput): Settings => {
+  if (AI_PROVIDERS.includes(input.provider) === false) {
+    throw new SettingsValidationError('プロバイダーの選択が不正です。')
+  }
+
   const model = input.model.trim()
   if (model.length === 0) {
-    throw new SettingsValidationError('モデル名を入力してください。')
+    throw new SettingsValidationError('モデルを選択してください。')
   }
 
   if (model.length > 128) {
     throw new SettingsValidationError('モデル名は 128 文字以内で入力してください。')
+  }
+
+  if (is_supported_model_for_provider(input.provider, model) === false) {
+    throw new SettingsValidationError('選択したプロバイダーで使えるモデルを選択してください。')
   }
 
   if (Number.isInteger(input.timeout_seconds) === false) {
@@ -139,7 +154,7 @@ const validate_settings_input = (input: SaveSettingsInput): Settings => {
   }
 
   const parsed = settings_schema.safeParse({
-    provider: 'gemini',
+    provider: input.provider,
     model,
     timeout_seconds: input.timeout_seconds,
     retries: input.retries,
@@ -159,4 +174,17 @@ const normalize_api_key = (api_key: string | undefined): string | null => {
 
   const normalized = api_key.trim()
   return normalized.length > 0 ? normalized : null
+}
+
+const load_api_key_status_by_provider = async (
+  deps: SettingsServiceDeps
+): Promise<Record<AiProviderName, boolean>> => {
+  const entries = await Promise.all(
+    AI_PROVIDERS.map(
+      async (provider) =>
+        [provider, (await deps.api_key_secret_store.get_api_key(provider)) !== null] as const
+    )
+  )
+
+  return Object.fromEntries(entries) as Record<AiProviderName, boolean>
 }

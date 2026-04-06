@@ -1,14 +1,22 @@
 import type { InputHTMLAttributes } from 'react'
 
+import {
+  AI_PROVIDER_OPTIONS,
+  get_models_for_provider,
+  get_provider_label,
+  type AiProviderName,
+} from '@/shared/ai_catalog'
 import { LoadingState } from '@/renderer/components/shared/loading_state'
 import { StatusMessage } from '@/renderer/components/shared/status_message'
 import { Badge } from '@/renderer/components/ui/badge'
 import { Button } from '@/renderer/components/ui/button'
 import { Card, CardContent } from '@/renderer/components/ui/card'
 import { Input } from '@/renderer/components/ui/input'
+import { Select } from '@/renderer/components/ui/select'
 import { cn } from '@/renderer/lib/utils'
 
 type SettingsPageForm = {
+  provider: AiProviderName
   model: string
   timeout_seconds: string
   retries: string
@@ -17,7 +25,7 @@ type SettingsPageForm = {
 
 type SettingsPageProps = {
   form: SettingsPageForm
-  has_api_key: boolean
+  api_key_status_by_provider: Record<AiProviderName, boolean>
   status_message: string
   error_message: string
   is_loading: boolean
@@ -65,6 +73,36 @@ const settings_field = (props: {
   )
 }
 
+const settings_select_field = (props: {
+  label: string
+  aria_label: string
+  value: string
+  options: Array<{ value: string; label: string }>
+  on_change: (value: string) => void
+}) => (
+  <label className="space-y-2">
+    <span className="text-sm font-semibold text-foreground">{props.label}</span>
+    <div className="relative">
+      <Select
+        aria-label={props.aria_label}
+        onChange={(event) => {
+          props.on_change(event.target.value)
+        }}
+        value={props.value}
+      >
+        {props.options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </Select>
+      <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+        ▼
+      </span>
+    </div>
+  </label>
+)
+
 const settings_summary_card = (props: { label: string; value: string; tone?: string }) => (
   <Card className={cn('border-white/20 bg-white/60', props.tone)}>
     <CardContent className="space-y-2 p-5 pt-5">
@@ -80,7 +118,7 @@ const settings_summary_card = (props: { label: string; value: string; tone?: str
 
 export const SettingsPage = ({
   form,
-  has_api_key,
+  api_key_status_by_provider,
   status_message,
   error_message,
   is_loading,
@@ -91,190 +129,203 @@ export const SettingsPage = ({
   on_field_change,
   on_save,
   on_delete_api_key,
-}: SettingsPageProps) => (
-  <div className="space-y-6">
-    <section className="grid gap-6 xl:grid-cols-[1.2fr_0.95fr]">
-      <Card className="overflow-hidden border-white/18 bg-linear-to-br from-white/78 via-white/62 to-[#f4ffe8]/88">
-        <CardContent className="relative space-y-5 p-6 pt-6 sm:p-8 sm:pt-8">
-          <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[#7efc00]/20 blur-3xl" />
-          <div className="relative space-y-3">
+}: SettingsPageProps) => {
+  const selected_provider_label = get_provider_label(form.provider)
+  const selected_provider_has_api_key = api_key_status_by_provider[form.provider]
+  const selected_model_options = get_models_for_provider(form.provider)
+
+  return (
+    <div className="space-y-6">
+      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.95fr]">
+        <Card className="overflow-hidden border-white/18 bg-linear-to-br from-white/78 via-white/62 to-[#f4ffe8]/88">
+          <CardContent className="relative space-y-5 p-6 pt-6 sm:p-8 sm:pt-8">
+            <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[#7efc00]/20 blur-3xl" />
+            <div className="relative space-y-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <Badge variant={selected_provider_has_api_key ? 'default' : 'outline'}>
+                  {selected_provider_has_api_key ? 'API キー登録済み' : 'API キー未設定'}
+                </Badge>
+                <Badge variant="outline">{selected_provider_label}</Badge>
+              </div>
+              <div className="space-y-3">
+                <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-primary/70">
+                  接続設定
+                </p>
+                <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
+                  接続条件と生成既定値を
+                  <br />
+                  ひとつに集約
+                </h2>
+                <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
+                  プロバイダー、モデル、API キー、タイムアウト、リトライ回数を管理します。API
+                  キー欄を空欄で保存すると、選択中プロバイダーの現在のキーを維持します。
+                </p>
+              </div>
+            </div>
+
             <div className="flex flex-wrap items-center gap-3">
-              <Badge variant={has_api_key ? 'default' : 'outline'}>
-                {has_api_key ? 'API キー登録済み' : 'API キー未設定'}
-              </Badge>
-              <Badge variant="outline">Gemini</Badge>
+              <div className="rounded-full bg-primary/92 px-5 py-2 text-sm font-bold text-primary-foreground shadow-[0_20px_44px_-28px_rgba(48,104,0,0.9)]">
+                API キーの状態: {selected_provider_has_api_key ? '登録済み' : '未設定'}
+              </div>
+              <div className="rounded-full bg-white/70 px-5 py-2 text-sm text-muted-foreground">
+                保存先はローカル環境です
+              </div>
             </div>
-            <div className="space-y-3">
-              <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-primary/70">
-                接続設定
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+          {settings_summary_card({
+            label: 'プロバイダー',
+            value: selected_provider_label,
+            tone: 'bg-[#f7fff0]',
+          })}
+          {settings_summary_card({
+            label: 'モデル',
+            value:
+              selected_model_options.find((option) => option.value === form.model)?.label ??
+              '未設定',
+            tone: 'bg-[#effff9]',
+          })}
+          {settings_summary_card({
+            label: '状態',
+            value: selected_provider_has_api_key ? '利用可能' : 'キー待ち',
+            tone: 'bg-[#fffdf3]',
+          })}
+        </div>
+      </section>
+
+      {is_loading ? <LoadingState message="設定を読み込み中..." /> : null}
+
+      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <Card className="border-white/20 bg-white/64">
+          <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
+                生成の既定値
               </p>
-              <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-                接続条件と生成既定値を
-                <br />
-                ひとつに集約
-              </h2>
-              <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-                API キー、モデル名、タイムアウト、リトライ回数を管理します。API
-                キー欄を空欄で保存すると現在のキーを維持します。
+              <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
+                プロバイダーとリクエスト条件
+              </h3>
+              <p className="text-sm leading-7 text-muted-foreground">
+                生成時に使うプロバイダー、モデル、タイムアウト、リトライ回数を更新します。
               </p>
             </div>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-full bg-primary/92 px-5 py-2 text-sm font-bold text-primary-foreground shadow-[0_20px_44px_-28px_rgba(48,104,0,0.9)]">
-              {has_api_key ? 'API キー登録済み' : 'API キー未設定'}
+            <div className="grid gap-4">
+              {settings_select_field({
+                label: 'プロバイダー',
+                aria_label: 'プロバイダー',
+                value: form.provider,
+                options: AI_PROVIDER_OPTIONS,
+                on_change: (value) => {
+                  on_field_change('provider', value)
+                },
+              })}
+              {settings_select_field({
+                label: 'モデル',
+                aria_label: 'モデル',
+                value: form.model,
+                options: selected_model_options,
+                on_change: (value) => {
+                  on_field_change('model', value)
+                },
+              })}
+              <div className="grid gap-4 sm:grid-cols-2">
+                {settings_field({
+                  label: 'タイムアウト（秒）',
+                  aria_label: 'タイムアウト秒',
+                  value: form.timeout_seconds,
+                  input_mode: 'numeric',
+                  on_change: (value) => {
+                    on_field_change('timeout_seconds', value)
+                  },
+                })}
+                {settings_field({
+                  label: 'リトライ回数',
+                  aria_label: 'リトライ回数',
+                  value: form.retries,
+                  input_mode: 'numeric',
+                  on_change: (value) => {
+                    on_field_change('retries', value)
+                  },
+                })}
+              </div>
             </div>
-            <div className="rounded-full bg-white/70 px-5 py-2 text-sm text-muted-foreground">
-              保存先はローカル環境です
+          </CardContent>
+        </Card>
+
+        <Card className="border-white/20 bg-white/60">
+          <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
+                API キー管理
+              </p>
+              <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
+                認証情報の更新
+              </h3>
+              <p className="text-sm leading-7 text-muted-foreground">
+                選択中プロバイダーの API キーを登録するか、不要なキーを削除できます。
+              </p>
             </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
-        {settings_summary_card({
-          label: 'プロバイダー',
-          value: 'gemini',
-          tone: 'bg-[#f7fff0]',
-        })}
-        {settings_summary_card({
-          label: 'モデル',
-          value: form.model.trim().length > 0 ? form.model : '未設定',
-          tone: 'bg-[#effff9]',
-        })}
-        {settings_summary_card({
-          label: '状態',
-          value: has_api_key ? '利用可能' : 'キー待ち',
-          tone: 'bg-[#fffdf3]',
-        })}
-      </div>
-    </section>
+            <div className="rounded-[1.75rem] bg-[#f7fff0] px-5 py-5">
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+                現在の状態
+              </p>
+              <p className="mt-3 text-sm leading-7 text-foreground">
+                {selected_provider_has_api_key
+                  ? `${selected_provider_label} 用の API キーは登録済みです。新しいキーを入力すると上書きします。`
+                  : `${selected_provider_label} 用の API キーが未設定です。生成機能を使うには登録が必要です。`}
+              </p>
+            </div>
 
-    {is_loading ? <LoadingState message="設定を読み込み中..." /> : null}
-
-    <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-      <Card className="border-white/20 bg-white/64">
-        <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
-          <div className="space-y-2">
-            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
-              生成の既定値
-            </p>
-            <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
-              モデルとリクエスト条件
-            </h3>
-            <p className="text-sm leading-7 text-muted-foreground">
-              生成時に使うモデル名、タイムアウト、リトライ回数を更新します。
-            </p>
-          </div>
-
-          <div className="grid gap-4">
             {settings_field({
-              label: 'プロバイダー',
-              aria_label: 'プロバイダー',
-              value: 'gemini',
-              read_only: true,
-            })}
-            {settings_field({
-              label: 'モデル名',
-              aria_label: 'モデル名',
-              value: form.model,
-              placeholder: '例: gemini-2.5-flash',
+              label: 'API キー',
+              aria_label: 'API キー',
+              value: form.api_key,
+              type: 'password',
+              placeholder: selected_provider_has_api_key
+                ? '新しいキーを入力すると上書きされます'
+                : 'API キーを入力',
               on_change: (value) => {
-                on_field_change('model', value)
+                on_field_change('api_key', value)
               },
             })}
-            <div className="grid gap-4 sm:grid-cols-2">
-              {settings_field({
-                label: 'タイムアウト（秒）',
-                aria_label: 'タイムアウト秒',
-                value: form.timeout_seconds,
-                input_mode: 'numeric',
-                on_change: (value) => {
-                  on_field_change('timeout_seconds', value)
-                },
-              })}
-              {settings_field({
-                label: 'リトライ回数',
-                aria_label: 'リトライ回数',
-                value: form.retries,
-                input_mode: 'numeric',
-                on_change: (value) => {
-                  on_field_change('retries', value)
-                },
-              })}
+
+            <div className="flex flex-wrap gap-3">
+              <Button
+                disabled={save_disabled}
+                onClick={() => {
+                  void on_save()
+                }}
+                type="button"
+              >
+                {is_saving ? '保存中...' : '設定を保存'}
+              </Button>
+              <Button
+                disabled={delete_disabled}
+                onClick={() => {
+                  void on_delete_api_key()
+                }}
+                type="button"
+                variant="destructive"
+              >
+                {is_deleting_api_key ? '削除中...' : 'API キーを削除'}
+              </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </section>
 
-      <Card className="border-white/20 bg-white/60">
-        <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
-          <div className="space-y-2">
-            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
-              API キー管理
-            </p>
-            <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
-              認証情報の更新
-            </h3>
-            <p className="text-sm leading-7 text-muted-foreground">
-              新しいキーを登録するか、不要なキーを削除できます。
-            </p>
-          </div>
-
-          <div className="rounded-[1.75rem] bg-[#f7fff0] px-5 py-5">
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
-              現在の状態
-            </p>
-            <p className="mt-3 text-sm leading-7 text-foreground">
-              {has_api_key
-                ? 'API キーは登録済みです。新しいキーを入力すると上書きします。'
-                : 'API キーが未設定です。生成機能を使うには登録が必要です。'}
-            </p>
-          </div>
-
-          {settings_field({
-            label: 'API キー',
-            aria_label: 'API キー',
-            value: form.api_key,
-            type: 'password',
-            placeholder: has_api_key ? '新しいキーを入力すると上書きされます' : 'API キーを入力',
-            on_change: (value) => {
-              on_field_change('api_key', value)
-            },
-          })}
-
-          <div className="flex flex-wrap gap-3">
-            <Button
-              disabled={save_disabled}
-              onClick={() => {
-                void on_save()
-              }}
-              type="button"
-            >
-              {is_saving ? '保存中...' : '設定を保存'}
-            </Button>
-            <Button
-              disabled={delete_disabled}
-              onClick={() => {
-                void on_delete_api_key()
-              }}
-              type="button"
-              variant="destructive"
-            >
-              {is_deleting_api_key ? '削除中...' : 'API キーを削除'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </section>
-
-    <div className="space-y-3">
-      {status_message.length > 0 ? (
-        <StatusMessage message={status_message} kind="success" role="status" />
-      ) : null}
-      {error_message.length > 0 ? (
-        <StatusMessage message={error_message} kind="error" role="alert" />
-      ) : null}
+      <div className="space-y-3">
+        {status_message.length > 0 ? (
+          <StatusMessage message={status_message} kind="success" role="status" />
+        ) : null}
+        {error_message.length > 0 ? (
+          <StatusMessage message={error_message} kind="error" role="alert" />
+        ) : null}
+      </div>
     </div>
-  </div>
-)
+  )
+}

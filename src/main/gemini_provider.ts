@@ -8,6 +8,7 @@ import {
 
 import {
   AiProviderError,
+  build_generation_prompt,
   ensure_generated_word_card_is_japanese,
   parse_generated_word_card_json,
   type AiProvider,
@@ -153,25 +154,6 @@ export class GeminiProvider implements AiProvider {
     }
   }
 }
-
-export const build_generation_prompt = (word: string): string =>
-  `
-次の日本語単語に対して、必ず JSON のみを返してください。Markdown や説明文は不要です。
-
-単語: ${word}
-
-出力要件:
-1. JSON のキーは次の4つのみ:
-   - reading_kana
-   - meaning_ja
-   - context_scene_ja
-   - example_sentence_ja
-2. すべて日本語で出力すること。
-3. example_sentence_ja は1文にすること。
-4. null は使わないこと。
-`
-    .trim()
-    .replace(/\n {2,}/g, '\n')
 
 const classify_provider_error = (error: unknown): AiProviderError => {
   if (error instanceof AiProviderError) {

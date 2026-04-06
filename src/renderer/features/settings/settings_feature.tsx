@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { DEFAULT_MODEL_BY_PROVIDER, type AiProviderName } from '@/shared/ai_catalog'
 import { SettingsPage } from '@/renderer/features/settings/settings_page'
 import {
   IPC_CHANNELS,
@@ -10,6 +11,7 @@ import {
 } from '@/shared/ipc'
 
 type SettingsForm = {
+  provider: AiProviderName
   model: string
   timeout_seconds: string
   retries: string
@@ -17,13 +19,21 @@ type SettingsForm = {
 }
 
 const EMPTY_SETTINGS_FORM: SettingsForm = {
-  model: '',
+  provider: 'gemini',
+  model: DEFAULT_MODEL_BY_PROVIDER.gemini,
   timeout_seconds: '',
   retries: '',
   api_key: '',
 }
 
+const EMPTY_API_KEY_STATUS_BY_PROVIDER: Record<AiProviderName, boolean> = {
+  gemini: false,
+  openai: false,
+  anthropic: false,
+}
+
 const to_settings_form = (settings: SettingsGetResult): SettingsForm => ({
+  provider: settings.provider,
   model: settings.model,
   timeout_seconds: String(settings.timeout_seconds),
   retries: String(settings.retries),
@@ -41,7 +51,9 @@ const parse_non_negative_integer = (value: string): number | null => {
 
 export const SettingsFeature = () => {
   const [form, set_form] = useState<SettingsForm>(EMPTY_SETTINGS_FORM)
-  const [has_api_key, set_has_api_key] = useState<boolean>(false)
+  const [api_key_status_by_provider, set_api_key_status_by_provider] = useState<
+    Record<AiProviderName, boolean>
+  >(EMPTY_API_KEY_STATUS_BY_PROVIDER)
   const [status_message, set_status_message] = useState<string>('')
   const [error_message, set_error_message] = useState<string>('')
   const [is_loading, set_is_loading] = useState<boolean>(false)
@@ -62,7 +74,7 @@ export const SettingsFeature = () => {
     }
 
     set_form(to_settings_form(response.data))
-    set_has_api_key(response.data.has_api_key)
+    set_api_key_status_by_provider(response.data.api_key_status_by_provider)
     set_error_message('')
   }, [])
 
@@ -73,6 +85,17 @@ export const SettingsFeature = () => {
   }, [load_settings_page])
 
   const handle_settings_field = (field: keyof SettingsForm, value: string): void => {
+    if (field === 'provider') {
+      const next_provider = value as AiProviderName
+      set_form((current) => ({
+        ...current,
+        provider: next_provider,
+        model: DEFAULT_MODEL_BY_PROVIDER[next_provider],
+        api_key: '',
+      }))
+      return
+    }
+
     set_form((current) => ({
       ...current,
       [field]: value,
@@ -82,7 +105,7 @@ export const SettingsFeature = () => {
   const handle_settings_save = async (): Promise<void> => {
     const model = form.model.trim()
     if (model.length === 0) {
-      set_error_message('モデル名を入力してください。')
+      set_error_message('モデルを選択してください。')
       set_status_message('')
       return
     }
@@ -106,6 +129,7 @@ export const SettingsFeature = () => {
     set_error_message('')
 
     const response = (await window.kotoba.invoke(IPC_CHANNELS.SETTINGS_SAVE, {
+      provider: form.provider,
       model,
       timeout_seconds,
       retries,
@@ -119,7 +143,7 @@ export const SettingsFeature = () => {
     }
 
     set_form(to_settings_form(response.data))
-    set_has_api_key(response.data.has_api_key)
+    set_api_key_status_by_provider(response.data.api_key_status_by_provider)
     set_status_message(response.data.message_ja)
   }
 
@@ -138,14 +162,8 @@ export const SettingsFeature = () => {
       return
     }
 
-    set_form((current) => ({
-      ...current,
-      api_key: '',
-      model: response.data.model,
-      timeout_seconds: String(response.data.timeout_seconds),
-      retries: String(response.data.retries),
-    }))
-    set_has_api_key(response.data.has_api_key)
+    set_form(to_settings_form(response.data))
+    set_api_key_status_by_provider(response.data.api_key_status_by_provider)
     set_status_message(response.data.message_ja)
   }
 
@@ -160,16 +178,20 @@ export const SettingsFeature = () => {
   )
 
   const delete_disabled = useMemo(
-    () => is_loading || is_saving || is_deleting_api_key || has_api_key === false,
-    [has_api_key, is_deleting_api_key, is_loading, is_saving]
+    () =>
+      is_loading ||
+      is_saving ||
+      is_deleting_api_key ||
+      api_key_status_by_provider[form.provider] === false,
+    [api_key_status_by_provider, form.provider, is_deleting_api_key, is_loading, is_saving]
   )
 
   return (
     <SettingsPage
+      api_key_status_by_provider={api_key_status_by_provider}
       delete_disabled={delete_disabled}
       error_message={error_message}
       form={form}
-      has_api_key={has_api_key}
       is_deleting_api_key={is_deleting_api_key}
       is_loading={is_loading}
       is_saving={is_saving}

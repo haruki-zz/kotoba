@@ -133,7 +133,7 @@ const create_word_by_generate_then_save = async (
   meaning_ja: string
 ): Promise<void> => {
   await open_word_add_page(page)
-  await page.getByLabel('単語').fill(word)
+  await page.getByLabel('単語').first().fill(word)
   await page.getByRole('button', { name: '生成' }).click()
   await expect(page.getByLabel('読み仮名')).toHaveValue(FAKE_GENERATED_CARD.reading_kana)
   await page.getByLabel('意味').fill(meaning_ja)
@@ -141,14 +141,19 @@ const create_word_by_generate_then_save = async (
 }
 
 const open_page = async (page: Page, tab_name: string, title: string): Promise<void> => {
-  await page.getByRole('tab', { name: tab_name }).click()
-  await expect(page.getByRole('tab', { name: tab_name })).toHaveAttribute('aria-selected', 'true')
+  const navigation_button = page
+    .getByRole('navigation', { name: 'メインページ' })
+    .locator('button')
+    .filter({ hasText: tab_name })
+    .first()
+  await navigation_button.click()
+  await expect(navigation_button).toHaveAttribute('aria-current', 'page')
   await expect(page.getByRole('heading', { name: title })).toBeVisible()
 }
 
 const open_word_add_page = async (page: Page): Promise<void> => {
   await open_page(page, '単語追加', '新しい単語を追加')
-  await expect(page.getByLabel('単語')).toBeVisible()
+  await expect(page.getByLabel('単語').first()).toBeVisible()
 }
 
 test('word-create: create word and persist after restart', async () => {
@@ -162,7 +167,7 @@ test('word-create: create word and persist after restart', async () => {
       '食物を口にして栄養を取る基本的な行為です。'
     )
     await expect(first_launch.page.getByRole('status')).toContainText('単語を保存しました')
-    await expect(first_launch.page.getByLabel('単語')).toHaveValue('')
+    await expect(first_launch.page.getByLabel('単語').first()).toHaveValue('')
   } finally {
     await close_app(first_launch.electron_app)
   }
@@ -172,7 +177,7 @@ test('word-create: create word and persist after restart', async () => {
   })
   try {
     await open_word_add_page(second_launch.page)
-    await expect(second_launch.page.getByLabel('単語')).toHaveValue('')
+    await expect(second_launch.page.getByLabel('単語').first()).toHaveValue('')
   } finally {
     await close_app(second_launch.electron_app)
   }
@@ -192,7 +197,7 @@ test('draft: recover unsaved inputs after debounce autosave', async () => {
 
   try {
     await open_word_add_page(first_launch.page)
-    await first_launch.page.getByLabel('単語').fill('散歩')
+    await first_launch.page.getByLabel('単語').first().fill('散歩')
     await first_launch.page.getByLabel('意味').fill('近所をゆっくり歩いて気分転換することです。')
     await first_launch.page.waitForTimeout(900)
   } finally {
@@ -204,7 +209,7 @@ test('draft: recover unsaved inputs after debounce autosave', async () => {
   })
   try {
     await open_word_add_page(second_launch.page)
-    await expect(second_launch.page.getByLabel('単語')).toHaveValue('散歩')
+    await expect(second_launch.page.getByLabel('単語').first()).toHaveValue('散歩')
     await expect(second_launch.page.getByLabel('意味')).toHaveValue(
       '近所をゆっくり歩いて気分転換することです。'
     )
@@ -219,8 +224,13 @@ test('draft: save draft on page switch before debounce timeout', async () => {
 
   try {
     await open_word_add_page(first_launch.page)
-    await first_launch.page.getByLabel('単語').fill('猫')
-    await first_launch.page.getByRole('tab', { name: '単語帳' }).click()
+    await first_launch.page.getByLabel('単語').first().fill('猫')
+    await first_launch.page
+      .getByRole('navigation', { name: 'メインページ' })
+      .locator('button')
+      .filter({ hasText: '単語帳' })
+      .first()
+      .click()
     await first_launch.page.waitForTimeout(200)
   } finally {
     await close_app(first_launch.electron_app)
@@ -231,7 +241,7 @@ test('draft: save draft on page switch before debounce timeout', async () => {
   })
   try {
     await open_word_add_page(second_launch.page)
-    await expect(second_launch.page.getByLabel('単語')).toHaveValue('猫')
+    await expect(second_launch.page.getByLabel('単語').first()).toHaveValue('猫')
   } finally {
     await close_app(second_launch.electron_app)
   }
@@ -434,11 +444,41 @@ test('i18n-ja: shows japanese labels, actions, and dialog text on the main flows
     await expect(
       launched.page.getByText('直近 40 週間の学習量と現在の記憶レベル構成を確認できます。')
     ).toBeVisible()
-    await expect(launched.page.getByRole('tab', { name: '単語追加' })).toBeVisible()
-    await expect(launched.page.getByRole('tab', { name: '単語帳' })).toBeVisible()
-    await expect(launched.page.getByRole('tab', { name: '復習' })).toBeVisible()
-    await expect(launched.page.getByRole('tab', { name: '活動' })).toBeVisible()
-    await expect(launched.page.getByRole('tab', { name: '設定' })).toBeVisible()
+    await expect(
+      launched.page
+        .getByRole('navigation', { name: 'メインページ' })
+        .locator('button')
+        .filter({ hasText: '単語追加' })
+        .first()
+    ).toBeVisible()
+    await expect(
+      launched.page
+        .getByRole('navigation', { name: 'メインページ' })
+        .locator('button')
+        .filter({ hasText: '単語帳' })
+        .first()
+    ).toBeVisible()
+    await expect(
+      launched.page
+        .getByRole('navigation', { name: 'メインページ' })
+        .locator('button')
+        .filter({ hasText: '復習' })
+        .first()
+    ).toBeVisible()
+    await expect(
+      launched.page
+        .getByRole('navigation', { name: 'メインページ' })
+        .locator('button')
+        .filter({ hasText: '活動' })
+        .first()
+    ).toBeVisible()
+    await expect(
+      launched.page
+        .getByRole('navigation', { name: 'メインページ' })
+        .locator('button')
+        .filter({ hasText: '設定' })
+        .first()
+    ).toBeVisible()
     await expect(launched.page.getByRole('heading', { name: '学習活動の全体像' })).toBeVisible()
     await expect(
       launched.page.getByText(
@@ -446,7 +486,7 @@ test('i18n-ja: shows japanese labels, actions, and dialog text on the main flows
       )
     ).toBeVisible()
     await open_word_add_page(launched.page)
-    await expect(launched.page.getByLabel('単語')).toBeVisible()
+    await expect(launched.page.getByLabel('単語').first()).toBeVisible()
     await expect(launched.page.getByLabel('読み仮名')).toBeVisible()
     await expect(launched.page.getByLabel('意味')).toBeVisible()
     await expect(launched.page.getByLabel('文脈')).toBeVisible()
@@ -491,10 +531,11 @@ test('settings: save settings and api key, reload them, then delete api key', as
   const first_launch = await launch_app(user_data_dir)
 
   try {
-    await open_page(first_launch.page, '設定', 'Gemini 設定の管理')
+    await open_page(first_launch.page, '設定', 'AI 設定の管理')
     await expect(first_launch.page.getByText('API キーの状態: 未設定')).toBeVisible()
 
-    await first_launch.page.getByLabel('モデル名').fill('gemini-2.0-flash')
+    await first_launch.page.getByLabel('プロバイダー').selectOption('openai')
+    await first_launch.page.getByLabel('モデル').selectOption('gpt-4o-mini')
     await first_launch.page.getByLabel('タイムアウト秒').fill('20')
     await first_launch.page.getByLabel('リトライ回数').fill('3')
     await first_launch.page.getByLabel('API キー').fill('test-api-key-from-settings')
@@ -511,7 +552,8 @@ test('settings: save settings and api key, reload them, then delete api key', as
 
   const settings_path = path.join(user_data_dir, 'kotoba-settings.json')
   const settings_raw = await readFile(settings_path, 'utf8')
-  expect(settings_raw).toContain('"model": "gemini-2.0-flash"')
+  expect(settings_raw).toContain('"provider": "openai"')
+  expect(settings_raw).toContain('"model": "gpt-4o-mini"')
   expect(settings_raw).toContain('"timeout_seconds": 20')
   expect(settings_raw).toContain('"retries": 3')
   expect(settings_raw).not.toContain('test-api-key-from-settings')
@@ -520,9 +562,10 @@ test('settings: save settings and api key, reload them, then delete api key', as
     fake_generated_card_json: null,
   })
   try {
-    await open_page(second_launch.page, '設定', 'Gemini 設定の管理')
+    await open_page(second_launch.page, '設定', 'AI 設定の管理')
     await expect(second_launch.page.getByText('API キーの状態: 登録済み')).toBeVisible()
-    await expect(second_launch.page.getByLabel('モデル名')).toHaveValue('gemini-2.0-flash')
+    await expect(second_launch.page.getByLabel('プロバイダー')).toHaveValue('openai')
+    await expect(second_launch.page.getByLabel('モデル')).toHaveValue('gpt-4o-mini')
     await expect(second_launch.page.getByLabel('タイムアウト秒')).toHaveValue('20')
     await expect(second_launch.page.getByLabel('リトライ回数')).toHaveValue('3')
 
@@ -531,7 +574,7 @@ test('settings: save settings and api key, reload them, then delete api key', as
     await expect(second_launch.page.getByText('API キーの状態: 未設定')).toBeVisible()
 
     await open_page(second_launch.page, '単語追加', '新しい単語を追加')
-    await second_launch.page.getByLabel('単語').fill('設定確認')
+    await second_launch.page.getByLabel('単語').first().fill('設定確認')
     await second_launch.page.getByRole('button', { name: '生成' }).click()
     await expect
       .poll(() => second_launch.page.locator('body').innerText())
@@ -583,10 +626,10 @@ test('error-handling: keeps input and shows japanese guidance for generate failu
 
     try {
       await open_word_add_page(launched.page)
-      await launched.page.getByLabel('単語').fill('試験')
+      await launched.page.getByLabel('単語').first().fill('試験')
       await launched.page.getByRole('button', { name: '生成' }).click()
       await expect(launched.page.getByRole('alert')).toContainText(scenario.expected_message)
-      await expect(launched.page.getByLabel('単語')).toHaveValue('試験')
+      await expect(launched.page.getByLabel('単語').first()).toHaveValue('試験')
     } finally {
       await close_app(launched.electron_app)
     }

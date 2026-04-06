@@ -136,12 +136,19 @@
   - 提供设置概览读取、设置保存、API Key 删除能力。
   - API Key 缺失时抛 `SETTINGS_API_KEY_MISSING`。
   - 缺失提示文案与设置校验文案均为纯日语。
+  - 当前按 provider 粒度管理 API Key 状态，并返回 `api_key_status_by_provider` 给设置页。
 - `ai_provider.ts`
   - Provider 抽象与生成输出校验。
   - 能力：四字段 schema 校验、JSON 解析错误分类、非日语输出检测。
 - `gemini_provider.ts`
   - Gemini 默认实现。
   - 能力：超时、可重试错误分类、指数退避与重试。
+- `openai_provider.ts`
+  - OpenAI 文本生成实现。
+  - 通过 `chat/completions` 请求 JSON 输出，并复用统一的日语与 schema 校验。
+- `anthropic_provider.ts`
+  - Anthropic Claude 文本生成实现。
+  - 通过 `messages` 请求 JSON 输出，并复用统一的日语与 schema 校验。
 - `word_entry_service.ts`
   - 第 9 步核心服务：生成词卡与保存词条。
   - 保存规则：`word` 按 `trim + NFKC` 判重，命中时直接覆盖旧词条并保留既有 `review_state`。
@@ -168,6 +175,9 @@
 - `domain_schema.ts`
   - 领域 schema 与类型定义（`Word`、`ReviewState`、`ReviewLog`、`LibraryRoot`、`Settings`）。
   - 固化 `schema_version=1`、`REVIEW_LOG_RETENTION_LIMIT=50000` 与 AI 字段长度约束。
+- `ai_catalog.ts`
+  - 共享 AI provider/model 目录。
+  - 为 main 与 renderer 提供 provider 枚举、常用模型列表、默认模型与显示标签。
 
 ### 3.4 渲染层（`src/renderer`）
 - `main.tsx`
@@ -195,8 +205,8 @@
   - 负责整体背景、页面最大宽度、头部区域、导航区域与内容区域的外层布局。
 - `components/layout/app_navigation.tsx`
   - 顶层主导航组件。
-  - 基于 `Tabs + ScrollArea` 实现主页面切换入口。
-  - 交互语义是 `tab` / `tablist`，不是传统 `button` 导航。
+  - 当前使用 `button + aria-current=page` 实现主页面切换入口。
+  - 不承载业务逻辑，仅负责页面跳转表达。
 - `components/layout/page_header.tsx`
   - 顶部标题区组件。
   - 负责 App 名称、当前页面标签、标题与说明文案。
@@ -229,21 +239,21 @@
 - `components/ui/scroll_area.tsx`
   - 滚动容器组件，当前供导航区使用。
 - `components/ui/tabs.tsx`
-  - 标签页组件，当前作为顶层导航的交互底座。
+  - 标签页组件，当前仓库保留该基元，但主导航未直接使用。
 - `features/settings/settings_page.tsx`
   - `設定` 页的页面级 feature 组件。
   - 负责 settings 视图结构，不直接持有 IPC 或业务状态。
   - 通过 props 接收：
     - `form`
-    - `has_api_key`
+    - `api_key_status_by_provider`
     - `status_message / error_message`
     - `is_loading / is_saving / is_deleting_api_key`
     - `save_disabled / delete_disabled`
     - `on_field_change / on_save / on_delete_api_key`
-  - 当前使用 `Card` 拆成“生成既定值”和“API キー管理”两个区域，并保留原有可访问标签与文案。
+  - 当前使用 provider/model 双下拉，按所选 provider 切换模型列表与 API Key 状态说明。
 - `features/settings/settings_feature.tsx`
   - `設定` 页的容器组件。
-  - 持有设置表单状态、加载/保存/删除状态、本地整数校验与设置相关 IPC 编排。
+  - 持有设置表单状态、provider 切换联动、加载/保存/删除状态、本地整数校验与设置相关 IPC 编排。
   - 负责把 `SettingsGetResult` 映射到页面表单结构，并将业务结果转换为日语状态提示。
 - `features/word_add/word_add_page.tsx`
   - `単語追加` 页的页面级 feature 组件。
@@ -358,7 +368,7 @@
     - `settings`：设置页保存、API Key 更新/删除、重启后回读
     - `i18n-ja`：主页面、标签、按钮、搜索占位、删除确认弹窗均为日语
     - `error-handling`：API Key 缺失/无效、网络失败、超时、损坏回退提示
-  - 当前额外包含一个基于 `tab` 导航的页面切换辅助函数，用于隔离“默认主界面是 `活動`”与新导航语义，避免 E2E 用例对初始页面和 DOM 角色产生隐式耦合。
+  - 当前额外包含一个基于导航 `button` 的页面切换辅助函数，用于隔离“默认主界面是 `活動`”与当前导航语义，避免 E2E 用例对初始页面和 DOM 角色产生隐式耦合。
   - 使用临时 `userData` 目录与 `KOTOBA_FAKE_KEYTAR_FILE`，避免污染本地真实数据与钥匙串。
 
 ## 5. 当前运行流程（步骤 14 完成后 + `活動` 主界面快照）
@@ -386,9 +396,9 @@
    - `library:update`：更新词条字段并保留 `review_state`，发生冲突返回可定位错误。
    - `library:delete`：按 `word_id` 删除词条并更新 `updated_at`，渲染层删除确认由 `LibraryFeature + ConfirmDialog` 承接。
 9. 设置流程：
-  - `settings:get`：返回当前 `provider / model / timeout / retries` 与 `has_api_key`。
-  - `settings:save`：保存非敏感设置；若提交了新的 API Key，则写入密钥存储且不回显。
-  - `settings:delete-api-key`：删除 API Key，并使后续生成恢复为“未设置”引导错误。
+  - `settings:get`：返回当前 `provider / model / timeout / retries` 与各 provider 的 API Key 状态。
+  - `settings:save`：保存非敏感设置；若提交了新的 API Key，则只更新当前 provider 对应的密钥存储且不回显。
+  - `settings:delete-api-key`：删除当前 provider 的 API Key，并使后续生成恢复为“未设置”引导错误。
 10. 复习流程：
   - `review:queue`：返回所有 `next_review_at <= now` 的词条，并统计本地自然日内已完成词条数。
   - `review:grade`：按 SM-2 纯函数计算新 `review_state`，追加一条 `review_log`，并立即持久化到词库。
@@ -413,7 +423,7 @@
 - `設定` 页现在已经是 `SettingsFeature + SettingsPage` 双层结构；后续不要再把整页 JSX 或设置状态回填进 `App`。
 - 当前 `活動` 页面已确定采用“固定格子尺寸 + `40` 周跨度 + 无 hover 详情窗 + 固定 `1-5` 级记忆等级卡片”的实现方向，后续不应回退到原始 `repetition` 裸展示或会闪烁的浮层方案。
 - 当前首页信息架构也已确定为“先看 `活動`，再进入 `単語追加` / `復習` / `単語帳` 做操作”，后续若要调整必须同步修改 E2E 的初始页面假设。
-- 当前主导航采用 `Tabs` 语义；若后续维护 Playwright，用例选择器应优先匹配 `role=tab`，不要再默认导航项是 `button`。
+- 当前主导航采用 `button + aria-current=page` 语义；后续维护 Playwright 时应优先匹配导航 `button`。
 - 当前 `src/renderer/style.css` 不再包含页面级旧类名；若后续需要测试定位器，可保留稳定 class，但不要让这些 class 再次承担视觉样式职责。
 
 ## 7. 当前质量门禁流程

@@ -1,5 +1,11 @@
 import { z } from 'zod'
 
+import {
+  AI_PROVIDERS,
+  DEFAULT_MODEL_BY_PROVIDER,
+  is_supported_model_for_provider,
+} from './ai_catalog'
+
 export const LIBRARY_SCHEMA_VERSION = 1 as const
 export const REVIEW_LOG_RETENTION_LIMIT = 50_000 as const
 
@@ -21,6 +27,8 @@ export const AI_FIELD_LIMITS = {
     max: 80,
   },
 } as const
+
+const ai_provider_schema = z.enum(AI_PROVIDERS)
 
 const UTC_ISO_8601_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
@@ -67,7 +75,7 @@ export const word_schema = z.object({
     .trim()
     .min(AI_FIELD_LIMITS.example_sentence_ja.min)
     .max(AI_FIELD_LIMITS.example_sentence_ja.max),
-  source_provider: z.literal('gemini'),
+  source_provider: ai_provider_schema,
   review_state: review_state_schema,
   created_at: utc_iso_datetime_schema,
   updated_at: utc_iso_datetime_schema,
@@ -95,16 +103,28 @@ export const library_root_v0_schema = z.object({
   words: z.array(word_schema),
 })
 
-export const settings_schema = z.object({
-  provider: z.literal('gemini'),
-  model: z.string().trim().min(1).max(128),
-  timeout_seconds: z.number().int().min(1).max(120),
-  retries: z.number().int().min(0).max(8),
-})
+export const settings_schema = z
+  .object({
+    provider: ai_provider_schema,
+    model: z.string().trim().min(1).max(128),
+    timeout_seconds: z.number().int().min(1).max(120),
+    retries: z.number().int().min(0).max(8),
+  })
+  .superRefine((settings, context) => {
+    if (is_supported_model_for_provider(settings.provider, settings.model)) {
+      return
+    }
+
+    context.addIssue({
+      code: 'custom',
+      path: ['model'],
+      message: 'must be a supported model for the selected provider',
+    })
+  })
 
 export const DEFAULT_SETTINGS: Settings = {
   provider: 'gemini',
-  model: 'gemini-2.5-flash',
+  model: DEFAULT_MODEL_BY_PROVIDER.gemini,
   timeout_seconds: 15,
   retries: 2,
 }

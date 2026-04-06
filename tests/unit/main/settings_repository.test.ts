@@ -71,13 +71,13 @@ describe('settings_repository', () => {
 
     const updated = await repository.update_settings((current_settings) => ({
       ...current_settings,
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-pro',
       timeout_seconds: 30,
       retries: 4,
     }))
 
     expect(updated.provider).toBe('gemini')
-    expect(updated.model).toBe('gemini-2.0-flash')
+    expect(updated.model).toBe('gemini-2.5-pro')
     expect(updated.timeout_seconds).toBe(30)
     expect(updated.retries).toBe(4)
 
@@ -107,7 +107,7 @@ describe('settings_service', () => {
     )
     expect((missing_api_key_error as SettingsApiKeyMissingError).message).toContain('設定ページ')
 
-    await api_key_secret_store.set_api_key('  test-gemini-key  ')
+    await api_key_secret_store.set_api_key('gemini', '  test-gemini-key  ')
 
     const runtime_settings = await load_ai_runtime_settings({
       settings_repository,
@@ -133,7 +133,8 @@ describe('settings_service', () => {
       settings_repository,
       api_key_secret_store,
     })
-    expect(initial_overview.has_api_key).toBe(false)
+    expect(initial_overview.api_key_status_by_provider.gemini).toBe(false)
+    expect(initial_overview.api_key_status_by_provider.openai).toBe(false)
     expect(initial_overview.model).toBe(DEFAULT_SETTINGS.model)
 
     const saved = await save_settings(
@@ -142,19 +143,22 @@ describe('settings_service', () => {
         api_key_secret_store,
       },
       {
-        model: 'gemini-2.0-flash',
+        provider: 'openai',
+        model: 'gpt-4.1-mini',
         timeout_seconds: 20,
         retries: 3,
         api_key: '  new-secret-key  ',
       }
     )
 
-    expect(saved.model).toBe('gemini-2.0-flash')
+    expect(saved.provider).toBe('openai')
+    expect(saved.model).toBe('gpt-4.1-mini')
     expect(saved.timeout_seconds).toBe(20)
     expect(saved.retries).toBe(3)
-    expect(saved.has_api_key).toBe(true)
+    expect(saved.api_key_status_by_provider.openai).toBe(true)
+    expect(saved.api_key_status_by_provider.gemini).toBe(false)
     expect(saved.message_ja).toContain('API キーを更新')
-    expect(await api_key_secret_store.get_api_key()).toBe('new-secret-key')
+    expect(await api_key_secret_store.get_api_key('openai')).toBe('new-secret-key')
 
     const saved_again = await save_settings(
       {
@@ -162,17 +166,18 @@ describe('settings_service', () => {
         api_key_secret_store,
       },
       {
-        model: 'gemini-2.5-flash',
+        provider: 'openai',
+        model: 'gpt-4o-mini',
         timeout_seconds: 15,
         retries: 2,
         api_key: '   ',
       }
     )
 
-    expect(saved_again.model).toBe('gemini-2.5-flash')
-    expect(saved_again.has_api_key).toBe(true)
+    expect(saved_again.model).toBe('gpt-4o-mini')
+    expect(saved_again.api_key_status_by_provider.openai).toBe(true)
     expect(saved_again.message_ja).toBe('設定を保存しました。')
-    expect(await api_key_secret_store.get_api_key()).toBe('new-secret-key')
+    expect(await api_key_secret_store.get_api_key('openai')).toBe('new-secret-key')
   })
 
   it('deletes api key and rejects invalid settings input', async () => {
@@ -184,15 +189,15 @@ describe('settings_service', () => {
     const keytar_client = create_memory_keytar_client()
     const api_key_secret_store = create_keytar_secret_store(keytar_client)
 
-    await api_key_secret_store.set_api_key('delete-me')
+    await api_key_secret_store.set_api_key('gemini', 'delete-me')
 
     const deleted = await delete_api_key({
       settings_repository,
       api_key_secret_store,
     })
-    expect(deleted.has_api_key).toBe(false)
+    expect(deleted.api_key_status_by_provider.gemini).toBe(false)
     expect(deleted.message_ja).toBe('API キーを削除しました。')
-    expect(await api_key_secret_store.get_api_key()).toBeNull()
+    expect(await api_key_secret_store.get_api_key('gemini')).toBeNull()
 
     const invalid_error = await save_settings(
       {
@@ -200,7 +205,8 @@ describe('settings_service', () => {
         api_key_secret_store,
       },
       {
-        model: 'gemini-2.5-flash',
+        provider: 'anthropic',
+        model: 'claude-sonnet-4-6',
         timeout_seconds: 0,
         retries: 2,
       }
@@ -208,5 +214,31 @@ describe('settings_service', () => {
 
     expect(invalid_error).toBeInstanceOf(SettingsValidationError)
     expect((invalid_error as SettingsValidationError).message).toContain('タイムアウト')
+  })
+
+  it('rejects models that do not belong to the selected provider', async () => {
+    const workspace = await mkdtemp(join(tmpdir(), 'kotoba-settings-model-validation-'))
+    temp_dirs.push(workspace)
+
+    const settings_file_path = join(workspace, 'kotoba-settings.json')
+    const settings_repository = new SettingsRepository({ settings_file_path })
+    const keytar_client = create_memory_keytar_client()
+    const api_key_secret_store = create_keytar_secret_store(keytar_client)
+
+    const invalid_error = await save_settings(
+      {
+        settings_repository,
+        api_key_secret_store,
+      },
+      {
+        provider: 'anthropic',
+        model: 'gemini-2.5-flash',
+        timeout_seconds: 15,
+        retries: 2,
+      }
+    ).catch((error: unknown) => error)
+
+    expect(invalid_error).toBeInstanceOf(SettingsValidationError)
+    expect((invalid_error as SettingsValidationError).message).toContain('使えるモデル')
   })
 })
