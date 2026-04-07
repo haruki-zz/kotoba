@@ -125,17 +125,14 @@ export const ActivityPage = ({ heatmap, error_message, is_loading }: ActivityPag
             <Card className="overflow-hidden border-white/18 bg-linear-to-br from-white/78 via-white/62 to-[#f4ffe8]/88">
               <CardContent className="relative space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
                 <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[#7efc00]/20 blur-3xl" />
-                <div className="relative space-y-4">
+                <div className="relative space-y-3">
                   <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-primary/70">
-                    活動ダッシュボード
+                    活動
                   </p>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-                      直近 40 週間の学習リズムを一目で確認
+                      40 週間
                     </h2>
-                    <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-                      活動量は単語追加と復習の合計です。ローカル時刻基準で毎日の積み上がりを集計しています。
-                    </p>
                   </div>
                 </div>
 
@@ -190,14 +187,11 @@ export const ActivityPage = ({ heatmap, error_message, is_loading }: ActivityPag
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                   <div className="space-y-2">
                     <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
-                      学習ヒートマップ
+                      ヒートマップ
                     </p>
                     <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
-                      日ごとの活動強度
+                      活動
                     </h3>
-                    <p className="text-sm leading-7 text-muted-foreground">
-                      今日のセルは外枠で強調しています。横方向に最近 40 週間を並べています。
-                    </p>
                   </div>
 
                   <div
@@ -271,11 +265,8 @@ export const ActivityPage = ({ heatmap, error_message, is_loading }: ActivityPag
                     記憶レベル構成
                   </p>
                   <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
-                    現在の定着バランス
+                    レベル
                   </h3>
-                  <p className="text-sm leading-7 text-muted-foreground">
-                    現在の SM-2 状態を 5 段階にまとめています。
-                  </p>
                 </div>
 
                 {heatmap.total_word_count > 0 ? (
@@ -285,25 +276,17 @@ export const ActivityPage = ({ heatmap, error_message, is_loading }: ActivityPag
                     )}
                   </div>
                 ) : (
-                  <EmptyState
-                    title="まだ単語がありません。"
-                    description="単語を保存すると記憶レベル構成がここに表示されます。"
-                  />
+                  <EmptyState title="単語がありません。" />
                 )}
               </CardContent>
             </Card>
           </section>
 
-          {heatmap.total_activity_count === 0 ? (
-            <EmptyState
-              title="まだ活動記録がありません。"
-              description="単語追加や復習をするとヒートマップに表示されます。"
-            />
-          ) : null}
+          {heatmap.total_activity_count === 0 ? <EmptyState title="活動がありません。" /> : null}
         </>
       ) : null}
 
-      {is_loading ? <LoadingState message="活動データを読み込み中..." /> : null}
+      {is_loading ? <LoadingState message="読み込み中..." /> : null}
 
       {error_message.length > 0 ? (
         <StatusMessage message={error_message} kind="error" role="alert" />

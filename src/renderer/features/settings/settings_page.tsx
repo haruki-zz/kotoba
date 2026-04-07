@@ -147,28 +147,19 @@ export const SettingsPage = ({
                 </Badge>
                 <Badge variant="outline">{selected_provider_label}</Badge>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-primary/70">
-                  接続設定
+                  設定
                 </p>
                 <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-                  接続条件と生成既定値を
-                  <br />
-                  ひとつに集約
+                  AI 設定
                 </h2>
-                <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-                  プロバイダー、モデル、API キー、タイムアウト、リトライ回数を管理します。API
-                  キー欄を空欄で保存すると、選択中プロバイダーの現在のキーを維持します。
-                </p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
               <div className="rounded-full bg-primary/92 px-5 py-2 text-sm font-bold text-primary-foreground shadow-[0_20px_44px_-28px_rgba(48,104,0,0.9)]">
                 API キーの状態: {selected_provider_has_api_key ? '登録済み' : '未設定'}
-              </div>
-              <div className="rounded-full bg-white/70 px-5 py-2 text-sm text-muted-foreground">
-                保存先はローカル環境です
               </div>
             </div>
           </CardContent>
@@ -195,21 +186,18 @@ export const SettingsPage = ({
         </div>
       </section>
 
-      {is_loading ? <LoadingState message="設定を読み込み中..." /> : null}
+      {is_loading ? <LoadingState message="読み込み中..." /> : null}
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <Card className="border-white/20 bg-white/64">
           <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
             <div className="space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
-                生成の既定値
+                生成
               </p>
               <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
-                プロバイダーとリクエスト条件
+                基本設定
               </h3>
-              <p className="text-sm leading-7 text-muted-foreground">
-                生成時に使うプロバイダー、モデル、タイムアウト、リトライ回数を更新します。
-              </p>
             </div>
 
             <div className="grid gap-4">
@@ -259,24 +247,21 @@ export const SettingsPage = ({
           <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
             <div className="space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
-                API キー管理
+                API キー
               </p>
               <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
-                認証情報の更新
+                認証
               </h3>
-              <p className="text-sm leading-7 text-muted-foreground">
-                選択中プロバイダーの API キーを登録するか、不要なキーを削除できます。
-              </p>
             </div>
 
             <div className="rounded-[1.75rem] bg-[#f7fff0] px-5 py-5">
               <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
-                現在の状態
+                状態
               </p>
-              <p className="mt-3 text-sm leading-7 text-foreground">
+              <p className="mt-3 text-sm text-foreground">
                 {selected_provider_has_api_key
-                  ? `${selected_provider_label} 用の API キーは登録済みです。新しいキーを入力すると上書きします。`
-                  : `${selected_provider_label} 用の API キーが未設定です。生成機能を使うには登録が必要です。`}
+                  ? `${selected_provider_label}: 登録済み`
+                  : `${selected_provider_label}: 未設定`}
               </p>
             </div>
 
@@ -285,9 +270,7 @@ export const SettingsPage = ({
               aria_label: 'API キー',
               value: form.api_key,
               type: 'password',
-              placeholder: selected_provider_has_api_key
-                ? '新しいキーを入力すると上書きされます'
-                : 'API キーを入力',
+              placeholder: selected_provider_has_api_key ? '新しいキー' : 'API キー',
               on_change: (value) => {
                 on_field_change('api_key', value)
               },

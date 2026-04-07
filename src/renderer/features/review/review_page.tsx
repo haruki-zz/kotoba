@@ -66,33 +66,25 @@ export const ReviewPage = ({
       <Card className="overflow-hidden border-white/18 bg-linear-to-br from-white/78 via-white/62 to-[#f4ffe8]/88">
         <CardContent className="relative space-y-5 p-6 pt-6 sm:p-8 sm:pt-8">
           <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[#7efc00]/20 blur-3xl" />
-          <div className="relative space-y-3">
+          <div className="relative space-y-2">
             <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-primary/70">
-              今日の復習セッション
+              復習
             </p>
             <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-              今の集中で、
-              <br />
-              定着率を一段上げる
+              今日のキュー
             </h2>
-            <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-              到期した単語を 1 件ずつ評価し、SM-2 に沿って次回の復習予定を更新します。
-            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <div className="rounded-full bg-primary/92 px-5 py-2 text-sm font-bold text-primary-foreground shadow-[0_20px_44px_-28px_rgba(48,104,0,0.9)]">
               復習対象 {due_count} 件
             </div>
-            <div className="rounded-full bg-white/70 px-5 py-2 text-sm text-muted-foreground">
-              今日の完了 {completed_today_count} 件
-            </div>
           </div>
         </CardContent>
       </Card>
     </section>
 
-    {is_loading ? <LoadingState message="復習キューを読み込み中..." /> : null}
+    {is_loading ? <LoadingState message="読み込み中..." /> : null}
 
     {current_review_word ? (
       <Card className="overflow-hidden border-white/18 bg-white/66">
@@ -100,14 +92,8 @@ export const ReviewPage = ({
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
-                フラッシュカード
+                カード
               </p>
-              <p className="text-sm leading-7 text-muted-foreground">
-                意味と文脈を確認したら、思い出しやすさに近い評価を選んでください。
-              </p>
-            </div>
-            <div className="rounded-full bg-white/72 px-5 py-2 text-sm text-muted-foreground">
-              評価すると次回日時を更新します
             </div>
           </div>
 
@@ -199,10 +185,7 @@ export const ReviewPage = ({
     ) : null}
 
     {current_review_word === null && is_loading === false ? (
-      <EmptyState
-        title="今日の復習は完了しました。"
-        description="新しく到期した単語がある場合は、このページに自動で表示されます。"
-      />
+      <EmptyState title="今日の復習は完了しました。" />
     ) : null}
 
     <div className="space-y-3">

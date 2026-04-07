@@ -23,31 +23,26 @@ const APP_NAVIGATION_ITEMS: AppNavigationItem<AppPage>[] = [
   { value: 'settings', label: '設定', icon: 'settings' },
 ]
 
-const APP_PAGE_META: Record<AppPage, { label: string; title: string; description: string }> = {
+const APP_PAGE_META: Record<AppPage, { label: string; title: string; description?: string }> = {
   activity: {
     label: '活動',
-    title: '学習活動の全体像',
-    description: '直近 40 週間の学習量と現在の記憶レベル構成を確認できます。',
+    title: '活動',
   },
   library: {
     label: '単語帳',
-    title: '保存済み単語の管理',
-    description: '保存した単語を検索し、その場で編集や削除ができます。',
+    title: '単語帳',
   },
   review: {
     label: '復習',
-    title: '今日の復習キュー',
-    description: '到期した単語を評価し、SM-2 に沿って次回の復習予定を更新します。',
+    title: '復習',
   },
   'word-add': {
     label: '単語追加',
-    title: '新しい単語を追加',
-    description: '単語を入力して AI 生成結果を編集し、個人の単語帳へ保存します。',
+    title: '単語追加',
   },
   settings: {
     label: '設定',
-    title: 'AI 設定の管理',
-    description: 'プロバイダー、モデル、API キーと生成時の既定値を調整できます。',
+    title: '設定',
   },
 }
 

@@ -137,7 +137,7 @@ export const WordAddFeature = () => {
       context_scene_ja: response.data.context_scene_ja,
       example_sentence_ja: response.data.example_sentence_ja,
     }))
-    set_status_message('生成結果を取得しました。必要なら編集して保存してください。')
+    set_status_message('生成しました。')
   }
 
   const handle_save_click = async (): Promise<void> => {

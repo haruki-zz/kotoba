@@ -111,24 +111,13 @@ export const LibraryPage = ({
         <Card className="overflow-hidden border-white/18 bg-linear-to-br from-white/78 via-white/62 to-[#f4ffe8]/88">
           <CardContent className="relative space-y-5 p-6 pt-6 sm:p-8 sm:pt-8">
             <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[#7efc00]/20 blur-3xl" />
-            <div className="relative space-y-3">
-              <div className="flex flex-wrap items-center gap-3">
-                <Badge variant="secondary">かな表記ゆれ対応</Badge>
-                <Badge variant="outline">ローカル検索</Badge>
-              </div>
-              <div className="space-y-3">
-                <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-primary/70">
-                  単語ライブラリ
-                </p>
-                <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-                  保存済みの単語を
-                  <br />
-                  静かに整える
-                </h2>
-                <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-                  単語、読み仮名、意味で検索し、その場で編集や削除ができます。検索条件はかな表記ゆれと大文字小文字の差異を吸収します。
-                </p>
-              </div>
+            <div className="relative space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-primary/70">
+                単語帳
+              </p>
+              <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
+                単語を管理
+              </h2>
             </div>
 
             <label className="relative block">
@@ -166,13 +155,10 @@ export const LibraryPage = ({
         </div>
       </section>
 
-      {is_loading ? <LoadingState message="単語帳を読み込み中..." /> : null}
+      {is_loading ? <LoadingState message="読み込み中..." /> : null}
 
       {words.length === 0 && is_loading === false ? (
-        <EmptyState
-          title="該当する単語がありません。"
-          description="検索条件を変更してもう一度確認してください。"
-        />
+        <EmptyState title="単語がありません。" />
       ) : null}
 
       <ul className="m-0 grid list-none gap-5 p-0">
@@ -188,16 +174,12 @@ export const LibraryPage = ({
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                       <div className="space-y-2">
                         <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
-                          編集モード
+                          編集
                         </p>
                         <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
                           「{word.word}」を更新
                         </h3>
-                        <p className="text-sm leading-7 text-muted-foreground">
-                          内容を更新しても既存の復習状態は保持されます。
-                        </p>
                       </div>
-                      <Badge variant="outline">レビュー状態は維持</Badge>
                     </div>
 
                     <div className="grid gap-4 xl:grid-cols-2">
@@ -338,9 +320,7 @@ export const LibraryPage = ({
       cancel_label="削除しない"
       confirm_disabled={deleting_word_id !== null}
       confirm_label={deleting_word_id !== null ? '削除中...' : '削除する'}
-      description={
-        delete_target ? `「${delete_target.word}」を削除します。この操作は取り消せません。` : ''
-      }
+      description={delete_target ? `「${delete_target.word}」を削除します。` : ''}
       on_cancel={on_cancel_delete}
       on_confirm={on_confirm_delete}
       open={delete_target !== null}

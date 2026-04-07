@@ -20,7 +20,7 @@ export const AppNavigation = <TValue extends string>({
   on_value_change,
 }: AppNavigationProps<TValue>) => (
   <div className="flex h-full flex-col gap-6">
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="flex items-center gap-3">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-primary to-[#4b8d16] text-primary-foreground shadow-[0_20px_40px_-24px_rgba(48,104,0,0.8)]">
           <span className="material-symbols-outlined">spa</span>
@@ -28,13 +28,10 @@ export const AppNavigation = <TValue extends string>({
         <div>
           <p className="font-headline text-xl font-extrabold tracking-tight text-primary">Kotoba</p>
           <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
-            静かな学習空間
+            学習
           </p>
         </div>
       </div>
-      <p className="max-w-xs text-sm leading-6 text-muted-foreground">
-        AI 生成、単語管理、復習、活動確認をひとつの流れで回すローカル学習ワークスペース。
-      </p>
     </div>
 
     <nav aria-label={aria_label} className="grid gap-2">
@@ -77,13 +74,5 @@ export const AppNavigation = <TValue extends string>({
         )
       })}
     </nav>
-
-    <div className="mt-auto rounded-[1.75rem] bg-white/62 p-5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.3)]">
-      <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary">学習フロー</p>
-      <p className="mt-2 font-headline text-lg font-extrabold text-foreground">追加・復習・定着</p>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        単語追加の草稿は自動保存され、復習結果は活動ヒートマップに反映されます。
-      </p>
-    </div>
   </div>
 )
