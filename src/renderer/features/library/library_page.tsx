@@ -70,9 +70,9 @@ const field_block = (props: {
 )
 
 const library_summary_card = (props: { label: string; value: string; tone?: string }) => (
-  <Card className={cn('border-white/20 bg-white/60', props.tone)}>
+  <Card className={cn('border-border bg-white/94', props.tone)}>
     <CardContent className="space-y-2 p-5 pt-5">
-      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
         {props.label}
       </p>
       <p className="font-headline text-3xl font-extrabold tracking-tight text-foreground">
@@ -108,11 +108,11 @@ export const LibraryPage = ({
   <>
     <div className="space-y-6">
       <section className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
-        <Card className="overflow-hidden border-white/18 bg-linear-to-br from-white/78 via-white/62 to-[#f4ffe8]/88">
+        <Card className="overflow-hidden border-border bg-linear-to-br from-white via-[#fcfcfb] to-[#f4f4f1]">
           <CardContent className="relative space-y-5 p-6 pt-6 sm:p-8 sm:pt-8">
-            <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[#7efc00]/20 blur-3xl" />
+            <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-stone-100 blur-3xl" />
             <div className="relative space-y-2">
-              <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-primary/70">
+              <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-muted-foreground">
                 単語帳
               </p>
               <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
@@ -122,7 +122,7 @@ export const LibraryPage = ({
 
             <label className="relative block">
               <span className="sr-only">単語帳検索</span>
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary/70">
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
                 search
               </span>
               <Input
@@ -140,17 +140,17 @@ export const LibraryPage = ({
           {library_summary_card({
             label: '表示件数',
             value: `${matched_count} 件`,
-            tone: 'bg-[#f7fff0]',
+            tone: 'bg-[#fbfbf8]',
           })}
           {library_summary_card({
             label: '全件数',
             value: `${total_count} 件`,
-            tone: 'bg-[#effff9]',
+            tone: 'bg-[#f7f7f4]',
           })}
           {library_summary_card({
             label: '検索状態',
             value: query.trim().length > 0 ? '絞り込み中' : '全件表示',
-            tone: 'bg-[#fffdf3]',
+            tone: 'bg-[#f3f3ef]',
           })}
         </div>
       </section>
@@ -169,11 +169,11 @@ export const LibraryPage = ({
           if (is_editing) {
             return (
               <li key={word.id}>
-                <Card className="border-white/20 bg-white/66">
+                <Card className="border-border bg-white">
                   <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                       <div className="space-y-2">
-                        <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
                           編集
                         </p>
                         <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
@@ -244,7 +244,7 @@ export const LibraryPage = ({
 
           return (
             <li key={word.id}>
-              <Card className="border-white/18 bg-white/62">
+              <Card className="border-border bg-white/94">
                 <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="space-y-3">
@@ -275,14 +275,14 @@ export const LibraryPage = ({
                   </div>
 
                   <div className="grid gap-4 xl:grid-cols-2">
-                    <div className="rounded-[1.75rem] bg-[#f7fff0] px-5 py-5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2)]">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+                    <div className="rounded-[1.75rem] bg-[#fbfbf8] px-5 py-5 shadow-[inset_0_0_0_1px_rgba(31,42,31,0.05)]">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
                         意味
                       </p>
                       <p className="mt-3 text-sm leading-7 text-foreground">{word.meaning_ja}</p>
                     </div>
-                    <div className="rounded-[1.75rem] bg-[#effff9] px-5 py-5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2)]">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+                    <div className="rounded-[1.75rem] bg-[#f7f7f4] px-5 py-5 shadow-[inset_0_0_0_1px_rgba(31,42,31,0.05)]">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
                         文脈
                       </p>
                       <p className="mt-3 text-sm leading-7 text-foreground">
@@ -291,8 +291,8 @@ export const LibraryPage = ({
                     </div>
                   </div>
 
-                  <div className="rounded-[1.75rem] bg-white/72 px-5 py-5 shadow-[inset_0_0_0_1px_rgba(48,104,0,0.06)]">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+                  <div className="rounded-[1.75rem] bg-white px-5 py-5 shadow-[inset_0_0_0_1px_rgba(31,42,31,0.05)]">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
                       例文
                     </p>
                     <p className="mt-3 text-sm leading-7 text-foreground">

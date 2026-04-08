@@ -12,12 +12,12 @@ const button_variants = cva(
         default:
           'bg-linear-to-br from-primary to-[#4b8d16] text-primary-foreground shadow-[0_18px_36px_-24px_rgba(48,104,0,0.9)] hover:-translate-y-0.5 hover:shadow-[0_24px_48px_-24px_rgba(48,104,0,0.72)]',
         secondary:
-          'bg-white/70 text-foreground shadow-[0_16px_36px_-28px_rgba(14,54,27,0.45)] hover:-translate-y-0.5 hover:bg-white/85',
+          'bg-linear-to-br from-secondary to-[#ea9a2f] text-secondary-foreground shadow-[0_18px_36px_-24px_rgba(217,119,6,0.62)] hover:-translate-y-0.5 hover:shadow-[0_24px_48px_-24px_rgba(217,119,6,0.5)]',
         outline:
-          'border border-primary/12 bg-white/55 text-foreground shadow-[inset_0_0_0_1px_rgba(255,255,255,0.28)] hover:-translate-y-0.5 hover:bg-white/78',
-        ghost: 'text-muted-foreground hover:bg-white/55 hover:text-foreground',
+          'border border-secondary/20 bg-secondary/10 text-secondary hover:-translate-y-0.5 hover:bg-secondary/16',
+        ghost: 'text-secondary hover:bg-secondary/10 hover:text-secondary',
         destructive:
-          'bg-linear-to-br from-destructive to-[#cf4b21] text-destructive-foreground shadow-[0_18px_36px_-24px_rgba(176,37,0,0.72)] hover:-translate-y-0.5',
+          'bg-linear-to-br from-destructive to-[#f2a33b] text-destructive-foreground shadow-[0_18px_36px_-24px_rgba(217,119,6,0.62)] hover:-translate-y-0.5',
       },
       size: {
         default: 'h-11 px-5 py-2.5',

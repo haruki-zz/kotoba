@@ -10,9 +10,9 @@ const alert_variants = cva(
       variant: {
         default: 'bg-white/62 text-card-foreground',
         destructive:
-          'border-destructive/18 bg-[#fff0eb]/85 text-destructive dark:border-destructive/30',
-        success: 'border-primary/16 bg-[#f4ffe8]/82 text-foreground',
-        warning: 'border-chart-4/20 bg-[#fff8de]/82 text-foreground',
+          'border-destructive/20 bg-white/88 text-destructive dark:border-destructive/30',
+        success: 'border-border bg-white/88 text-foreground',
+        warning: 'border-border bg-white/88 text-foreground',
       },
     },
     defaultVariants: {

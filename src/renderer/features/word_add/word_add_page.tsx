@@ -61,11 +61,11 @@ export const WordAddPage = ({
 }: WordAddPageProps) => (
   <div className="space-y-6">
     <section>
-      <Card className="overflow-hidden border-white/18 bg-linear-to-br from-white/78 via-white/62 to-[#f4ffe8]/88">
+      <Card className="overflow-hidden border-border bg-linear-to-br from-white via-[#fcfcfb] to-[#f4f4f1]">
         <CardContent className="relative space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
-          <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[#7efc00]/20 blur-3xl" />
+          <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-stone-100 blur-3xl" />
           <div className="relative space-y-2">
-            <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-primary/70">
+            <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-muted-foreground">
               単語追加
             </p>
             <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
@@ -73,7 +73,7 @@ export const WordAddPage = ({
             </h2>
           </div>
 
-          <div className="relative rounded-[2rem] bg-white/66 p-5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.24)]">
+          <div className="relative rounded-[2rem] bg-white p-5 shadow-[inset_0_0_0_1px_rgba(31,42,31,0.05)]">
             <label className="space-y-2">
               <span className="text-sm font-semibold text-foreground">単語</span>
               <Input
@@ -114,10 +114,10 @@ export const WordAddPage = ({
     {is_generating ? <LoadingState message="生成中..." /> : null}
 
     <section>
-      <Card className="border-white/20 bg-white/60">
+      <Card className="border-border bg-white/94">
         <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
           <div className="space-y-2">
-            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
+            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
               結果
             </p>
             <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">

@@ -54,28 +54,28 @@ const format_activity_memory_level_label = (
 
 const activity_level_class_name = (level: ActivityHeatmapCell['level']): string => {
   if (level === 0) {
-    return 'bg-white/55'
+    return 'bg-neutral-100'
   }
 
   if (level === 1) {
-    return 'bg-[#d4f7b5]'
+    return 'bg-neutral-200'
   }
 
   if (level === 2) {
-    return 'bg-[#9ae85b]'
+    return 'bg-neutral-300'
   }
 
   if (level === 3) {
-    return 'bg-[#5faf28]'
+    return 'bg-neutral-500'
   }
 
-  return 'bg-primary'
+  return 'bg-neutral-700'
 }
 
 const activity_summary_card = (props: { label: string; value: string; tone?: string }) => (
-  <Card className={cn('border-white/20 bg-white/58', props.tone)}>
+  <Card className={cn('border-border bg-white/92', props.tone)}>
     <CardContent className="space-y-2 p-5 pt-5">
-      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
         {props.label}
       </p>
       <p className="font-headline text-3xl font-extrabold tracking-tight text-foreground">
@@ -89,12 +89,12 @@ const activity_memory_level_row = (stat: ActivityMemoryLevelStat, total_word_cou
   <div
     key={stat.level}
     aria-label={format_activity_memory_level_label(stat, total_word_count)}
-    className="rounded-[1.75rem] bg-white/60 px-5 py-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.24)]"
+    className="rounded-[1.75rem] bg-white px-5 py-4 shadow-[inset_0_0_0_1px_rgba(31,42,31,0.05)]"
     role="listitem"
   >
     <div className="flex items-end justify-between gap-4">
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
           記憶レベル {stat.level}
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -105,9 +105,9 @@ const activity_memory_level_row = (stat: ActivityMemoryLevelStat, total_word_cou
         {format_activity_memory_level_percentage(stat.percentage)}
       </p>
     </div>
-    <div className="mt-4 h-2 rounded-full bg-accent/55">
+    <div className="mt-4 h-2 rounded-full bg-neutral-200">
       <div
-        className="h-full rounded-full bg-linear-to-r from-primary to-primary-container"
+        className="h-full rounded-full bg-neutral-700"
         style={{ width: `${Math.max(stat.percentage, stat.word_count > 0 ? 6 : 0)}%` }}
       />
     </div>
@@ -122,11 +122,11 @@ export const ActivityPage = ({ heatmap, error_message, is_loading }: ActivityPag
       {heatmap ? (
         <>
           <section className="grid gap-6 xl:grid-cols-[1.35fr_0.9fr]">
-            <Card className="overflow-hidden border-white/18 bg-linear-to-br from-white/78 via-white/62 to-[#f4ffe8]/88">
+            <Card className="overflow-hidden border-border bg-linear-to-br from-white via-[#fcfcfb] to-[#f4f4f1]">
               <CardContent className="relative space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
-                <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[#7efc00]/20 blur-3xl" />
+                <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-stone-100 blur-3xl" />
                 <div className="relative space-y-3">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-primary/70">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-muted-foreground">
                     活動
                   </p>
                   <div className="space-y-2">
@@ -140,25 +140,25 @@ export const ActivityPage = ({ heatmap, error_message, is_loading }: ActivityPag
                   {activity_summary_card({
                     label: '総活動',
                     value: `${heatmap.total_activity_count} 件`,
-                    tone: 'bg-[#f7fff0]',
+                    tone: 'bg-[#fbfbf8]',
                   })}
                   {activity_summary_card({
                     label: '現在連続',
                     value: `${heatmap.current_streak_days} 日`,
-                    tone: 'bg-[#effff9]',
+                    tone: 'bg-[#f7f7f4]',
                   })}
                   {activity_summary_card({
                     label: '最長連続',
                     value: `${heatmap.longest_streak_days} 日`,
-                    tone: 'bg-[#fffdf3]',
+                    tone: 'bg-[#f3f3ef]',
                   })}
                 </div>
 
                 <div className="relative flex flex-wrap items-center gap-3">
-                  <div className="rounded-full bg-primary/92 px-5 py-2 text-sm font-bold text-primary-foreground shadow-[0_20px_44px_-28px_rgba(48,104,0,0.9)]">
+                  <div className="rounded-full bg-white px-5 py-2 text-sm font-medium text-foreground shadow-[inset_0_0_0_1px_rgba(31,42,31,0.08)]">
                     期間: {heatmap.range_start} - {heatmap.range_end}
                   </div>
-                  <div className="rounded-full bg-white/70 px-5 py-2 text-sm text-muted-foreground">
+                  <div className="rounded-full bg-[#f7f7f4] px-5 py-2 text-sm text-muted-foreground">
                     追加 {heatmap.total_added_word_count} 件 / 復習 {heatmap.total_review_count} 件
                   </div>
                 </div>
@@ -182,11 +182,11 @@ export const ActivityPage = ({ heatmap, error_message, is_loading }: ActivityPag
           </section>
 
           <section className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
-            <Card className="bg-white/58">
+            <Card className="border-border bg-white/94">
               <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                   <div className="space-y-2">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
                       ヒートマップ
                     </p>
                     <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
@@ -258,10 +258,10 @@ export const ActivityPage = ({ heatmap, error_message, is_loading }: ActivityPag
               </CardContent>
             </Card>
 
-            <Card className="bg-white/55">
+            <Card className="border-border bg-white/94">
               <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
                 <div className="space-y-2">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
                     記憶レベル構成
                   </p>
                   <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">

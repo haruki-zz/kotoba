@@ -104,9 +104,9 @@ const settings_select_field = (props: {
 )
 
 const settings_summary_card = (props: { label: string; value: string; tone?: string }) => (
-  <Card className={cn('border-white/20 bg-white/60', props.tone)}>
+  <Card className={cn('border-border bg-white/94', props.tone)}>
     <CardContent className="space-y-2 p-5 pt-5">
-      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+      <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
         {props.label}
       </p>
       <p className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
@@ -137,9 +137,9 @@ export const SettingsPage = ({
   return (
     <div className="space-y-6">
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.95fr]">
-        <Card className="overflow-hidden border-white/18 bg-linear-to-br from-white/78 via-white/62 to-[#f4ffe8]/88">
+        <Card className="overflow-hidden border-border bg-linear-to-br from-white via-[#fcfcfb] to-[#f4f4f1]">
           <CardContent className="relative space-y-5 p-6 pt-6 sm:p-8 sm:pt-8">
-            <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[#7efc00]/20 blur-3xl" />
+            <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-stone-100 blur-3xl" />
             <div className="relative space-y-3">
               <div className="flex flex-wrap items-center gap-3">
                 <Badge variant={selected_provider_has_api_key ? 'default' : 'outline'}>
@@ -148,7 +148,7 @@ export const SettingsPage = ({
                 <Badge variant="outline">{selected_provider_label}</Badge>
               </div>
               <div className="space-y-2">
-                <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-primary/70">
+                <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-muted-foreground">
                   設定
                 </p>
                 <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
@@ -158,7 +158,7 @@ export const SettingsPage = ({
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <div className="rounded-full bg-primary/92 px-5 py-2 text-sm font-bold text-primary-foreground shadow-[0_20px_44px_-28px_rgba(48,104,0,0.9)]">
+              <div className="rounded-full bg-white px-5 py-2 text-sm font-medium text-foreground shadow-[inset_0_0_0_1px_rgba(31,42,31,0.08)]">
                 API キーの状態: {selected_provider_has_api_key ? '登録済み' : '未設定'}
               </div>
             </div>
@@ -169,19 +169,19 @@ export const SettingsPage = ({
           {settings_summary_card({
             label: 'プロバイダー',
             value: selected_provider_label,
-            tone: 'bg-[#f7fff0]',
+            tone: 'bg-[#fbfbf8]',
           })}
           {settings_summary_card({
             label: 'モデル',
             value:
               selected_model_options.find((option) => option.value === form.model)?.label ??
               '未設定',
-            tone: 'bg-[#effff9]',
+            tone: 'bg-[#f7f7f4]',
           })}
           {settings_summary_card({
             label: '状態',
             value: selected_provider_has_api_key ? '利用可能' : 'キー待ち',
-            tone: 'bg-[#fffdf3]',
+            tone: 'bg-[#f3f3ef]',
           })}
         </div>
       </section>
@@ -189,10 +189,10 @@ export const SettingsPage = ({
       {is_loading ? <LoadingState message="読み込み中..." /> : null}
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <Card className="border-white/20 bg-white/64">
+        <Card className="border-border bg-white/96">
           <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
             <div className="space-y-2">
-              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
+              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
                 生成
               </p>
               <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
@@ -243,10 +243,10 @@ export const SettingsPage = ({
           </CardContent>
         </Card>
 
-        <Card className="border-white/20 bg-white/60">
+        <Card className="border-border bg-white/94">
           <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
             <div className="space-y-2">
-              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary/70">
+              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
                 API キー
               </p>
               <h3 className="font-headline text-2xl font-extrabold tracking-tight text-foreground">
@@ -254,8 +254,8 @@ export const SettingsPage = ({
               </h3>
             </div>
 
-            <div className="rounded-[1.75rem] bg-[#f7fff0] px-5 py-5">
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary/70">
+            <div className="rounded-[1.75rem] bg-[#fbfbf8] px-5 py-5">
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
                 状態
               </p>
               <p className="mt-3 text-sm text-foreground">

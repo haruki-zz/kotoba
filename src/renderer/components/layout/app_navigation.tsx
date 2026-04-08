@@ -22,7 +22,7 @@ export const AppNavigation = <TValue extends string>({
   <div className="flex h-full flex-col gap-6">
     <div className="space-y-2">
       <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-primary to-[#4b8d16] text-primary-foreground shadow-[0_20px_40px_-24px_rgba(48,104,0,0.8)]">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-primary shadow-[inset_0_0_0_1px_rgba(31,42,31,0.08)]">
           <span className="material-symbols-outlined">spa</span>
         </div>
         <div>
@@ -45,8 +45,8 @@ export const AppNavigation = <TValue extends string>({
             className={cn(
               'group flex items-center gap-4 rounded-full px-5 py-4 text-left transition-all duration-200',
               is_active
-                ? 'bg-white/82 text-foreground shadow-[0_18px_45px_-28px_rgba(14,54,27,0.4)]'
-                : 'text-muted-foreground hover:bg-white/50 hover:text-foreground'
+                ? 'bg-neutral-50 text-foreground shadow-[0_18px_45px_-28px_rgba(31,42,31,0.16)]'
+                : 'text-muted-foreground hover:bg-neutral-50 hover:text-foreground'
             )}
             onClick={() => on_value_change(item.value)}
             type="button"
@@ -54,7 +54,7 @@ export const AppNavigation = <TValue extends string>({
             <span
               className={cn(
                 'flex h-10 w-10 items-center justify-center rounded-full transition-colors',
-                is_active ? 'bg-primary-container/80 text-primary' : 'bg-white/45 text-primary/80'
+                is_active ? 'bg-neutral-100 text-foreground' : 'bg-neutral-50 text-muted-foreground'
               )}
             >
               <span className="material-symbols-outlined">{item.icon}</span>
@@ -66,7 +66,7 @@ export const AppNavigation = <TValue extends string>({
               <span
                 className={cn(
                   'h-2.5 w-2.5 rounded-full transition-colors',
-                  is_active ? 'bg-primary' : 'bg-transparent group-hover:bg-primary/35'
+                  is_active ? 'bg-neutral-400' : 'bg-transparent group-hover:bg-neutral-300'
                 )}
               />
             </span>

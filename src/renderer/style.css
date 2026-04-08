@@ -47,37 +47,37 @@
 
 :root {
   color: #0e361b;
-  background-color: #deffe0;
+  background-color: #fcfcfa;
   font-family: var(--font-sans);
   --radius: 1.25rem;
-  --background: #deffe0;
-  --foreground: #0e361b;
-  --card: rgba(255, 255, 255, 0.82);
+  --background: #fcfcfa;
+  --foreground: #1f2a1f;
+  --card: rgba(255, 255, 255, 0.9);
   --card-foreground: #0e361b;
   --popover: rgba(255, 255, 255, 0.92);
   --popover-foreground: #0e361b;
   --primary: #306800;
   --primary-foreground: #d6ffb5;
-  --primary-container: #7efc00;
-  --secondary: #5a5c57;
-  --secondary-foreground: #f3f3ec;
-  --secondary-container: #e3e3dc;
-  --muted: #ccfdd1;
-  --muted-foreground: #3d6445;
-  --accent: #aeebb8;
-  --accent-foreground: #295b00;
-  --tertiary: #00666d;
-  --tertiary-container: #d7fbff;
-  --destructive: #b02500;
-  --destructive-foreground: #ffefec;
-  --border: rgba(88, 128, 95, 0.18);
-  --input: rgba(183, 240, 191, 0.95);
+  --primary-container: #eaf7df;
+  --secondary: #d97706;
+  --secondary-foreground: #fff7ed;
+  --secondary-container: #fff2df;
+  --muted: #f4f4ef;
+  --muted-foreground: #5f685f;
+  --accent: #f1f1ea;
+  --accent-foreground: #374137;
+  --tertiary: #71717a;
+  --tertiary-container: #f4f4f5;
+  --destructive: #d97706;
+  --destructive-foreground: #fff7ed;
+  --border: rgba(31, 42, 31, 0.09);
+  --input: #f7f7f3;
   --ring: rgba(48, 104, 0, 0.35);
-  --chart-1: #7efc00;
-  --chart-2: #4ea421;
-  --chart-3: #19edfd;
-  --chart-4: #ebc66f;
-  --chart-5: #f97316;
+  --chart-1: #e5e7eb;
+  --chart-2: #c7d2c7;
+  --chart-3: #8db174;
+  --chart-4: #5f8d43;
+  --chart-5: #306800;
 }
 
 .dark {
@@ -126,10 +126,10 @@
     margin: 0;
     min-height: 100vh;
     background:
-      radial-gradient(circle at top left, rgba(126, 252, 0, 0.2), transparent 30%),
-      radial-gradient(circle at top right, rgba(25, 237, 253, 0.12), transparent 26%),
-      radial-gradient(circle at bottom left, rgba(174, 235, 184, 0.35), transparent 34%),
-      linear-gradient(180deg, #deffe0 0%, #d4fbd8 46%, #ebfff0 100%);
+      radial-gradient(circle at top left, rgba(255, 255, 255, 0.96), transparent 34%),
+      radial-gradient(circle at top right, rgba(243, 244, 246, 0.8), transparent 28%),
+      radial-gradient(circle at bottom left, rgba(245, 245, 240, 0.75), transparent 36%),
+      linear-gradient(180deg, #ffffff 0%, #fafaf7 52%, #f3f3ef 100%);
     font-family: var(--font-sans);
     letter-spacing: 0.01em;
   }

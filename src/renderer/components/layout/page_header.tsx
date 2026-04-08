@@ -8,7 +8,7 @@ type PageHeaderProps = {
 }
 
 export const PageHeader = ({ app_name, page_label, title, description }: PageHeaderProps) => (
-  <header className="rounded-[2.25rem] bg-white/58 px-6 py-6 shadow-[0_30px_80px_-52px_rgba(14,54,27,0.42)] backdrop-blur-2xl sm:px-8 sm:py-8">
+  <header className="rounded-[2.25rem] bg-white/94 px-6 py-6 shadow-[0_30px_80px_-52px_rgba(31,42,31,0.14)] backdrop-blur-2xl sm:px-8 sm:py-8">
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Badge variant="secondary">{app_name}</Badge>
