@@ -68,7 +68,7 @@ export const WordAddPage = ({
             <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-muted-foreground">
               単語追加
             </p>
-            <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
+            <h2 className="max-w-2xl font-headline text-[clamp(2rem,5vw,3rem)] font-extrabold tracking-tight text-foreground">
               単語を追加
             </h2>
           </div>
@@ -125,7 +125,7 @@ export const WordAddPage = ({
             </h3>
           </div>
 
-          <div className="grid gap-4">
+          <div className="grid gap-4 lg:grid-cols-2">
             {form_field({
               label: '読み仮名',
               aria_label: '読み仮名',
@@ -148,14 +148,16 @@ export const WordAddPage = ({
               multiline: true,
               on_change: (value) => on_field_change('context_scene_ja', value),
             })}
-            {form_field({
-              label: '例文',
-              aria_label: '例文',
-              value: draft.example_sentence_ja,
-              rows: 3,
-              multiline: true,
-              on_change: (value) => on_field_change('example_sentence_ja', value),
-            })}
+            <div className="lg:col-span-2">
+              {form_field({
+                label: '例文',
+                aria_label: '例文',
+                value: draft.example_sentence_ja,
+                rows: 3,
+                multiline: true,
+                on_change: (value) => on_field_change('example_sentence_ja', value),
+              })}
+            </div>
           </div>
         </CardContent>
       </Card>

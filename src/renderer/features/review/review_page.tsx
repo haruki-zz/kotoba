@@ -49,8 +49,8 @@ export const ReviewPage = ({
   on_grade,
 }: ReviewPageProps) => (
   <div className="space-y-6">
-    <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+    <section className="grid gap-6 2xl:grid-cols-[0.9fr_1.1fr]">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4 2xl:grid-cols-1">
         {review_stat_card({
           label: '残り件数',
           value: `${due_count} 件`,
@@ -70,7 +70,7 @@ export const ReviewPage = ({
             <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-muted-foreground">
               復習
             </p>
-            <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
+            <h2 className="max-w-2xl font-headline text-[clamp(2rem,5vw,3rem)] font-extrabold tracking-tight text-foreground">
               今日のキュー
             </h2>
           </div>
@@ -89,7 +89,7 @@ export const ReviewPage = ({
     {current_review_word ? (
       <Card className="overflow-hidden border-border bg-white/96">
         <CardContent className="space-y-8 p-6 pt-6 sm:p-8 sm:pt-8">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
             <div className="space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
                 カード
@@ -98,9 +98,9 @@ export const ReviewPage = ({
           </div>
 
           <div className="relative mx-auto w-full max-w-4xl">
-            <div className="absolute inset-0 translate-x-4 translate-y-4 rounded-[2rem] bg-neutral-100" />
-            <div className="absolute inset-0 -translate-x-2 translate-y-2 rounded-[2rem] bg-stone-50" />
-            <div className="relative rounded-[2.5rem] bg-white px-6 py-8 shadow-[0_40px_90px_-52px_rgba(31,42,31,0.16)] sm:px-10 sm:py-12">
+            <div className="absolute inset-0 translate-x-2 translate-y-2 rounded-[2rem] bg-neutral-100 sm:translate-x-4 sm:translate-y-4" />
+            <div className="absolute inset-0 -translate-x-1 translate-y-1 rounded-[2rem] bg-stone-50 sm:-translate-x-2 sm:translate-y-2" />
+            <div className="relative rounded-[2rem] bg-white px-5 py-6 shadow-[0_40px_90px_-52px_rgba(31,42,31,0.16)] sm:rounded-[2.5rem] sm:px-8 sm:py-9 lg:px-10 lg:py-12">
               <div className="mb-8 flex items-center justify-between gap-4">
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
@@ -116,10 +116,10 @@ export const ReviewPage = ({
               </div>
 
               <div className="space-y-8 text-center">
-                <h3 className="font-headline text-6xl font-extrabold tracking-tight text-foreground sm:text-[5.5rem]">
+                <h3 className="font-headline text-[clamp(2.75rem,10vw,5.5rem)] font-extrabold tracking-tight text-foreground">
                   {current_review_word.word}
                 </h3>
-                <div className="grid gap-4 text-left lg:grid-cols-3">
+                <div className="grid gap-4 text-left xl:grid-cols-3">
                   <div className="rounded-[1.75rem] bg-[#fbfbf8] px-5 py-5">
                     <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
                       意味
@@ -149,7 +149,10 @@ export const ReviewPage = ({
             </div>
           </div>
 
-          <div aria-label="復習評価" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+          <div
+            aria-label="復習評価"
+            className="grid grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))] gap-4"
+          >
             {REVIEW_GRADES.map((item) => {
               const is_submitting = grading_word_id === current_review_word.id
 

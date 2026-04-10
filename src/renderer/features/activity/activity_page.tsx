@@ -121,7 +121,7 @@ export const ActivityPage = ({ heatmap, error_message, is_loading }: ActivityPag
     <div className="space-y-6">
       {heatmap ? (
         <>
-          <section className="grid gap-6 xl:grid-cols-[1.35fr_0.9fr]">
+          <section className="grid gap-6 2xl:grid-cols-[1.35fr_0.9fr]">
             <Card className="overflow-hidden border-border bg-linear-to-br from-white via-[#fcfcfb] to-[#f4f4f1]">
               <CardContent className="relative space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
                 <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-stone-100 blur-3xl" />
@@ -130,13 +130,13 @@ export const ActivityPage = ({ heatmap, error_message, is_loading }: ActivityPag
                     活動
                   </p>
                   <div className="space-y-2">
-                    <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
+                    <h2 className="max-w-2xl font-headline text-[clamp(2rem,5vw,3rem)] font-extrabold tracking-tight text-foreground">
                       40 週間
                     </h2>
                   </div>
                 </div>
 
-                <div className="relative grid gap-4 md:grid-cols-3">
+                <div className="relative grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4">
                   {activity_summary_card({
                     label: '総活動',
                     value: `${heatmap.total_activity_count} 件`,
@@ -165,7 +165,7 @@ export const ActivityPage = ({ heatmap, error_message, is_loading }: ActivityPag
               </CardContent>
             </Card>
 
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4 2xl:grid-cols-1">
               {activity_summary_card({
                 label: '活動日',
                 value: `${heatmap.active_day_count} 日`,
@@ -181,7 +181,7 @@ export const ActivityPage = ({ heatmap, error_message, is_loading }: ActivityPag
             </div>
           </section>
 
-          <section className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
+          <section className="grid gap-6 2xl:grid-cols-[1.25fr_0.95fr]">
             <Card className="border-border bg-white/94">
               <CardContent className="space-y-6 p-6 pt-6 sm:p-8 sm:pt-8">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -213,7 +213,7 @@ export const ActivityPage = ({ heatmap, error_message, is_loading }: ActivityPag
                 </div>
 
                 <div className="overflow-x-auto pb-2">
-                  <div className="flex min-w-fit items-start gap-3">
+                  <div className="flex min-w-fit items-start gap-2 sm:gap-3">
                     <div
                       aria-hidden="true"
                       className="grid grid-rows-[repeat(7,_16px)] gap-2 pt-0.5 text-[12px] text-muted-foreground"

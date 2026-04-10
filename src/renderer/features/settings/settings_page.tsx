@@ -136,7 +136,7 @@ export const SettingsPage = ({
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.95fr]">
+      <section className="grid gap-6 2xl:grid-cols-[1.2fr_0.95fr]">
         <Card className="overflow-hidden border-border bg-linear-to-br from-white via-[#fcfcfb] to-[#f4f4f1]">
           <CardContent className="relative space-y-5 p-6 pt-6 sm:p-8 sm:pt-8">
             <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-stone-100 blur-3xl" />
@@ -151,7 +151,7 @@ export const SettingsPage = ({
                 <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-muted-foreground">
                   設定
                 </p>
-                <h2 className="max-w-2xl font-headline text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
+                <h2 className="max-w-2xl font-headline text-[clamp(2rem,5vw,3rem)] font-extrabold tracking-tight text-foreground">
                   AI 設定
                 </h2>
               </div>
@@ -165,7 +165,7 @@ export const SettingsPage = ({
           </CardContent>
         </Card>
 
-        <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4 2xl:grid-cols-1">
           {settings_summary_card({
             label: 'プロバイダー',
             value: selected_provider_label,
@@ -219,7 +219,7 @@ export const SettingsPage = ({
                   on_field_change('model', value)
                 },
               })}
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 lg:grid-cols-2">
                 {settings_field({
                   label: 'タイムアウト（秒）',
                   aria_label: 'タイムアウト秒',
