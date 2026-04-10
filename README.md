@@ -107,6 +107,23 @@ pnpm make:seed-10k
 pnpm bench:search
 ```
 
+## CI/CD
+
+仓库已接入 GitHub Actions：
+
+- `CI`（`.github/workflows/ci.yml`）
+  - 触发：`pull_request`、`push`
+  - 执行：
+    - `pnpm verify`
+    - `pnpm test`
+    - 文档默认值关键字一致性检查（`design-doc.md` / `tech-stack.md`）
+    - `xvfb-run -a pnpm test:e2e`
+- `CD`（`.github/workflows/cd.yml`）
+  - 触发：`main` 分支 `push`、手动 `workflow_dispatch`
+  - 执行：
+    - 在 `ubuntu-latest`、`macos-latest`、`windows-latest` 三平台执行 `pnpm build`
+    - 上传 `dist/` 与 `dist-electron/` 为构建产物 artifact（保留 14 天）
+
 ## 数据与运行时约束
 
 - 词库主文件位于 Electron `userData` 目录下的 `kotoba-library.json`
